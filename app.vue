@@ -10,6 +10,7 @@ import Index from './pages/index.vue';
      <NuxtLayout>
       <NuxtPage/>
      </NuxtLayout>
+     <Modal />
   </div>
 </template>
 

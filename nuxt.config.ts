@@ -11,7 +11,14 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
-
-
-  modules: ['@nuxtjs/google-fonts'],
+  pinia: {
+    storesDirs: ['./stores/**', './custom-folder/stores/**'],
+  },
+  modules: [
+    '@nuxtjs/google-fonts',
+    '@nuxt/icon',
+    '@nuxt/ui',
+    '@pinia/nuxt',
+    '@hebilicious/vue-query-nuxt',
+  ],
 })

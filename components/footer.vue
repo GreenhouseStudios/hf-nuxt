@@ -1,5 +1,5 @@
 <template>
-    <footer class=" border-t-2 border-gray-300 my-24  text-sm bg-blue-950 text-white">
+    <footer class=" border-t-2 border-gray-300 mt-24  text-sm bg-blue-950 text-white">
         <section class="p-16 grid grid-cols-3 gap-4">
             <about class="pr-12"></about>
             <!-- <address></address> -->

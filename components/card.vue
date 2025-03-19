@@ -1,6 +1,6 @@
 <template>
 
-  <div class="flex flex-col grow overflow-hidden shadow-md rounded-2xl column feature shrink">
+  <div class="flex flex-col grow overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature shrink" @click="showModal">
     <img :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random()*100) + 300}/${Math.floor(Math.random()*100) + 300}`"
       class="bg-auto shrink" alt="">
     <CardContent />
@@ -9,8 +9,14 @@
 </template>
 
 <script lang="ts" setup>
+import { useStore } from '~/stores/store';
 
+const store = useStore();
 const randomMultiplier = Math.ceil(Math.random() * 2);
+
+const showModal = () => {
+  store.toggleModal();
+}
 </script>
 
 <style scoped>
