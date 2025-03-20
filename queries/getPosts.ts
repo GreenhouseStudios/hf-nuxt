@@ -8,6 +8,7 @@ query GetPosts {
       title
       date
       slug
+      link
   }
 }
 }

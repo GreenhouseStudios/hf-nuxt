@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import Index from './pages/index.vue';
+import { watch } from "vue";
+const store = useStore();
 
+// Watch the modal state in the Pinia store
+watch(() => store.showModal, (newValue) => {
+  if (newValue) {
+    document.body.style.overflow = "hidden"; // Disable scrolling
+  } else {
+    document.body.style.overflow = ""; // Restore scrolling
+  }
+});
 </script>
 
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
+  <div :class="store.showModal ? 'overflow-y-hidden' : ''">
+    <!-- <NuxtRouteAnnouncer /> -->
     <!-- <NuxtWelcome /> -->
-     <NuxtLayout>
+     <NuxtLayout >
       <NuxtPage/>
      </NuxtLayout>
      <Modal />
@@ -18,4 +27,8 @@ import Index from './pages/index.vue';
 body{
   font-family: 'Inter', sans-serif;
 }
+.no-scroll {
+  overflow: hidden;
+}
+
 </style>
