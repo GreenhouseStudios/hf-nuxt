@@ -1,7 +1,8 @@
 <template>
-    <div>
+    <div >
         <Nav/>
-        <slot/> 
+
+       <div class="hf-page"> <slot /> </div>
         <Footer/>
     </div>
 </template>
@@ -11,5 +12,7 @@
 </script>
 
 <style scoped>
-
+.hf-page{
+    min-height: 70vh;
+}
 </style>
