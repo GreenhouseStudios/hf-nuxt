@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-wrap w-1/3 mt-5">
+    <div class="flex flex-wrap w-1/2 mt-5">
         <CategoryFilterButton v-for="cat in categories" :key="cat" :category="cat" />
     </div>
 </template>

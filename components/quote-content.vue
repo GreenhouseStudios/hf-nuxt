@@ -1,11 +1,9 @@
 <template>
-    <div class="flex flex-col gap-2 px-8 py-4 text-left hover:bg-lavender feature-content grow">
-      <p class=" font-bold text-xl">2020</p>
-      <p class="text-2xl font-black">TITLE</p>
-      <p class=" h-full font-light">
+    <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean text-white feature-content grow">
+      <p class="grid items-center h-full italic text-2xl">
         <!-- {blok.description} -->
         <!-- {{fillerText(loremFragment, Math.floor(Math.random() * 2) + 1)}} -->
-        {{fillerText(loremFragment, 1)}}
+        "{{fillerText(loremFragment, 1)}}"
       </p>
     </div>
 </template>

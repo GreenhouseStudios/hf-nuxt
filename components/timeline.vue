@@ -7,19 +7,27 @@
     <section>
       <Filters />
     </section>
-    <section class="grid items-center">
-      <div class="mx-auto flex gap-8">
-        <div class="flex flex-col w-72 gap-5" v-for="j in 4">
-          <Card v-for="i in 5" />
-        </div>
 
+    <!-- Card Grid Layout -->
+    <section class="flex justify-between">
+      <div class="mx-auto flex gap-8 justify-between">
+        <div class="flex flex-col w-72 gap-5 justify-start" v-for="j in 4">
+          <Card v-for="i in 5" random />
+        </div>
       </div>
     </section>
+
+    <section class="my-5 px-18">
+      <div class="grid grid-cols-2 mx-auto gap-8">
+        <decade-card v-for="i in 4"/>
+      </div>
+    </section>
+
   </div>
 </template>
 
 <script lang="ts" setup>
-
+const { data: posts } = usePosts();
 </script>
 
 <style>
