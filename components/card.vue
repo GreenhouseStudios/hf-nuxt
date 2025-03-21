@@ -5,7 +5,7 @@
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
       class="bg-auto" :class="isDefault ? 'shrink' :'grow'" alt="">
     <CardContent v-if="isDefault" :post="props.post" />
-    <QuoteContent v-if="isQuote" />
+    <QuoteContent v-if="isQuote" :post="props.post" />
     <DecadeContent v-if="actualVariation === 'decade'" />
   </div>
 
@@ -26,11 +26,7 @@ const props = defineProps({
   }
 });
 import { useStore } from '~/stores/store';
-const handleCardClick = () => {
-  if (isDefault.value) {
-    showModal();
-  }
-}
+
 const variations = ['default', 'quote', 'other'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
 const actualVariation = computed( () => props.post?.cardOptions.type ? props.post.cardOptions.type[0] : 'default');
@@ -40,8 +36,13 @@ const isOther = computed(() => actualVariation.value === 'other');
 const store = useStore();
 const randomMultiplier = Math.ceil(Math.random() * 2);
 
+const handleCardClick = () => {
+  if (isDefault.value) {
+    showModal();
+  }
+}
 const showModal = () => {
-  store.toggleModal();
+  store.setModalPost(props.post);
 }
 </script>
 
