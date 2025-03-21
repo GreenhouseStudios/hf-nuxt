@@ -1,7 +1,4 @@
 <template>
-  <!-- <div class="mx-auto container" style="width:1200px">
-      <Card v-for="i in 30" :key="i" />
-  </div> -->
   <div class="mb-36 px-4 md:px-24">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black">OUR TIMELINE</h1>
     <section>
@@ -30,7 +27,7 @@
 const { data: posts } = usePosts();
 const postGroups = computed(() => {
   return posts.value?.reduce((acc, post, index) => {
-    const groupIndex = Math.floor(index / 4);
+    const groupIndex = Math.floor(index / 3);
     if (!acc[groupIndex]) {
       acc[groupIndex] = [];
     }

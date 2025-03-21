@@ -13,7 +13,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div v-html="props.content" class="wp-content" v-show="props.content" ref="wrapper"></div>
+  <div v-html="props.content" class="wp-content pb-20" v-show="props.content" ref="wrapper"></div>
 </template>
 
 
@@ -21,7 +21,7 @@ const props = defineProps({
 .wp-content{
 
 p{
-  padding: 0 2rem;
+  padding: 5rem 10rem 0rem 10rem;
 }
 
 iframe{

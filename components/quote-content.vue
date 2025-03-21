@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean text-white feature-content grow">
+    <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean text-white feature-content shrink">
       <p class="grid items-center h-full italic text-2xl">
         "{{props.post.cardOptions.cardDescription}}"
       </p>

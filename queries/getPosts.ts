@@ -13,6 +13,12 @@ query GetPosts {
         year
         type
         cardDescription
+        mainImage {
+          node {
+            mediaItemUrl
+            sourceUrl
+          }
+        }
       }
     }
   }
