@@ -1,17 +1,19 @@
 <template>
     <div class="flex flex-col gap-2 px-8 py-4 text-left hover:bg-lavender feature-content grow">
-      <p class=" font-bold text-xl">2020</p>
-      <p class="text-2xl font-black">TITLE</p>
+      <p class=" font-bold text-xl">{{props.post.cardOptions.year}}</p>
+      <p class="text-2xl font-black">{{props.post.title}}</p>
       <p class=" h-full font-light">
-        <!-- {blok.description} -->
-        <!-- {{fillerText(loremFragment, Math.floor(Math.random() * 2) + 1)}} -->
-        {{fillerText(loremFragment, 1)}}
+        {{props.post.cardOptions.cardDescription}}
       </p>
     </div>
 </template>
 
 <script lang="ts" setup>
+const props = defineProps<{
+  post: any;
+}>();
 import { ref, computed } from 'vue';
+
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed molestie, neque non scelerisque ultricies.`;
 const fillerText = (text: string, multiplier: number) => {
   return text.repeat(multiplier);

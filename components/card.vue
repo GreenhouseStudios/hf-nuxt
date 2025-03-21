@@ -4,7 +4,7 @@
     <img v-if="isDefault || isOther"
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
       class="bg-auto" :class="isDefault ? 'shrink' :'grow'" alt="">
-    <CardContent v-if="isDefault" />
+    <CardContent v-if="isDefault" :post="props.post" />
     <QuoteContent v-if="isQuote" />
     <DecadeContent v-if="actualVariation === 'decade'" />
   </div>
@@ -14,12 +14,15 @@
 <script lang="ts" setup>
 
 const props = defineProps({
-  variation: {
-    type: String,
-    default: 'default'
-  },
-  random: {
-    type: Boolean
+  // variation: {
+  //   type: String,
+  //   default: 'default'
+  // },
+  // random: {
+  //   type: Boolean
+  // },
+  post:{
+    type: Object
   }
 });
 import { useStore } from '~/stores/store';
@@ -29,7 +32,8 @@ const handleCardClick = () => {
   }
 }
 const variations = ['default', 'quote', 'other'];
-const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
+// const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
+const actualVariation = computed( () => props.post?.cardOptions.type ? props.post.cardOptions.type[0] : 'default');
 const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isOther = computed(() => actualVariation.value === 'other');
