@@ -2,7 +2,7 @@
   <!-- <div class="mx-auto container" style="width:1200px">
       <Card v-for="i in 30" :key="i" />
   </div> -->
-  <div class="my-36 px-4 md:px-24 md:px-12">
+  <div class="mb-36 px-4 md:px-24">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black">OUR TIMELINE</h1>
     <section>
       <Filters />
