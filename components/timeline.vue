@@ -15,7 +15,7 @@
     </section>
 
     <!-- <section class="grid gap-8 grid-cols-4 auto-rows-auto">
-      <Card v-for="card in posts" :post="card" :key="card"></Card>
+      <Card v-for="card in posts" :post="card" :key="card.slug"></Card>
     </section> -->
 
     <!-- <section class="flex flex-wrap mx-auto">
@@ -26,7 +26,7 @@
 
     <section class="my-5 md:px-18 px-2">
       <div class="grid md:grid-cols-2 grid-cols-1 mx-auto gap-8">
-        <decade-card v-for="i in 4"/>
+        <decade-card v-for="i in 4" />
       </div>
     </section>
 
@@ -34,26 +34,21 @@
 </template>
 
 <script lang="ts" setup>
+import { chunk } from 'es-toolkit';
+const store = useStore();
 const { data: posts } = usePosts();
+const postsArray = computed(() => Array.isArray(posts.value) ? posts.value : [] as Post[]);
 const postGroups = computed(() => {
-  return posts.value?.reduce((acc, post, index) => {
-    const groupIndex = Math.floor(index / 3);
-    if (!acc[groupIndex]) {
-      acc[groupIndex] = [];
-    }
-    acc[groupIndex].push(post);
-    return acc;
-  }, []);
+  return store.timelineFilterCategories.length > 0 ? chunk(postsArray.value.filter((post: Post) => {
+      return post.categories.nodes.some((category: Category) =>
+        store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
+      );
+    }),3) : chunk(postsArray.value, 3);
 });
 </script>
 
 <style>
 .container {
-  /* display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: masonry; */
-
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
   gap: 1rem;

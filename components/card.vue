@@ -15,28 +15,18 @@
 </template>
 
 <script lang="ts" setup>
-
-const props = defineProps({
-  // variation: {
-  //   type: String,
-  //   default: 'default'
-  // },
-  // random: {
-  //   type: Boolean
-  // },
-  post:{
-    type: Object
-  }
-});
+const props = defineProps<{
+  post: Post
+}>();
 import { useStore } from '~/stores/store';
 
 const variations = ['default', 'quote', 'other'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
-const actualVariation = computed( () => props.post?.cardOptions.type ? props.post.cardOptions.type[0] : 'default');
+const actualVariation = computed( () => props.post?.cardOptions?.type ? props.post?.cardOptions.type : 'default');
 const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isOther = computed(() => actualVariation.value === 'other');
-const hasMainImage = computed(() => props.post?.cardOptions.mainImage)
+const hasMainImage = computed(() => !!props.post?.cardOptions?.mainImage)
 const store = useStore();
 // const randomMultiplier = Math.ceil(Math.random() * 3) + 2;
 // Random choice of 2 or 4

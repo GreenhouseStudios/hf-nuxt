@@ -1,14 +1,15 @@
-import tailwindcss from "@tailwindcss/vite";
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  build: {
+    transpile: ['nuxt-graphql-request'],
+  },
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   css: ['~/assets/css/main.css'],
   ssr: true,
   vite: {
     plugins: [
-      tailwindcss(),
+
     ],
   },
   pinia: {
@@ -20,5 +21,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@pinia/nuxt',
     '@hebilicious/vue-query-nuxt',
+    '@nuxt/content',
+    '@nuxtjs/mdc',
   ],
 })

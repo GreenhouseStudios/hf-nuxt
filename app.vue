@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watch } from "vue";
+import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
 const store = useStore();
 
 // Watch the modal state in the Pinia store
@@ -16,19 +17,24 @@ watch(() => store.showModal, (newValue) => {
   <div :class="store.showModal ? 'overflow-y-hidden' : ''">
     <!-- <NuxtRouteAnnouncer /> -->
     <!-- <NuxtWelcome /> -->
-     <NuxtLayout >
-      <NuxtPage/>
-     </NuxtLayout>
-     <Modal />
+    <UApp>
+      <NuxtLayout>
+
+        <NuxtPage />
+
+      </NuxtLayout>
+    </UApp>
+    <Modal />
+    <VueQueryDevtools/>
   </div>
 </template>
 
 <style>
-body{
+body {
   font-family: 'Inter', sans-serif;
 }
+
 .no-scroll {
   overflow: hidden;
 }
-
 </style>

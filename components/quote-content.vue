@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean text-white feature-content grow">
       <p class="grid items-center h-full italic text-2xl my-24">
-        "{{props.post.cardOptions.cardDescription}}"
+        "{{props.post.cardOptions?.cardDescription}}"
       </p>
     </div>
 </template>
