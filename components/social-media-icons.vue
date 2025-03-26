@@ -1,5 +1,5 @@
 <template>
-  <div class="p-12">
+  <div class="md:p-12">
     <div>
       Connect
     </div>

@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature shrink"
-    @click="handleCardClick">
+    @click="handleCardClick" :class="isQuote ? '' : ``">
     <img v-if="(isDefault || isOther) && hasMainImage"
       :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
-      class="bg-auto" :class="isDefault || isQuote ? 'shrink' :'grow'" alt="">
+      class="bg-cover" :class="isDefault || isQuote ? 'shrink' :'grow'" alt="">
     <img v-else-if="isDefault || isOther"
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
       class="bg-auto" :class="isDefault || isQuote ? 'shrink' :'grow'" alt="">
@@ -38,7 +38,9 @@ const isQuote = computed(() => actualVariation.value === 'quote');
 const isOther = computed(() => actualVariation.value === 'other');
 const hasMainImage = computed(() => props.post?.cardOptions.mainImage)
 const store = useStore();
-const randomMultiplier = Math.ceil(Math.random() * 2);
+// const randomMultiplier = Math.ceil(Math.random() * 3) + 2;
+// Random choice of 2 or 4
+const randomMultiplier = 4;
 
 const handleCardClick = () => {
   if (isDefault.value) {

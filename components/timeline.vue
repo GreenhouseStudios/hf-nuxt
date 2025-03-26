@@ -7,15 +7,25 @@
 
     <!-- Card Grid Layout -->
     <section class="flex justify-between">
-      <div class="mx-auto flex gap-8 justify-between">
+      <div class="mx-auto flex md:flex-row flex-col gap-8 justify-between">
         <div class="flex flex-col w-72 gap-5 justify-start" v-for="j in postGroups" :key="j">
           <Card v-for="i in j" :post="i" />
         </div>
       </div>
     </section>
 
-    <section class="my-5 px-18">
-      <div class="grid grid-cols-2 mx-auto gap-8">
+    <!-- <section class="grid gap-8 grid-cols-4 auto-rows-auto">
+      <Card v-for="card in posts" :post="card" :key="card"></Card>
+    </section> -->
+
+    <!-- <section class="flex flex-wrap mx-auto">
+      <div v-for="card in posts" class="p-2 inline w-1/4" :key="card">
+        <Card :post="card" />
+      </div>
+    </section> -->
+
+    <section class="my-5 md:px-18 px-2">
+      <div class="grid md:grid-cols-2 grid-cols-1 mx-auto gap-8">
         <decade-card v-for="i in 4"/>
       </div>
     </section>

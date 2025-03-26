@@ -1,6 +1,6 @@
 <template>
-    <div class="md:px-16 flex flex-col gap-4 justify-start">
-        <slot></slot>
+    <div>
+        <div class="border-l-2 border-blue-400 h-full"></div>
     </div>
 </template>
 
