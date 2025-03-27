@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature shrink"
+  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature grow"
     @click="handleCardClick" :class="isQuote ? '' : ``">
     <img v-if="(isDefault || isOther) && hasMainImage"
       :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"

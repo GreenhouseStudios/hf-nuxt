@@ -1,17 +1,17 @@
 <template>
   <div class="mb-36 px-4 md:px-24">
-    <h1 class="text-blue-950 text-5xl md:text-9xl font-black">OUR TIMELINE</h1>
+    <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title">OUR TIMELINE</h1>
     <section>
       <Filters />
     </section>
 
     <!-- Card Grid Layout -->
-    <section class="flex justify-between">
-      <div class="mx-auto flex md:flex-row flex-col gap-8 justify-between">
-        <div class="flex flex-col w-72 gap-5 justify-start" v-for="j in postGroups" :key="j">
+    <section class="flex justify-between" >
+      <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
+        <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j,index) in postGroups" :key="index">
           <Card v-for="i in j" :post="i" />
-        </div>
-      </div>
+        </li>
+      </ul>
     </section>
 
     <!-- <section class="grid gap-8 grid-cols-4 auto-rows-auto">
@@ -34,16 +34,27 @@
 </template>
 
 <script lang="ts" setup>
+import anime from 'animejs';
+import { onMounted } from 'vue';
 import { chunk } from 'es-toolkit';
 const store = useStore();
 const { data: posts } = usePosts();
 const postsArray = computed(() => Array.isArray(posts.value) ? posts.value : [] as Post[]);
+const filteredPosts = computed(() => {
+  return postsArray.value.filter((post: Post) => {
+    return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : true;
+  });
+});
 const postGroups = computed(() => {
-  return store.timelineFilterCategories.length > 0 ? chunk(postsArray.value.filter((post: Post) => {
+  return store.timelineFilterCategories.length > 0 ? chunk(filteredPosts.value.filter((post: Post) => {
       return post.categories.nodes.some((category: Category) =>
         store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
       );
-    }),3) : chunk(postsArray.value, 3);
+    }),3) : chunk(filteredPosts.value, 3);
+});
+
+onMounted(() => {
+  anime({ targets: '.timeline-title', translateX: [-200,0], duration: 700 });
 });
 </script>
 

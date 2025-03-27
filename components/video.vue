@@ -5,7 +5,16 @@
 </template>
 
 <script lang="ts" setup>
+import anime from 'animejs'
+import { onMounted } from 'vue'
 
+onMounted(() => {
+  anime({
+    targets: '.bg-gray-500',
+    translateY: 50,
+    duration: 800
+  })
+})
 </script>
 
 <style>

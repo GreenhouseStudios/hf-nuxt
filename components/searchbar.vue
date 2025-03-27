@@ -1,11 +1,9 @@
 <template>
-    <input class="rounded-full border-1 px-2 md:px-4 py-2 border-gray-500 md:text-lg relative" placeholder="Search by keyword">
-    
-
+    <UInput placeholder="Search by keyword" v-model="store.searchTerm" icon="i-lucide-search" />
 </template>
 
 <script setup lang="ts">
-
+const store = useStore();
 </script>
 
 <style scoped>

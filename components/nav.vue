@@ -25,7 +25,7 @@ const items = ref(<NavigationMenuItem[]>[
   },
   {
     label: 'MAKE AN IMPACT',
-    target: '/impact'
+    to: '/impact'
   },
   {
     label: 'CONTACT US',

@@ -47,7 +47,12 @@
 
 <script lang="ts" setup>
 import Hero from '~/components/hero.vue';
+import anime from 'animejs';
+import { onMounted } from 'vue';
 
+onMounted(() => {
+  anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
+});
 
 </script>
 

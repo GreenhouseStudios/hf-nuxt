@@ -9,6 +9,7 @@ export const useStore = defineStore('store', {
         },
         modalType: '',
         timelineFilterCategories: [] as Category[],
+        searchTerm: '',
     }),
     actions: {
        toggleModal() {
