@@ -16,7 +16,7 @@ import { onMounted } from 'vue'
 import anime from 'animejs'
 
 onMounted(() => {
-    anime({ targets: '.title', translateX: 50, duration: 800 })
+    anime({ targets: '.title', translateX: [-100,0], duration: 800 })
   })
 </script>
 

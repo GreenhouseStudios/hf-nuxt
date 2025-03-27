@@ -14,7 +14,7 @@ watch(() => store.showModal, (newValue) => {
 </script>
 
 <template>
-  <div :class="store.showModal ? 'overflow-y-hidden' : ''">
+  <div class="overflow-x-hidden" :class="store.showModal ? 'overflow-y-hidden' : ''">
     <!-- <NuxtRouteAnnouncer /> -->
     <!-- <NuxtWelcome /> -->
     <UApp>

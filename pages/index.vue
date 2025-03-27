@@ -2,7 +2,7 @@
   <div>
     <Hero />
     <Video />
-    <BlockRow class="my-24">
+    <BlockRow class="my-24 px-12">
       <Block class="text-center">
         <h1 class="text-3xl font-bold text-blue-500">How We Started</h1>
         <h2 class="text-blue-950">“Health Council Opens Center on Hispanics,” The Hartford Courant Dec. 22, 1980</h2>
