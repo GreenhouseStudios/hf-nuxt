@@ -1,6 +1,6 @@
 <template>
   <div class="mb-36 px-4 md:px-24">
-    <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title">OUR TIMELINE</h1>
+    <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
       <Filters />
     </section>

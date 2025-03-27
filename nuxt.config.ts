@@ -11,6 +11,11 @@ export default defineNuxtConfig({
   build: {
     transpile: ['nuxt-graphql-request'],
   },
+  colorMode: {
+    classSuffix: '',
+    preference: 'light',
+    fallback: 'light'
+},
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
@@ -38,5 +43,6 @@ export default defineNuxtConfig({
     '@nuxtjs/mdc',
     '@formkit/auto-animate/nuxt',
     '@hypernym/nuxt-anime',
+    '@nuxtjs/color-mode',
   ],
 })

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-2 px-8 py-4 text-left hover:bg-lavender feature-content grow">
+    <div class="flex flex-col gap-2 px-8 py-4 text-left hover:bg-lavender feature-content grow dark:bg-gray-800">
       <p class=" font-bold text-xl">{{props?.post?.cardOptions?.year}}</p>
       <p class="text-2xl font-black">{{props?.post?.title}}</p>
       <p class=" h-full font-light">
