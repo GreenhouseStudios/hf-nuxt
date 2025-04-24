@@ -18,13 +18,13 @@ export default defineNuxtConfig({
 },
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css','~/node_modules/gridstack/dist/gridstack.min.css', '~/node_modules/gridstack/dist/gridstack-all.js'],
   ui: {
     theme: {
       colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
     }
   },
-  ssr: true,
+  ssr: false,
   vite: {
     plugins: [
 
