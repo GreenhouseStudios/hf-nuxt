@@ -6,10 +6,19 @@
     </section>
 
     <!-- Card Grid Layout -->
-    <section class="flex justify-between" >
+    <!-- <section class="flex justify-between" >
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
         <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j,index) in postGroups" :key="index">
           <Card v-for="i in j" :post="i" />
+        </li>
+      </ul>
+    </section> -->
+
+    <section class="flex justify-between " >
+      <ul ref="gridContainer" class="grid-stack w-full">
+        <li v-for="(post, index) in postsArray" :key="index" :gs-w="3" :gs-h="4" :gs-x="(index)%12"
+        :gs-y="Math.floor((index) / 12)" class="grid-stack-item">
+          <Card :post="post" class="m-4"  />
         </li>
       </ul>
     </section>
@@ -24,19 +33,23 @@
       </div>
     </section> -->
 
-    <section class="my-5 md:px-18 px-2">
+    <!-- <section class="my-5 md:px-18 px-2">
       <div class="grid md:grid-cols-2 grid-cols-1 mx-auto gap-8">
         <decade-card v-for="i in 4" />
       </div>
-    </section>
+    </section> -->
 
   </div>
 </template>
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import { onMounted } from 'vue';
+import { nextTick, onMounted , ref, useTemplateRef, watch} from 'vue';
 import { chunk } from 'es-toolkit';
+import { GridStack } from 'gridstack'
+import 'gridstack/dist/gridstack.min.css';
+
+const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
 const { data: posts } = usePosts();
 const postsArray = computed(() => Array.isArray(posts.value) ? posts.value : [] as Post[]);
@@ -53,8 +66,24 @@ const postGroups = computed(() => {
     }),3) : chunk(filteredPosts.value, 3);
 });
 
-onMounted(() => {
+onMounted( async () => {
   anime({ targets: '.timeline-title', translateX: [-200,0], duration: 700 });
+});
+
+watch(postsArray, async (newPosts) => {
+  if (newPosts.length > 0) {
+    await nextTick(); // let Vue render all grid items
+
+    console.log('GridStack items:', gridContainer.value?.querySelectorAll('.grid-stack-item'));
+
+    GridStack.init({
+      column: 12,
+      minRow: 10,
+      sizeToContent: true,
+      // cellHeight: '25px',
+      margin: 10,
+    });
+  }
 });
 </script>
 
