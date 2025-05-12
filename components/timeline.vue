@@ -6,22 +6,22 @@
     </section>
 
     <!-- Card Grid Layout -->
-    <!-- <section class="flex justify-between" >
+    <section class="flex justify-between" >
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
         <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j,index) in postGroups" :key="index">
           <Card v-for="i in j" :post="i" />
         </li>
       </ul>
-    </section> -->
+    </section>
 
-    <section class="flex justify-between " >
+    <!-- <section class="flex justify-between " >
       <ul ref="gridContainer" class="grid-stack w-full">
         <li v-for="(post, index) in postsArray" :key="index" :gs-w="3" :gs-h="4" :gs-x="(index)%12"
         :gs-y="Math.floor((index) / 12)" class="grid-stack-item">
           <Card :post="post" class="m-4"  />
         </li>
       </ul>
-    </section>
+    </section> -->
 
     <!-- <section class="grid gap-8 grid-cols-4 auto-rows-auto">
       <Card v-for="card in posts" :post="card" :key="card.slug"></Card>
@@ -52,18 +52,31 @@ import 'gridstack/dist/gridstack.min.css';
 const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
 const { data: posts } = usePosts();
-const postsArray = computed(() => Array.isArray(posts.value) ? posts.value : [] as Post[]);
+const postsArray = computed(() => {
+  if (Array.isArray(posts.value)) {
+    return posts.value.slice().sort((a: Post, b: Post) => {
+      const yearA = a.cardOptions?.year || 0;
+      const yearB = b.cardOptions?.year || 0;
+      return yearB - yearA;
+    });
+  }
+  return [] as Post[];
+});
 const filteredPosts = computed(() => {
   return postsArray.value.filter((post: Post) => {
     return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : true;
   });
 });
 const postGroups = computed(() => {
-  return store.timelineFilterCategories.length > 0 ? chunk(filteredPosts.value.filter((post: Post) => {
+  const n = 5;
+  return store.timelineFilterCategories.length > 0 ? filteredPosts.value.filter((post: Post) => {
       return post.categories.nodes.some((category: Category) =>
         store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
       );
-    }),3) : chunk(filteredPosts.value, 3);
+    })  : filteredPosts.value.reduce((acc, item, i) => {
+    acc[i % n].push(item);
+    return acc;
+  }, Array.from({ length: n }, () => []));;
 });
 
 onMounted( async () => {
