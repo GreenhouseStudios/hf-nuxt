@@ -2,6 +2,11 @@
   <div>
     <Hero />
     <Video />
+   
+
+    <img src="../public/curve_banner.png" alt="curve banner">
+    <Timeline />
+
     <BlockRow class="my-24 px-12">
       <Block class="text-center">
         <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">How We Started</h1>
@@ -39,9 +44,6 @@
           Art school at UHart</h3>
       </Block>
     </BlockRow>
-
-    <img src="../public/curve_banner.png" alt="curve banner">
-    <Timeline />
   </div>
 </template>
 
