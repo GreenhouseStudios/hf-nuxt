@@ -1,16 +1,17 @@
 <template>
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature grow"
-    @click="handleCardClick" :class="isQuote ? '' : ``">
-    <img v-if="(isDefault || isOther) && hasMainImage"
-      :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
-      class="bg-cover" :class="isDefault || isQuote ? 'shrink' :'grow'" alt="">
+
+  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature grow h-121"
+    :class="isQuote ? '' : ``" @click="handleCardClick">
+    <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
+      class="max-h-1/2" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <img v-else-if="isDefault || isOther"
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
-      class="bg-auto" :class="isDefault || isQuote ? 'shrink' :'grow'" alt="">
+      class="bg-auto" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <CardContent v-if="isDefault" :post="props.post" />
     <QuoteContent v-if="isQuote" :post="props.post" />
     <DecadeContent v-if="actualVariation === 'decade'" />
   </div>
+
 
 </template>
 
@@ -22,7 +23,7 @@ import { useStore } from '~/stores/store';
 
 const variations = ['default', 'quote', 'other'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
-const actualVariation = computed( () => props.post?.cardOptions?.type ? props.post?.cardOptions.type : 'default');
+const actualVariation = computed(() => props.post?.cardOptions?.type ? props.post?.cardOptions.type : 'default');
 const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isOther = computed(() => actualVariation.value === 'other');
