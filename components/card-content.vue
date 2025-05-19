@@ -2,7 +2,7 @@
     <div class="flex flex-col gap-2 px-8 py-4 text-left hover:bg-lavender feature-content grow dark:bg-gray-800">
       <p class=" font-bold text-xl">{{props?.post?.cardOptions?.year}}</p>
       <p class="text-2xl font-black">{{props?.post?.title}}</p>
-      <p class=" h-full font-light">
+      <p class="font-light line-clamp-3 overflow-hidden">
         {{props?.post?.cardOptions?.cardDescription}}
       </p>
     </div>

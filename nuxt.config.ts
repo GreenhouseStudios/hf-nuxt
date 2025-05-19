@@ -3,6 +3,18 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in' }
   },
+  tailwindcss: {
+    config: {
+      theme: {
+        extend: {
+
+        }
+      },
+      plugins:[
+        require("@tailwindcss/line-clamp"),
+      ]
+    }
+  },
   anime: {
     provide: true,
     composables: true,
@@ -45,4 +57,5 @@ export default defineNuxtConfig({
     '@hypernym/nuxt-anime',
     '@nuxtjs/color-mode',
   ],
+  
 })

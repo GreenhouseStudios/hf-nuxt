@@ -5,11 +5,21 @@
       <Filters />
     </section>
 
-    <!-- Card Grid Layout -->
-    <section class="flex justify-between" >
+    <!-- Card Grid Layout (Flex)-->
+    <!-- <section class="flex justify-between" >
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
         <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j,index) in postGroups" :key="index">
           <Card v-for="i in j" :post="i" />
+        </li>
+      </ul>
+    </section> -->
+
+    <!-- Card Layout (CSS Grid) -->
+    <section class="flex justify-between">
+      <ul class="mx-auto grid grid-cols-5 gap-8" id="card-grid" v-auto-animate>
+        <li class="grid-item" v-for="(j, index) in filteredPosts" :key="index"
+          :class="index % 7 == 2 ? 'col-span-2' : ''">
+          <Card :post="j" :x-multiplier="index % 7 == 2 ? 2 : 1" :y-multiplier="1"/>
         </li>
       </ul>
     </section>
@@ -44,10 +54,12 @@
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import { nextTick, onMounted , ref, useTemplateRef, watch} from 'vue';
+import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { chunk } from 'es-toolkit';
 import { GridStack } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css';
+import Masonry from 'masonry-layout';
+import imagesLoaded from 'imagesloaded';
 
 const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
@@ -70,17 +82,26 @@ const filteredPosts = computed(() => {
 const postGroups = computed(() => {
   const n = 5;
   return store.timelineFilterCategories.length > 0 ? filteredPosts.value.filter((post: Post) => {
-      return post.categories.nodes.some((category: Category) =>
-        store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
-      );
-    })  : filteredPosts.value.reduce((acc, item, i) => {
+    return post.categories.nodes.some((category: Category) =>
+      store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
+    );
+  }) : filteredPosts.value.reduce((acc, item, i) => {
     acc[i % n].push(item);
     return acc;
   }, Array.from({ length: n }, () => []));;
 });
 
-onMounted( async () => {
-  anime({ targets: '.timeline-title', translateX: [-200,0], duration: 700 });
+onMounted(async () => {
+  anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 });
+
+  // imagesLoaded('#card-grid', () => {
+  //   new Masonry('#card-grid', {
+  //     gutter: 20,
+  //     columnWidth: 300,
+  //     itemSelector: '.grid-item',
+  //   });
+  // });
+
 });
 
 watch(postsArray, async (newPosts) => {
@@ -101,10 +122,8 @@ watch(postsArray, async (newPosts) => {
 </script>
 
 <style>
-.container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 1rem;
+/* #card-grid{
   grid-template-rows: masonry;
-}
+} */
+
 </style>

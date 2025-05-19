@@ -1,7 +1,7 @@
 <template>
 
   <div class="flex flex-col overflow-hidden shadow-md rounded-2xl column hover:bg-gray-200 feature grow h-121"
-    :class="isQuote ? '' : ``" @click="handleCardClick">
+    :class="isQuote ? `` : `w-${72*xMultiplier}`" @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
       class="max-h-1/2" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <img v-else-if="isDefault || isOther"
@@ -17,7 +17,9 @@
 
 <script lang="ts" setup>
 const props = defineProps<{
-  post: Post
+  post: Post,
+  xMultiplier: number,
+  yMultiplier: number,
 }>();
 import { useStore } from '~/stores/store';
 
