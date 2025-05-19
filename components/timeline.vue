@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-36 px-4 md:px-24">
+  <div class="mb-36 px-2 md:px-12">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
       <Filters />
@@ -15,10 +15,10 @@
     </section> -->
 
     <!-- Card Layout (CSS Grid) -->
-    <section class="flex justify-between">
-      <ul class="mx-auto grid grid-cols-5 gap-8" id="card-grid" v-auto-animate>
-        <li class="grid-item" v-for="(j, index) in filteredPosts" :key="index"
-          :class="index % 7 == 2 ? 'col-span-2' : ''">
+    <section class="flex justify-around">
+      <ul class="mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
+        <li class="grid-item mx-auto" v-for="(j, index) in filteredPosts" :key="index"
+          :class="index % 7 == 2 ? 'md:col-span-2' : ''">
           <Card :post="j" :x-multiplier="index % 7 == 2 ? 2 : 1" :y-multiplier="1"/>
         </li>
       </ul>
