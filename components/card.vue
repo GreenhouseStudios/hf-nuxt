@@ -3,7 +3,7 @@
   <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender  feature grow h-121"
     :class="isQuote ? `` : `w-${72*xMultiplier}`" @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
-      class="max-h-1/2 object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
+      class="max-h-1/2 object-cover min-h-4/12" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault || isOther"
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"

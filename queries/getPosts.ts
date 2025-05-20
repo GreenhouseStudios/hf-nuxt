@@ -14,6 +14,7 @@ query GetPosts {
         year
         type
         cardDescription
+        quoteAuthor
         mainImage {
           node {
             mediaItemUrl

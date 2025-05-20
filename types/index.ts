@@ -15,6 +15,7 @@ declare global {
             year: string;
             type: string;
             cardDescription: string;
+            quoteAuthor: string;
             mainImage: {
                 node: {
                     mediaItemUrl: string;

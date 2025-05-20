@@ -104,21 +104,21 @@ onMounted(async () => {
 
 });
 
-watch(postsArray, async (newPosts) => {
-  if (newPosts.length > 0) {
-    await nextTick(); // let Vue render all grid items
+// watch(postsArray, async (newPosts) => {
+//   if (newPosts.length > 0) {
+//     await nextTick(); // let Vue render all grid items
 
-    console.log('GridStack items:', gridContainer.value?.querySelectorAll('.grid-stack-item'));
+//     console.log('GridStack items:', gridContainer.value?.querySelectorAll('.grid-stack-item'));
 
-    GridStack.init({
-      column: 12,
-      minRow: 10,
-      sizeToContent: true,
-      // cellHeight: '25px',
-      margin: 10,
-    });
-  }
-});
+//     GridStack.init({
+//       column: 12,
+//       minRow: 10,
+//       sizeToContent: true,
+//       // cellHeight: '25px',
+//       margin: 10,
+//     });
+//   }
+// });
 </script>
 
 <style>
