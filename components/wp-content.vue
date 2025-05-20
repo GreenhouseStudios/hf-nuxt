@@ -19,7 +19,12 @@ const props = defineProps({
 
 <style >
 .wp-content{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
 
+}
+.wp-content{
 p{
   padding: 5rem 10rem 0rem 10rem;
 }
