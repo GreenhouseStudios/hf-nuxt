@@ -26,4 +26,14 @@ onMounted(() => {
   background-position: 50% 150%;
   background-size: 100% 100%;
   /* background: linear-gradient(rgb(0, 0, 1, 0.1), rgb(0, 0, 1, 0.1)); */
-}</style>
+}
+
+@media screen and (max-width: 768px) {
+  .hero-bg {
+    background-size: 200% 160%;
+    background-repeat: no-repeat;
+    background-position: 20% 0%;
+  }
+  
+}
+</style>
