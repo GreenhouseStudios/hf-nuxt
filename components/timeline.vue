@@ -88,7 +88,7 @@ const postGroups = computed(() => {
   }) : filteredPosts.value.reduce((acc, item, i) => {
     acc[i % n].push(item);
     return acc;
-  }, Array.from({ length: n }, () => []));;
+  }, Array.from({ length: n }, () => []));
 });
 
 onMounted(async () => {
