@@ -2,7 +2,7 @@ import { gql } from "graphql-request";
 
 export const GET_POSTS = gql`
 query GetPosts {
-  posts(first: 50) {
+  posts(first: 200) {
     nodes {
       content
       id
