@@ -56,6 +56,7 @@ export default defineNuxtConfig({
     '@formkit/auto-animate/nuxt',
     '@hypernym/nuxt-anime',
     '@nuxtjs/color-mode',
+    'nuxt-aos'
   ],
   
 })

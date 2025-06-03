@@ -1,21 +1,22 @@
 <template>
-  <div class="mb-36 px-2 md:px-12">
+  <div class="mb-36 px-2 md:px-12 overflow-x-hidden">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
       <Filters />
+      <UDropdownMenu size="sm" :items="layoutModes"></UDropdownMenu>
     </section>
 
     <!-- Card Grid Layout (Flex)-->
-    <!-- <section class="flex justify-between" >
+    <section class="flex justify-between" v-if="selectedLayoutMode.label === 'Flex'">
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
-        <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j,index) in postGroups" :key="index">
-          <Card v-for="i in j" :post="i" />
+        <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j, index) in postGroups" :key="index">
+          <Card v-for="i in j" :post="i" :x-multiplier="1" :y-multiplier="1" />
         </li>
       </ul>
-    </section> -->
+    </section>
 
     <!-- Card Layout (CSS Grid) -->
-    <section class="flex justify-around">
+    <section class="flex justify-around" v-else-if="selectedLayoutMode.label === 'Grid'">
       <ul class="mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
         <li class="grid-item mx-auto" v-for="(j, index) in filteredPosts" :key="index"
           :class="index % 7 == 2 ? 'md:col-span-2' : ''">
@@ -54,7 +55,8 @@
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
+import type { DropdownMenuItem } from '@nuxt/ui/dist/module'
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch, computed } from 'vue';
 import { chunk } from 'es-toolkit';
 import { GridStack } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css';
@@ -64,6 +66,21 @@ import imagesLoaded from 'imagesloaded';
 const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
 const { data: posts } = usePosts();
+const layoutModes = ref<DropdownMenuItem[]>([
+  { label: 'Flex', icon: 'i-lucide-user'},
+  { label: 'Grid', icon: 'i-lucide-user' },
+]);
+const selectedLayoutMode = ref<DropdownMenuItem>(layoutModes.value[0]);
+const numCols = ref(4);
+
+function updateColumns() {
+  const width = window.innerWidth
+  if (width >= 1024) numCols.value = 4
+  else if (width >= 768) numCols.value = 2
+  else if (width >= 640) numCols.value = 1
+  else numCols.value = 1
+}
+
 const postsArray = computed(() => {
   if (Array.isArray(posts.value)) {
     return posts.value.slice().sort((a: Post, b: Post) => {
@@ -80,7 +97,7 @@ const filteredPosts = computed(() => {
   });
 });
 const postGroups = computed(() => {
-  const n = 5;
+  const n = numCols.value;
   return store.timelineFilterCategories.length > 0 ? filteredPosts.value.filter((post: Post) => {
     return post.categories.nodes.some((category: Category) =>
       store.timelineFilterCategories.map(c => c.slug).includes(category.slug)
@@ -93,7 +110,8 @@ const postGroups = computed(() => {
 
 onMounted(async () => {
   anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 });
-
+  updateColumns()
+  window.addEventListener('resize', updateColumns)
   // imagesLoaded('#card-grid', () => {
   //   new Masonry('#card-grid', {
   //     gutter: 20,
@@ -101,7 +119,9 @@ onMounted(async () => {
   //     itemSelector: '.grid-item',
   //   });
   // });
-
+onUnmounted(() => {
+  window.removeEventListener('resize', updateColumns)
+})
 });
 
 // watch(postsArray, async (newPosts) => {
@@ -125,5 +145,4 @@ onMounted(async () => {
 /* #card-grid{
   grid-template-rows: masonry;
 } */
-
 </style>

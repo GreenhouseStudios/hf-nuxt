@@ -6,6 +6,12 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "moduleResolution": "node"
-  }
+    "moduleResolution": "node",
+    "types": [],
+  },
+    "include": [
+    "types",
+    "components",
+    "pages",
+  ]
 }

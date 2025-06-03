@@ -1,9 +1,9 @@
 <template>
 
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender  feature grow h-121"
-    :class="isQuote ? `w-full` : `md:w-${72*xMultiplier}`" @click="handleCardClick">
+  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow min-h-121"
+    :class="isQuote ? `w-full` : `md:w-${80*xMultiplier}`" @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
-      class="max-h-1/2 object-cover min-h-4/12" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
+      class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault || isOther"
       :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
@@ -17,12 +17,18 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps<{
-  post: Post,
-  xMultiplier: number,
-  yMultiplier: number,
-}>();
+
+import { ref, computed } from 'vue';
 import { useStore } from '~/stores/store';
+
+const props = withDefaults(defineProps<{
+  post: Post;
+  xMultiplier?: number;
+  yMultiplier?: number;
+}>(), {
+  xMultiplier: 1,
+  yMultiplier: 1
+});
 
 const variations = ['default', 'quote', 'other'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);

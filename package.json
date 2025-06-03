@@ -27,6 +27,7 @@
     "graphql": "14.x || 15.x || 16.x",
     "graphql-request": "^7.1.2",
     "gridstack": "^12.1.0",
+    "gsap": "^3.13.0",
     "imagesloaded": "^5.0.0",
     "masonry-layout": "^4.2.2",
     "nuxt": "^3.16.0",
@@ -43,6 +44,7 @@
     "@nuxtjs/sitemap": "^7.2.9",
     "@nuxtjs/tailwindcss": "^6.13.2",
     "@vueuse/nuxt": "^13.0.0",
+    "nuxt-aos": "^1.2.5",
     "typescript": "^5.8.2",
     "vue-tsc": "^2.2.8"
   }

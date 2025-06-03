@@ -1,9 +1,11 @@
 <template>
-    <div >
+    <div class="overflow-visible relative">
         <Nav/>
 
-       <div class="hf-page"> <slot /> </div>
-        <Footer/>
+        <div class="hf-page">
+            <slot />
+        </div>
+        <Footer />
     </div>
 </template>
 
@@ -12,7 +14,7 @@
 </script>
 
 <style scoped>
-.hf-page{
+.hf-page {
     min-height: 70vh;
 }
 </style>

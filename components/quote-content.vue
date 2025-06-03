@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean w-full text-white feature-content grow sm:w-"
+  <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean w-full text-white feature-content grow h-121"
     @mouseleave="hovered = false" @mouseenter="hovered = true">
     <transition name="fade" mode="out-in" v-if="!hovered" key="hover">
       <p class="grid place-content-center items-center h-full italic w-full text-2xl my-24" id="quote" >
