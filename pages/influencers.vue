@@ -13,14 +13,7 @@ import { onMounted } from 'vue';
 import InstagramEmbed from '~/components/instagram-embed.vue';
 import { useAsyncData } from '#app';
 const postCodes = [
-    'DKAIPrUzS9C',
-    'DJ7GfY-h3dU',
-     'DKSJzqOAv90',
-    'DJ7GfY-h3dU',
-     'DKAIPrUzS9C',
-    'DJ7GfY-h3dU',
-     'DKAIPrUzS9C',
-    'DJ7GfY-h3dU',
+   'DKSJzqOAv90','DKAIPrUzS9C','DJ7GfY-h3dU','DJrh4oav5Hy','DJZnJ2IxWtl','DJKGaYtpHES','DI4B9yntZk5','DIwTk5xsfcn','DIjbqJmM0r7','DIJrqvruhy8','DIAL4YyNlyY','DH6O45PtNdr','DHtW6oJxxXW','DHlthXdp2ap','DHbpembPgdz','DHTm-9Et8D'
 ]
 
 const { data: home } = await useAsyncData(() => queryCollection('content').path('/').first())
