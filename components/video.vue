@@ -1,13 +1,7 @@
 <template>
-  <div data-aos="fade-left" data-aos-duration="000" class="w-full mb-36 md:mx-auto justify-center flex align-center">
-     <!-- <video src="https://videos.pexels.com/video-files/3129576/3129576-uhd_2560_1440_30fps.mp4" autoplay loop
-      muted class="bg-gray-500 md:rounded-4xl w-1/2 h-1/3 md:w-5/6 md:h-200 mx-4 lg:mx-36 md:my-24">
-      <source src="https://videos.pexels.com/video-files/3129576/3129576-uhd_2560_1440_30fps.mp4" type="video/mp4">
-      <source src="https://videos.pexels.com/video-files/3129576/3129576-uhd_2560_1440_30fps.webm" type="video/webm">
-      Your browser does not support the video tag.
-    </video> -->
-    <div class="bg-gray-500 md:rounded-4xl md:w-5/6 w-screen h-1/3 md:h-200 mx-4 lg:mx-36 md:my-24 grid place-content-center p-24">
-      <p class="text-5xl font-bold text-white mx-36">Centennial Welcome Intro Animation</p>
+  <div data-aos="fade-left" data-aos-duration="000" class="w-7/8 md:w-full mb-36 mx-auto justify-center flex align-center z-50 ">
+    <div class="bg-gray-500 md:rounded-4xl md:w-5/6 w-screen h-1/3 md:h-200 mx-4 lg:mx-36 md:my-24 grid place-content-center p-24 sm:mt-56">
+      <p class=" text-xl md:text-5xl font-bold text-white mx-36">Centennial Welcome Intro Animation</p>
     </div>
   </div>
 </template>

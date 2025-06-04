@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-36 px-2 md:px-12 overflow-x-hidden">
+  <div class="max-w-screen mb-36 px-2 md:px-12 overflow-x-hidden">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
       <Filters />

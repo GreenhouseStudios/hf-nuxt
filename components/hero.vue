@@ -1,9 +1,9 @@
 <template>
 
-  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-24">
-    <div class="hero-bg-text md:w-7/10 my-8 mx-24 z-50 animate-me" data-aos="fade-up">
+  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-1 md:my-24">
+    <div class="hero-bg-text md:w-7/10 my-2 mx-4 md:mx-24 z-50 animate-me" data-aos="fade-up">
 
-      <h1 class="text-4xl md:text-7xl font-black my-5 title text-md">CELEBRATING 100 YEARS</h1>
+      <h1 class="text-4xl md:text-7xl font-black title text-md">CELEBRATING 100 YEARS</h1>
       <p class="md:text-lg md:w-2/3 text-sm"> Over the past 100 years, we’ve transformed how local people and
         organizations mobilize to drive positive change. Founded in 1925 by two Hartford bankers, we began with a
         vision: to create a community-wide charitable endowment that would accept “gifts, devises, and bequests” and
@@ -12,7 +12,7 @@
         showcases how our donors, nonprofit partners, volunteers, and staff have come together for good.</p>
       <!-- <img src="../public/hero_curve_banner.png" alt=""> -->
     </div>
-    <img src="../public/hf-arcs.png" class="w-full mt-24 z-10" />
+    <img src="../public/hf-arcs.png" class="w-full mt-24 z-10 sm:mb-80" />
     <Video />
   </div>
   <!-- <div class="bg-zaffre text-white h-screen p-4 relative">
@@ -42,7 +42,7 @@ onMounted(() => {
     duration: 0.5,
     scrollTrigger: {
       trigger: '.hero-bg-text',
-      start: '500 top',
+      start: '300 top',
       toggleActions: 'play none none reverse',
     }
   })
@@ -76,10 +76,25 @@ onMounted(() => {
   top: 75px;
 }
 
+@media screen and (max-width: 768px) {
+  .hero-bg-text {
+    top: 20px;
+  }
+  .hero-bg {
+    height: 1000px;
+  }
+}
+
+@media screen and (min-width: 1440px) {
+  .hero-bg {
+    height: 2500px;
+  }
+  
+}
+
 .hero-bg {
   background: #EFE8CF;
   background: linear-gradient(125deg, rgb(227, 221, 199) 0%, rgba(10, 94, 249, 1) 25%, rgba(1, 0, 74, 1) 85%);
-  height: 270vh;
 }
 
 @media screen and (max-width: 768px) {

@@ -16,5 +16,6 @@
 <style scoped>
 .hf-page {
     min-height: 70vh;
+    margin: 70px auto;
 }
 </style>
