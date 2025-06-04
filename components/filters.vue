@@ -1,5 +1,5 @@
 <template>
-    <div class="px-4 md:px-24 py-12">
+    <div class="px-4 md:px-24 py-4 md:py-12">
         <Searchbar />
         <CategoriesFilter />
     </div>

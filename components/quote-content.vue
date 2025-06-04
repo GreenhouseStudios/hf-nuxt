@@ -2,12 +2,12 @@
   <div class="flex flex-col gap-2 px-8 py-4 text-left bg-cetacean w-full text-white feature-content grow h-121"
     @mouseleave="hovered = false" @mouseenter="hovered = true">
     <transition name="fade" mode="out-in" v-if="!hovered" key="hover">
-      <p class="grid place-content-center items-center h-full italic w-full text-2xl my-24" id="quote" >
+      <p class="grid place-content-center items-center h-full italic w-full text-lg md:text-2xl my-24" id="quote" >
         "{{ props.post?.cardOptions?.cardDescription || fillerText(loremFragment, 1) }}"
       </p>
     </transition>
     <transition name="fade" v-else key="default">
-      <p class="grid place-content-center items-center h-full italic w-full text-2xl my-24" id="quote-author" >
+      <p class="grid place-content-center items-center h-full italic w-full text-lg md:text-2xl my-24" id="quote-author" >
         –{{ props.post?.cardOptions?.quoteAuthor }}
       </p>
     </transition>

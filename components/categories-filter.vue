@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-wrap md:w-1/2 mt-5">
+    <div class=" flex flex-wrap md:w-1/2 mt-2 md:mt-5">
         <CategoryFilterButton v-for="cat in displayCategories" :key="cat.slug" :category="cat.name" @categoryClicked="handleCategoryClick(cat)" />
     </div>
     <!-- <div v-for="cat in store.timelineFilterCategories" :key="cat.slug">

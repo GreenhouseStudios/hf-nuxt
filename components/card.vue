@@ -1,6 +1,6 @@
 <template>
 
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow min-h-121"
+  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow h-80 md:min-h-121"
     :class="isQuote ? `w-full` : `md:w-${80*xMultiplier}`" @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
       class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
