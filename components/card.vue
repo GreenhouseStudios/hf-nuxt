@@ -1,7 +1,7 @@
 <template>
 
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow h-80 md:min-h-121"
-    :class="isQuote ? `w-full` : `md:w-${80*xMultiplier}`" @click="handleCardClick">
+  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow"
+    :class="containerClass" @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
       class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
@@ -23,6 +23,7 @@ import { useStore } from '~/stores/store';
 
 const props = withDefaults(defineProps<{
   post: Post;
+  mode: 'fixedHeight' | 'autoHeight';
   xMultiplier?: number;
   yMultiplier?: number;
 }>(), {
@@ -37,6 +38,17 @@ const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isOther = computed(() => actualVariation.value === 'other');
 const hasMainImage = computed(() => !!props.post?.cardOptions?.mainImage)
+const containerClass = computed(() => {
+  let result = '';
+  if (props.mode === 'fixedHeight') {
+    result = 'h-80 md:min-h-121';
+  } else {
+    result = 'h-auto';
+  }
+  if (isDefault.value || isQuote.value) result += ' w-full';
+  else result += ` md:w-${80 * props.xMultiplier}`;
+  return result;
+});
 const store = useStore();
 // const randomMultiplier = Math.ceil(Math.random() * 3) + 2;
 // Random choice of 2 or 4

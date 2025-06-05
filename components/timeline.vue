@@ -3,14 +3,16 @@
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
       <Filters />
-      <UDropdownMenu size="sm" :items="layoutModes"></UDropdownMenu>
+      <select class="select select-bordered w-full max-w-xs mt-4 border-2 border-black ml-24 my-5" v-model="selectedLayoutMode">
+        <option v-for="mode in layoutModes" :key="mode.label" :value="mode">{{ mode.label }}</option>
+      </select>
     </section>
 
     <!-- Card Grid Layout (Flex)-->
     <section class="flex justify-between" v-if="selectedLayoutMode.label === 'Flex'">
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
-        <li class="flex flex-col w-72 gap-5 justify-start" v-for="(j, index) in postGroups" :key="index">
-          <Card v-for="i in j" :post="i" :x-multiplier="1" :y-multiplier="1" />
+        <li class="flex flex-col w-1/4 gap-5 justify-start" v-for="(j, index) in postGroups" :key="index">
+          <Card v-for="i in j" :post="i" :x-multiplier="1" :y-multiplier="1" mode="autoHeight" />
         </li>
       </ul>
     </section>
@@ -20,7 +22,7 @@
       <ul class="mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
         <li class="grid-item mx-auto" v-for="(j, index) in filteredPosts" :key="index"
           :class="index % 7 == 2 ? 'md:col-span-2' : ''">
-          <Card :post="j" :x-multiplier="index % 7 == 2 ? 2 : 1" :y-multiplier="1"/>
+          <Card :post="j" :x-multiplier="index % 6 == 1 ? 2 : 1" :y-multiplier="1" mode="fixedHeight"/>
         </li>
       </ul>
     </section>
