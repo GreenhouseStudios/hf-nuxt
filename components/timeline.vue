@@ -11,7 +11,7 @@
     <!-- Card Grid Layout (Flex)-->
     <section class="flex justify-between" v-if="selectedLayoutMode.label === 'Flex'">
       <ul class="mx-auto flex md:flex-row flex-col gap-8 justify-between" v-auto-animate>
-        <li class="flex flex-col w-1/4 gap-5 justify-start" v-for="(j, index) in postGroups" :key="index">
+        <li class="flex flex-col sm:w-full md:w-1/4 gap-5 justify-start" v-for="(j, index) in postGroups" :key="index">
           <Card v-for="i in j" :post="i" :x-multiplier="1" :y-multiplier="1" mode="autoHeight" />
         </li>
       </ul>
