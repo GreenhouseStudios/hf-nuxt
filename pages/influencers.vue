@@ -2,8 +2,8 @@
     <div class="px-24">
         <h1 class="text-5xl py-24 px-24">Influencers</h1>
         <section  class="grid grid-cols-4 gap-4 items-start align-top">
-            <!-- <influencer-card v-for="i in 50"></influencer-card> -->
-           <InstagramEmbed v-for="i in postCodes" :code="i"/>
+            <influencer-card v-for="i in 50"></influencer-card>
+           <!-- <InstagramEmbed v-for="i in postCodes" :code="i"/> -->
         </section>
     </div>
 </template>
