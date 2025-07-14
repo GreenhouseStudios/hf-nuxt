@@ -94,7 +94,7 @@ onMounted(() => {
 
 .hero-bg {
   background: #EFE8CF;
-  background: linear-gradient(125deg, rgb(227, 221, 199) 0%, rgba(10, 94, 249, 1) 25%, rgba(1, 0, 74, 1) 85%);
+  background: linear-gradient(125deg, rgb(132, 165, 224) 0%, rgba(10, 94, 249, 1) 25%, rgba(1, 0, 74, 1) 85%);
 }
 
 @media screen and (max-width: 768px) {
