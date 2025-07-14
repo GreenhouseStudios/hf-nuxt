@@ -1,6 +1,6 @@
 <template>
 
-  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-1 md:my-24">
+  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-1">
     <div class="hero-bg-text md:w-7/10 my-2 mx-4 md:mx-24 z-50 animate-me" data-aos="fade-up">
 
       <h1 class="text-4xl md:text-7xl font-black title text-md">CELEBRATING 100 YEARS</h1>
