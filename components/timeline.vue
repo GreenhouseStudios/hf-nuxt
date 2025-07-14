@@ -7,10 +7,19 @@
 
     <!-- Card Layout (CSS Grid) -->
     <section class="flex justify-around">
-      <ul class="mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
-        <li class="grid-item mx-auto w-full" v-for="(j, index) in filteredPosts" :key="index"
-          :class="index % 5 == 0 ? 'md:col-span-2' : ''">
-          <Card :post="j" :x-multiplier="index % 5 == 1 ? 2 : 1" :y-multiplier="1" mode="fixedHeight"/>
+      <ul class="mx-auto grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
+        <li
+          class="grid-item mx-auto w-full"
+          v-for="(j, index) in filteredPosts"
+          :key="index"
+          :class="getSpanClass(index)"
+        >
+          <Card
+            :post="j"
+            :x-multiplier="1"
+            :y-multiplier="1"
+            mode="fixedHeight"
+          />
         </li>
       </ul>
     </section>
@@ -80,6 +89,20 @@ const filteredPosts = computed(() => {
     return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : postsFilteredByCategory.value;
   });
 });
+
+function getSpanClass(index: number) {
+  const itemsPerRow = 4;
+  const patternLength = 6;
+  const wideCardPositions = [0,1,2,3,2,1];
+
+  const virtualRow = Math.floor(index / itemsPerRow);
+  const positionInPattern = virtualRow % patternLength;
+  const widePosition = wideCardPositions[positionInPattern];
+
+  const indexInRow = index % itemsPerRow;
+
+  return indexInRow === widePosition ? 'col-span-1 sm:col-span-2' : 'col-span-1';
+}
 
 onMounted(async () => {
   anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 });
