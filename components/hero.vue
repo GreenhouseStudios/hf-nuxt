@@ -1,9 +1,9 @@
 <template>
 
-  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-1 md:my-24">
+  <div class="hero-bg text-white flex flex-col relative justify-start items-start my-1">
     <div class="hero-bg-text md:w-7/10 my-2 mx-4 md:mx-24 z-50 animate-me" data-aos="fade-up">
 
-      <h1 class="text-4xl md:text-7xl font-black title text-md">CELEBRATING 100 YEARS</h1>
+      <h1 class="text-4xl md:text-7xl font-black title text-md mb-4">CELEBRATING 100 YEARS</h1>
       <p class="md:text-lg md:w-2/3 text-sm"> Over the past 100 years, we’ve transformed how local people and
         organizations mobilize to drive positive change. Founded in 1925 by two Hartford bankers, we began with a
         vision: to create a community-wide charitable endowment that would accept “gifts, devises, and bequests” and

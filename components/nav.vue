@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between px-4 py-2 fixed z-100 top-0 max-w-screen w-screen">
+  <div class="flex items-center justify-between px-4 py-4 fixed z-100 top-0 max-w-screen w-screen">
     <Logo></Logo>
 
     <UNavigationMenu :items="items" color="primary" class="bg-white hidden lg:flex"></UNavigationMenu>
