@@ -9,6 +9,10 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from '~/stores/store';
+import { computed } from 'vue';
+import { useCategories } from '~/composables/useCategories.js';
+
 const store = useStore();
 
 
@@ -17,14 +21,14 @@ const displayCategories = computed(() => {
     return categories.value?.filter((cat: Category) => cat.name.toLowerCase() !== 'uncategorized')
 })
 const handleCategoryClick = (category: Category) => {
-    if (store.timelineFilterCategories?.includes(category)) {
-        store.setFilterCategories(store.timelineFilterCategories.filter((cat) => cat !== category))
+    const exists = store.timelineFilterCategories.some(cat => cat.slug === category.slug);
+    
+    if (exists) {
+        store.setFilterCategories(
+            store.timelineFilterCategories.filter(cat => cat.slug !== category.slug)
+        );
     } else {
-        store.setFilterCategories([...store.timelineFilterCategories, category])
+        store.setFilterCategories([...store.timelineFilterCategories, category]);
     }
 }
 </script>
-
-<style scoped>
-
-</style>
