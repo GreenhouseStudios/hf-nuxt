@@ -78,7 +78,7 @@ const postsFilteredByCategory = computed(() => {
     return postsArray.value.filter((post: Post) => {
       return post.categories.nodes.some((cat: Category) => 
         store.timelineFilterCategories.some(c => c.slug === cat.slug)
-      );w
+      );
     });
   }
   return postsArray.value;
