@@ -4,24 +4,29 @@
     <section>
       <Filters />
     </section>
-
+ 
     <!-- Card Layout (CSS Grid) -->
     <section class="flex justify-around">
-      <ul class="mx-auto grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
-        <li
-          class="grid-item mx-auto w-full"
-          v-for="(j, index) in filteredPosts"
-          :key="index"
-          :class="getSpanClass(index)"
-        >
-          <Card
-            :post="j"
-            :x-multiplier="1"
-            :y-multiplier="1"
-            mode="fixedHeight"
-          />
-        </li>
-      </ul>
+      <div v-if="filteredPosts.length === 0">
+        No posts found.
+      </div>
+      <div v-else>
+        <ul class="mx-auto grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
+          <li
+            class="grid-item mx-auto w-full"
+            v-for="(j, index) in filteredPosts"
+            :key="index"
+            :class="getSpanClass(index)"
+          >
+            <Card
+              :post="j"
+              :x-multiplier="1"
+              :y-multiplier="1"
+              mode="fixedHeight"
+            />
+          </li>
+        </ul>
+      </div>
     </section>
 
     <!-- <section class="my-5 md:px-18 px-2">
