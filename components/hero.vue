@@ -71,6 +71,11 @@ onMounted(() => {
 </script>
 
 <style>
+
+.hero-bg {
+  overflow-x: clip;
+}
+
 .hero-bg-text {
   position: sticky;
   top: 75px;
