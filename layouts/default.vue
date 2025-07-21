@@ -1,5 +1,5 @@
 <template>
-    <div class="overflow-visible overflow-x-hidden relative">
+    <div class="overflow-visible relative">
         <Nav/>
 
         <div class="hf-page">
