@@ -1,7 +1,7 @@
 <template>
-    <div class="px-24">
-        <h1 class="text-5xl py-24 px-24">Influencers</h1>
-        <section  class="grid grid-cols-4 gap-4 items-start align-top">
+    <div class="px-12">
+        <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
+        <section  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <influencer-card v-for="i in 50"></influencer-card>
            <!-- <InstagramEmbed v-for="i in postCodes" :code="i"/> -->
         </section>
