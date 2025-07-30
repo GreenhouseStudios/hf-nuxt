@@ -28,4 +28,22 @@ declare global {
             nodes: Category[];
         };
     }
+
+    interface Influencer {
+        id: string;
+        title: string;
+        slug: string;
+        link: string;
+        influencerDetails: {
+          name: string;
+          title: string;
+          description: string;
+          image: {
+            node: {
+              mediaItemUrl: string;
+              sourceUrl: string;
+            };
+          };
+        };
+      }
 }
