@@ -23,6 +23,7 @@
     "@tanstack/vue-query-devtools": "^5.69.0",
     "@types/imagesloaded": "^4.1.6",
     "@types/masonry-layout": "^4.2.8",
+    "better-sqlite3": "^12.2.0",
     "es-toolkit": "^1.33.0",
     "graphql": "14.x || 15.x || 16.x",
     "graphql-request": "^7.1.2",
