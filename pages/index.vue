@@ -18,7 +18,7 @@
       </Block>
       <VerticalDivider />
       <Block class="text-center">
-        <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">How We Started</h1>
+        <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">Key Highlights</h1>
         <h2 class="text-blue-950 dark:text-blue-300">“Health Council Opens Center on Hispanics,” The Hartford Courant Dec. 22, 1980</h2>
 
         <h3 class="text-blue-950 dark:text-blue-300">1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,

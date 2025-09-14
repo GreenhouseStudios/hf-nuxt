@@ -1,4 +1,25 @@
+<style scoped>
+.bento-grid {
+  --gap: 25px;
+  --row-h: 100px;
+  display: grid;
+  grid-auto-flow: dense;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: var(--row-h);
+  gap: var(--gap);
+}
+
+.bento-grid > li > div {
+  height: 100%;
+}
+
+
+
+
+</style>
 <template>
+
+
   <div class="max-w-screen mb-36 px-2 py-12 md:px-12 overflow-x-hidden">
     <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
     <section>
@@ -10,20 +31,21 @@
       <div v-if="filteredPosts.length === 0">
         No posts found.
       </div>
-      <div v-else>
-        <ul class="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-8" id="card-grid" v-auto-animate>
+      <div v-else class="bento-wrap">
+        <ul
+            ref="gridRef"
+            class="bento-grid" id="card-grid"
+            :style="{'--cols': cols}"
+        >
           <li
-              class="grid-item mx-auto w-full"
-              v-for="(j, index) in filteredPosts"
-              :key="index"
-              :class="spans[index]"
+              v-for="(post, i) in filteredPosts"
+              :key="post.id ?? i"
+              :style="spanStyle(i)"
           >
-            <Card
-                :post="j"
-                :x-multiplier="1"
-                :y-multiplier="1"
-                mode="fixedHeight"
-            />
+              <Card
+                  :post="post" class=""
+              />
+
           </li>
         </ul>
       </div>
@@ -41,13 +63,14 @@
 <script lang="ts" setup>
 import anime from 'animejs';
 import type { DropdownMenuItem } from '@nuxt/ui/dist/module'
-import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch, computed, toRaw } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch, computed, onBeforeUnmount } from 'vue';
 import { chunk } from 'es-toolkit';
 import { GridStack } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css';
 import Masonry from 'masonry-layout';
 import imagesLoaded from 'imagesloaded';
 import { useStore } from '~/stores/store';
+import {resolveObjMapThunk} from "graphql/type";
 
 const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
@@ -58,10 +81,72 @@ const layoutModes = ref<DropdownMenuItem[]>([
 ]);
 const selectedLayoutMode = ref<DropdownMenuItem>(layoutModes.value[0]);
 const numCols = ref(4);
+let cols = numCols.value;
 
-const span1 = 'col-span-1';
-const span2 = 'col-span-1 sm:col-span-2';
-const spans = ref<string[]>([]);
+type Post = { id: string | number }
+const props = defineProps<{ posts: Post[] }>();
+
+let rowHeight = 100;
+
+const patterns: Record<number, Array<{ w:number; h: number }>> = {
+  1: [
+      { w: 1, h:4 },
+      { w: 1, h:2 },
+      { w: 1, h:3 }
+
+  ],
+  2: [
+    { w: 1, h: 2 },
+    { w: 1, h: 4 },
+    { w: 2, h: 4 },
+    { w: 1, h: 3 },
+    { w: 2, h: 2 },
+    { w: 1, h: 3 },
+    { w: 1, h: 3 },
+    { w: 2, h: 3 },
+    { w: 1, h: 3 },
+    { w: 1, h: 3 },
+    { w: 1, h: 4 },
+  ],
+  3: [
+    { w: 1, h: 3 },
+    { w: 2, h: 3 },
+    { w: 2, h: 4 },
+    { w: 1, h: 5 },
+    { w: 1, h: 3 },
+    { w: 1, h: 3 },
+    { w: 1, h: 2 },
+    { w: 2, h: 3 },
+    { w: 1, h: 3 },
+  ],
+  4: [
+    { w: 1, h: 5 },
+    { w: 2, h: 2 },
+    { w: 2, h: 3 },
+    { w: 1, h: 3 },
+    { w: 2, h: 2 },
+    { w: 1, h: 2 },
+    { w: 1, h: 3 },
+    { w: 1, h: 3 },
+    { w: 2, h: 3 },
+  ],
+  5: [
+    { w: 2, h: 3 },
+    { w: 1, h: 3 },
+    { w: 2, h: 2 },
+    { w: 1, h: 4 },
+    { w: 2, h: 2 },
+    { w: 1, h: 3 },
+    { w: 1, h: 3 },
+    { w: 2, h: 4 },
+    { w: 1, h: 3 },
+    { w: 2, h: 3 },
+    { w: 2, h: 4 },
+  ]
+}
+
+const gridRef = ref<HTMLElement | null>(null);
+let ro: ResizeObserver | null = null;
 
 function updateColumns() {
   const width = window.innerWidth
@@ -70,131 +155,23 @@ function updateColumns() {
   else if (width >= 1024) numCols.value = 3
   else if (width >= 640) numCols.value = 2
   else numCols.value = 1
+  cols = numCols.value;
 }
 
-function prefersWide(index: number, row: number) {
-  return (row % 2 === 0) ? (index % 3 === 0) : (index % 3 === 1);
+function spanFor(index: number): {w: number, h: number} {
+  const pattern = patterns[numCols.value] ?? patterns[1];
+  const pick = pattern[index % pattern.length];
+  const w = Math.min(pick.w, numCols.value);
+  return {w, h: pick.h}
 }
 
-function simulateWidths(cols: number, forceUpgrade: number | null) {
-  const widths: number[] = [];
-  if (cols < 2) {
-    for (let i = 0; i < filteredPosts.value.length; i++) widths.push(1);
-    return widths;
+function spanStyle(i: number) {
+  const { w, h } = spanFor(i);
+  return {
+    gridColumn: `span ${w} / span ${w}`,
+    gridRow: `span ${h} / span ${h}`,
+    minHeight: `${rowHeight * h}px`,
   }
-  let slotsLeft = cols;
-  let row = 0;
-  let upgraded = false;
-
-  for (let i = 0; i < filteredPosts.value.length; i++) {
-    const shouldBeWide = prefersWide(i, row);
-
-    let w = 1;
-    if (slotsLeft >= 2 && shouldBeWide) w = 2;
-
-    if (
-        forceUpgrade !== null &&
-        row === forceUpgrade &&
-        !upgraded &&
-        slotsLeft >= 2 &&
-        w === 1
-    ) {
-      w = 2;
-      upgraded = true;
-    }
-
-    widths.push(w);
-    slotsLeft -= w;
-
-
-    if(slotsLeft === 0) {
-      row += 1;
-      slotsLeft = cols;
-    }
-  }
-  return widths;
-}
-
-
-
-function checkLastRow(cols: number, widths: number[]) {
-  const totalSlots = widths.reduce((s, w) => s + w, 0);
-  const remaining = totalSlots % cols;
-  return remaining === 0 ? cols: remaining;
-}
-
-type Row = { start: number; end: number };
-
-function rowsFromWidths(cols: number, widths: number[]): Row[] {
-  const rows: Row[] = [];
-  let used = 0, start = 0;
-  for (let i = 0; i < widths.length; i++) {
-    used += widths[i];
-    if (used === cols) {
-      rows.push({ start, end: i + 1 });
-      start = i + 1;
-      used = 0;
-    }
-  }
-  if (start < widths.length) rows.push({ start, end: widths.length });
-  return rows;
-}
-
-function updateSpans() {
-  const cols = numCols.value;
-  const n = filteredPosts.value.length;
-
-  let widths = simulateWidths(cols, null);
-  let lastRowCount = checkLastRow(cols, widths);
-  if (cols >= 3 && n > cols && lastRowCount === 1) {
-    const rows = rowsFromWidths(cols, widths);
-    const secondLastIdx = rows.length - 2;
-    const secondLastCount = secondLastIdx >= 0 ? rows[secondLastIdx].end - rows[secondLastIdx].start : 0;
-
-    const secondLastSlots = secondLastIdx >= 0
-        ? widths.slice(rows[secondLastIdx].start, rows[secondLastIdx].end).reduce((a, b) => a + b, 0)
-        : 0;
-
-    if (secondLastSlots === secondLastCount && cols === 3) {
-      const i = toRaw(spans.value).length - 3;
-      const i2 = toRaw(spans.value).length - 2;
-      if (i >= 0 && i2 >= 0) {
-        spans.value.splice(i, 1, span2);
-        spans.value.splice(i2, 1, span2);
-      }
-    }
-
-  } else if (cols === 2 && lastRowCount === 1) {
-    if(widths[widths.length - 1] === 1 && widths[widths.length - 2] === 2) {
-      spans.value.splice(widths.length - 2, 1, span1);
-    }
-  }
-
-  let slotsLeft = cols;
-  let row = 0;
-
-  for (let i = 0; i < filteredPosts.value.length; i++) {
-    const shouldBeWide = prefersWide(i, row);
-
-    if (slotsLeft === 1) {
-      spans.value.push(span1);
-      slotsLeft = 0;
-    } else if (shouldBeWide && slotsLeft >= 2) {
-      spans.value.push(span2);
-      slotsLeft -= 2;
-    } else {
-      spans.value.push(span1);
-      slotsLeft -= 1;
-    }
-
-    if(slotsLeft === 0) {
-      row += 1;
-      slotsLeft = cols;
-    }
-
-  }
-
-
 }
 
 const postsArray = computed(() => {
@@ -226,36 +203,24 @@ const filteredPosts = computed(() => {
 });
 
 
-onMounted(async () => {
+onMounted( () => {
   anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 });
   updateColumns();
-  updateSpans();
-  window.addEventListener('resize', handleResize)
+
+  ro = new ResizeObserver(() => updateColumns());
+  if (gridRef.value) ro.observe(gridRef.value);
 });
+onBeforeUnmount(() => ro?.disconnect())
 
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
 
+/*
 watch([filteredPosts, numCols], async () => {
-  if (!filteredPosts.value.length) {
-    spans.value = [];
-    return;
-  }
-
-  const widths = simulateWidths(numCols.value, null);
-
-  spans.value = widths.map(w => (w === 2 ? span2 : span1));
-
   await nextTick();
-
-  handleResize();
-}, { immediate: true, flush: 'post' });
-
-function handleResize() {
-  updateColumns();
-  updateSpans();
-}
+  ro?.disconnect();
+  for (const el of innerEls.value) if (el) ro!.observe(el);
+  measureAll()
+  }, {immediate:true, flush: 'post'});
+*/
 
 </script>
 
