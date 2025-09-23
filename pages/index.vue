@@ -1,7 +1,26 @@
+<style>
+  .timeline-img-ani {
+    transition: transform .75s ease-in-out, opacity .5s !important;
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+}
+  .vision-head {
+    height: 100vw;
+    background-size: 100%;
+    background-image: url("../public/vision-bg.png");
+  }
+</style>
 <template>
   <div>
     <Hero />
-    <img src="../public/curve_banner.png" alt="curve banner">
+    <div class="vision-head">
+      <h2>AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH</h2>
+    </div>
+
+
+<!--    <img src="../public/curve_banner.png" id="timeline-img"
+      style="width: 100%; opacity: 0; will-change: transform"
+      alt="curve banner">-->
     <Timeline />
 
     <BlockRow class="my-24 px-12">
@@ -47,10 +66,32 @@
 <script lang="ts" setup>
 import Hero from '~/components/hero.vue';
 import anime from 'animejs';
-import { onMounted } from 'vue';
+import { onMounted, nextTick } from 'vue';
 
-onMounted(() => {
+onMounted(async ()  =>  {
   anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
+  await nextTick()
+  const timelineImg = document.querySelector('#timeline-img');
+  if(!timelineImg) {
+    return;
+  }
+  await nextTick()
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+      timelineImg.style.transition = 'transform .05s';
+      timelineImg.style.transform = 'translateY(-100%)';
+      timelineImg.addEventListener('transitionend', () => {
+        setTimeout(() => {
+          requestAnimationFrame(() => timelineImg.classList.add('timeline-img-ani'));
+        }, 250)
+      }, {once:true})
+      observer.unobserve(timelineImg)
+      }
+
+    });
+  }, {threshold: .2});
+  observer.observe(timelineImg);
 });
 
 </script>

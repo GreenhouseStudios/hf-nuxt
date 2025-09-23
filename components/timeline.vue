@@ -5,6 +5,8 @@
   grid-template-columns: repeat(var(--cols, 4), 1fr);
   grid-auto-rows: var(--row-h, 75px);
   gap: var(--gap, 25px);
+  overflow-y: hidden;
+  padding-bottom: 30px;
 }
 .bento-inner {
   height: 100%;
@@ -23,7 +25,55 @@
 .transform {
   transform: translateY(150px);
 }
-
+</style>
+<style>
+.covid-card {
+  opacity: 0;
+  border-radius: calc(var(--ui-radius) * 4);
+  transition: transform 1.25s, opacity .75s;
+  transition-delay: .25s;
+  position: relative;
+}
+.covid-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
+  transition-delay: .15s;
+  transition: width .75s ease-out, transform .75s ease-out;
+  background: #0014B6 !important;
+  border-radius: calc(var(--ui-radius) * 4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 98;
+}
+.covid-inner > * {
+  text-align: center;
+  color: white;
+  margin-bottom: 0;
+  max-width: 80%;
+}
+.covid-inner > h2 {
+  font-size: xxx-large;
+  font-weight: bolder;
+}
+.covid-inner > p {
+  font-size: large
+}
+.covid-transform {
+  transform: translateY(150px);
+}
+#quote {
+  margin: 0 !important;
+}
+#text-grow, #title-grow {
+  transition: opacity .3s;
+  text-align: left;
+  padding-left: 25px;
+  align-self: start;
+}
 
 
 </style>
@@ -83,18 +133,11 @@
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import AOS from 'aos';
 import type { DropdownMenuItem } from '@nuxt/ui/dist/module'
 import { nextTick, onMounted, onUnmounted, toRaw, ref, useTemplateRef, watch, computed, onBeforeUnmount } from 'vue';
-import { chunk } from 'es-toolkit';
-import { GridStack } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css';
-import Masonry from 'masonry-layout';
-import imagesLoaded from 'imagesloaded';
 import { useStore } from '~/stores/store';
-import {resolveObjMapThunk} from "graphql/type";
 
-const gridContainer = useTemplateRef('gridContainer');
 const store = useStore();
 const { data: posts } = usePosts();
 const layoutModes = ref<DropdownMenuItem[]>([
@@ -111,37 +154,93 @@ let ro: ResizeObserver | null = null;
 
 const gap = 25;
 
-
+let layoutInProgress = false;
+let covidCardMade = false;
 async function measureAndPack(reset = false) {
+  if(layoutInProgress) return;
+  layoutInProgress = true;
   await nextTick();
 
   const grid = document.querySelector('.bento-grid') ;
   if (!grid) return;
 
-  const rowH = parseFloat(getComputedStyle(grid).getPropertyValue('--row'));
-  const cols = parseFloat(getComputedStyle(grid).getPropertyValue('--cols'));
-
   const liElements = Array.from(grid.querySelectorAll('li:not(.filler)'));
   const styles = getComputedStyle(grid);
 
-  const gapPx = styles.gap || gap;
+  if(liElements.length >= 10 && !covidCardMade) {
+    const refNode = grid.children[Math.floor(grid.children.length / 2)];
+    const covidLi = document.createElement('li');
+    const covidInner = document.createElement('div');
+    covidInner.className = 'covid-inner';
+    covidLi.appendChild(covidInner);
 
-  if(reset) {
-    liElements.forEach(el => {
-      el.style.gridColumn = 'span 1';
-      el.dataset.colspan = 1;
-      el.style.gridRowEnd = 'span 1';
-      el.dataset.rowspan = 1;
-    })
+    const covidTitleShrunk = document.createElement('h2');
+    covidTitleShrunk.textContent = 'The COVID-19 Pandemic';
+    covidTitleShrunk.id = 'title-shrunk';
+    covidTitleShrunk.style.transition = 'opacity .3s';
+
+    const covidTitleGrow = document.createElement('h2');
+    covidTitleGrow.textContent = 'The COVID-19 Pandemic';
+    covidTitleGrow.id = 'title-grow';
+    covidTitleGrow.style.opacity = '0';
+    covidTitleGrow.style.display = 'none';
+
+
+    covidInner.appendChild(covidTitleShrunk);
+    covidInner.appendChild(covidTitleGrow);
+
+    const covidTextShrunk = document.createElement('p');
+    covidTextShrunk.id = 'text-shrunk'
+    covidTextShrunk.textContent =
+        'The coronavirus disease 2019 (COVID-19) pandemic is a global outbreak of coronavirus - ' +
+        'an infectious disease caused by the severe acute respiratory syndrome...';
+    covidTextShrunk.style.transition = 'opacity .3s';
+
+    const covidTextGrow = document.createElement('p');
+    covidTextGrow.id = 'text-grow'
+    covidTextGrow.textContent =
+        'The coronavirus disease 2019 (COVID-19) pandemic is a global outbreak of coronavirus - ' +
+        'an infectious disease caused by the severe acute respiratory syndrome...';
+    covidTextGrow.style.opacity = '0';
+    covidTextGrow.style.display = 'none';
+
+    covidInner.appendChild(covidTextShrunk);
+    covidInner.appendChild(covidTextGrow);
+
+    covidLi.id = 'covid-li';
+    grid.insertBefore(covidLi, refNode);
+    covidLi.classList.add('bento-card', 'covid-card');
+    liElements.splice(Math.floor(grid.children.length / 2), 0, covidLi);
+    covidCardMade = true;
+
+    covidLi.addEventListener('pointerenter', () => requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement)))
+    setCovidSpan(covidLi, grid as HTMLElement);
   }
 
+
+  if(reset) {
+    if(covidCardMade) setCovidSpan(document.getElementById('covid-li') as HTMLElement, grid as HTMLElement)
+    liElements.forEach(el => {
+      if(el.id === 'covid-li') return;
+      el.style.gridColumn = 'span 1';
+      el.dataset.colspan = '1';
+      el.style.gridRowEnd = 'span 1';
+      el.dataset.rowspan = '1';
+      
+    })
+  }
+  await nextTick()
+
+
   liElements.forEach(el => {
+    if(el.id === 'covid-li') return;
     const c = parseInt(el.dataset.colspan || '1', 10);
-    el.style.gridColumn = `span ${Math.max(1, Math.min(cols, c))}`;
+    el.style.gridColumn = `span ${Math.max(1, Math.min(numCols.value, c))}`;
     el.dataset.colspan = c;
   })
   let totalCells = 0;
   liElements.forEach(el => {
+    if(el.id === 'covid-li') return;
     const inner = el.querySelector('.bento-inner');
     if(!inner) return;
     const c = parseInt(el.dataset.colspan || '1', 10);
@@ -169,7 +268,7 @@ async function measureAndPack(reset = false) {
 
   await growAcrossTwoEmptyRows(7);
   await growSinglesByOne(7);
-
+  await nextTick();
   totalCells = 0;
   for (const el of liElements) {
     const r = parseInt(el.dataset.rowspan || '1', 10);
@@ -177,10 +276,12 @@ async function measureAndPack(reset = false) {
     totalCells += r * c;
   }
 
+
+
   Array.from(grid.querySelectorAll('.filler')).forEach(f => f.remove());
 
-  let rows = Math.ceil(totalCells / cols);
-  let remainder = rows * cols - totalCells;
+  let rows = Math.ceil(totalCells / numCols.value);
+  let remainder = rows * numCols.value - totalCells;
 
   if (remainder > 0) {
     const lastBottom = Math.max(...liElements.map(el => el.offsetTop + el.offsetHeight));
@@ -194,20 +295,11 @@ async function measureAndPack(reset = false) {
       const addRows = Math.floor(remainder / c);
       if (addRows > 0) {
         const base = parseInt(el.dataset.rowspan || '0', 10);
-        el.style.gridRowEnd = `span ${base + addRows}`;
-        el.dataset.rowspan = base + addRows;
+        el.style.gridRowEnd = `span ${Math.min(5, base + addRows)}`;
+        el.dataset.rowspan = Math.min(5, base + addRows);
         remainder -= addRows * c;
       }
     }
-/*    if (remainder > 0) {
-      const filler = document.createElement('li');
-      filler.className = '.filler';
-      filler.style.visibility = 'hidden';
-      filler.style.pointerEvents = 'none';
-      filler.style.gridColumn = `span ${Math.min(remainder, cols)}`;
-      filler.style.gridRowEnd = 'span 1';
-      grid.appendChild(filler)
-    }*/
   }
   Array.from(document.querySelectorAll('.bento-inner')).forEach(inner => {
     const div = inner.firstElementChild;
@@ -218,9 +310,12 @@ async function measureAndPack(reset = false) {
   })
 
   await nextTick();
-  const placements = getPlacements(grid as HTMLElement);
-  const bottom = getBottomRow(grid as HTMLElement);
-  const r = [];
+  let placements;
+  if(reset) {
+    placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement))
+    reset = false;
+  }
+  else { placements = getPlacements(grid as HTMLElement) }
   for(let c = 1; c <= 5; c++) {
     let rowCount = 0;
     let prevRow = 0;
@@ -229,58 +324,247 @@ async function measureAndPack(reset = false) {
       let emptyRows = [];
       if(p.col === c || (p.colspan > 1 && (p.col === c + 1 || p.col === c - 1))) {
         rowCount += p.rowspan;
-        prevRow = p.row + p.rowspan
+        prevRow = p.row + p.rowspan;
       }
-
-
-    })
+    });
+  }
+  if(reset) {
 
   }
+  try {
+    let newPlacements = getPlacements(grid as HTMLElement);
+    let emptyGaps = gapsPerCol(newPlacements, numCols.value);
+    console.log('empty gaps: ', emptyGaps);
+    if(emptyGaps) { requestAnimationFrame(async () => {
+      console.log('measure')
+      await growSinglesByOne(7);
+      await growAcrossTwoEmptyRows(7);
+      await nextTick();
+      newPlacements = getPlacements(grid as HTMLElement);
+      await nextTick();
+      const newEmpty = gapsPerCol(newPlacements, numCols.value);
+      if(newEmpty) {
+        layoutInProgress = false;
+        await measureAndPack(true);
+      }
+    });
+  }
 
-    /*if(p.row + p.rowspan >= -1) return;
-    console.log(p.row)
+  } finally {
+    layoutInProgress = false;
+  }
 
-
-    const aboveEmptyGlobal = isVisualRowEmpty(grid as HTMLElement, 3);
-    const aboveEmptyLocal  = isRowAboveEmptyForCard(p.el as HTMLElement, grid as HTMLElement);
-    const belowEmptyLocal  = isRowBelowEmptyForCard(p.el as HTMLElement, grid as HTMLElement);
-    let log = '';
-    if(aboveEmptyGlobal) log += `above empty global ${aboveEmptyGlobal}`;
-    if(aboveEmptyLocal) log += `above empty local ${aboveEmptyLocal}`;
-    if(belowEmptyLocal) log += `below empty local ${belowEmptyLocal}`;
-    if(log !== '') {
-      console.log(p.el)
-      console.log(log)
-    }
-  })*/
-/*  console.log('bottom ' + bottom)
-  const { gaps } = gapsPerCol(placements, numCols.value);
-  gaps;*/
-
-
-  const empty = gapsPerCol(placements, numCols.value);
-  console.log(empty)
-  if(empty) { await measureAndPack(true) }
   liElements.forEach(el => {
-    el.classList.add('transform')
-  })
+    if(el.id === 'covid-li') el.classList.add('covid-transform');
+    else el.classList.add('transform');
+  });
+
   cardAnimation();
-/*  liElements.forEach(el => {
-    el.firstElementChild.setAttribute('data-aos', 'fade-up');
-    el.firstElementChild.setAttribute('data-aos-once', 'true')
-  })*/
 }
 
-function checkEmptyRows(placements: Placement[], c:number): boolean {
-  const result = gapsPerCol(placements, c);
+function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
+  if(!card || !grid) return;
+  let colWidth = Math.floor(
+      (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
+  let covidRows = Math.floor((colWidth * 1.75) / rowHeight);
 
-  let empty = false;
-  for(let r in result) {
-    if(r.length > 0) {
-      empty = true;
+  if(numCols.value > 1) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = `span ${covidRows}`;
+    card.dataset.rowspan = `${covidRows}`;
+  } else {
+    card.style.gridColumn = 'span 1';
+    card.dataset.colspan = '1';
+    covidRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
+    card.style.gridRowEnd = `span ${covidRows}`;
+    card.dataset.rowspan = `${covidRows}`;
+  }
+}
+
+function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+  const { pitchY } = getGridMetrics(grid);
+  const placements = getPlacements(grid);
+  const covidPlacement = placements.find(p => p.el === covidCard);
+  if (!covidPlacement) return;
+
+  const covidTop = covidPlacement.row;
+  const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
+  const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
+
+  const cTopPx = covidTop * pitchY;
+  const cBotPx = (covidPlacement.row + covidPlacement.rowspan) * pitchY;
+
+  // maps for stack shifts
+  const upByCol = new Map<number, number>();
+  const downByCol = new Map<number, number>();
+
+  // per-card shift (only for cards overlapping COVID rows)
+  const perCardShift = new Map<HTMLElement, number>();
+
+  // pass 1: collect overlaps and max shifts
+  for (const p of placements) {
+    if (p.el === covidCard) continue;
+
+    const pTop = p.row;
+    const pBot = p.row + p.rowspan - 1;
+
+    const overlapRows = Math.max(0, Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1);
+    const overlapPx = overlapRows * pitchY;
+
+    const colStart = p.col;
+    const colEnd = p.col + p.colspan - 1;
+
+    if (overlapRows > 0) {
+      // inside COVID rows
+      const center = pTop + (p.rowspan - 1) / 2;
+      const delta = center < covidMid ? -overlapPx : overlapPx;
+      perCardShift.set(p.el, delta);
+
+      // record per-column max for stacks
+      for (let c = colStart; c <= colEnd; c++) {
+        if (delta < 0) {
+          upByCol.set(c, Math.max(upByCol.get(c) ?? 0, overlapPx));
+        } else {
+          downByCol.set(c, Math.max(downByCol.get(c) ?? 0, overlapPx));
+        }
+      }
+    } else {
+      // no overlap — candidate for stacks
+      if (pBot < covidTop) {
+        for (let c = colStart; c <= colEnd; c++) {
+          upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
+        }
+      } else if (pTop > covidBot) {
+        for (let c = colStart; c <= colEnd; c++) {
+          downByCol.set(c, Math.max(downByCol.get(c) ?? 0, 0));
+        }
+      }
     }
   }
-  return empty;
+
+  // pass 2: apply shifts
+  for (const p of placements) {
+    if (p.el === covidCard) continue;
+
+    let deltaY = perCardShift.get(p.el) ?? 0;
+
+    if (deltaY === 0) {
+      // check stacks for non-overlapping cards
+      const pTopPx = p.row * pitchY;
+      const pBotPx = (p.row + p.rowspan) * pitchY;
+
+      let upPx = 0;
+      let downPx = 0;
+
+      for (let c = p.col; c <= p.col + p.colspan - 1; c++) {
+        const upShift = upByCol.get(c) ?? 0;
+        const downShift = downByCol.get(c) ?? 0;
+
+        if (upShift > 0 && pBotPx <= cTopPx) {
+          upPx = Math.max(upPx, upShift);
+        }
+        if (downShift > 0 && pTopPx >= cBotPx) {
+          downPx = Math.max(downPx, downShift);
+        }
+      }
+
+      if (upPx > 0 && downPx === 0) {
+        deltaY = -upPx;
+      } else if (downPx > 0 && upPx === 0) {
+        deltaY = downPx;
+      } else if (upPx > 0 && downPx > 0) {
+        // pick the stronger one (just in case)
+        deltaY = (downPx >= upPx) ? downPx : -upPx;
+      }
+    }
+
+    p.el.style.transition = "transform 0.5s ease";
+    p.el.style.transform = mergeTranslateY(p.el.style.transform || "", deltaY);
+  }
+  const inner = covidCard.querySelector('.covid-inner');
+  const innerRect = inner?.getBoundingClientRect() || null;
+  if(!inner || !innerRect) return;
+  const gridRect = grid.getBoundingClientRect();
+  const distFromLeft = innerRect.left - gridRect.left;
+  inner.style.transform = `translateX(${-distFromLeft}px)`;
+  inner.style.width = `${gridRect.width}px`;
+
+
+  const textGrow = inner.querySelector('#text-grow');
+  const textShrunk = inner.querySelector('#text-shrunk');
+  const titleGrow = inner.querySelector('#title-grow');
+  const titleShrunk = inner.querySelector('#title-shrunk');
+
+  if(!textGrow || !textShrunk || !titleGrow || !titleShrunk) return;
+
+  inner.addEventListener('transitionend', function shrink(e) {
+    if(e.propertyName !== 'width') return;
+    inner.removeEventListener('transitionend', shrink);
+    covidCard.addEventListener('pointerleave', () => requestAnimationFrame(() => {
+      inner.style.width = '100%';
+      inner.style.transform = 'none';
+
+      textGrow.style.opacity = '0';
+      titleGrow.style.opacity = '0';
+
+      inner.addEventListener('transitionend', function shrink(e) {
+        if(e.propertyName !== 'width') return;
+        inner.removeEventListener('transitionend', shrink);
+        requestAnimationFrame(() => {
+          textGrow.style.display = 'none';
+          titleGrow.style.display = 'none';
+
+          textShrunk.style.display = '';
+          titleShrunk.style.display = '';
+          void titleShrunk.offsetWidth;
+          void textShrunk.offsetWidth;
+          textShrunk.style.opacity = '1';
+          titleShrunk.style.opacity = '1';
+        })
+
+      })
+
+      const liElements = Array.from(document.querySelectorAll('.bento-card'));
+      setTimeout(() => {
+        liElements.forEach(el => {
+          if(el === covidCard || el.dataset.animated !== 'true') return;
+          el.style.transform = 'none';
+        });
+      }, 500);
+    }));
+
+  })
+
+
+  titleShrunk.style.opacity = '0';
+  textShrunk.style.opacity = '0';
+  inner.addEventListener('transitionend', function grow(e) {
+    if(e.propertyName !== 'width') return;
+    inner.removeEventListener('transitionend', grow);
+    titleShrunk.style.display = 'none';
+    textShrunk.style.display = 'none';
+    textGrow.style.display = '';
+    titleGrow.style.display = '';
+    void textGrow.offsetWidth;
+    void titleGrow.offsetWidth;
+    textGrow.style.opacity = '1';
+    titleGrow.style.opacity = '1';
+  });
+
+
+
+}
+
+function mergeTranslateY(transformStr: string, y: number) {
+  // Treat 'none' as empty
+  const safe = (transformStr || '').trim();
+  const base = (safe === 'none' ? '' : safe)
+      // remove any existing translateY
+      .replace(/translateY\([^)]*\)\s*/g, '')
+      .trim();
+
+  return (base ? `${base} ` : '') + `translateY(${y}px)`;
 }
 
 function gapsPerCol(placements: Placement[], cols:number) {
@@ -334,7 +618,8 @@ function gapsPerCol(placements: Placement[], cols:number) {
 
   }
   let empty = false;
-  for(let r = 1; r <= numCols.value; r++) {
+  for(let r = 1; r <= cols; r++) {
+    const gaps = result[r]
     if(result[r].length > 0) {
       empty = true;
       break;
@@ -381,6 +666,15 @@ function getGridMetrics(grid: HTMLElement) {
   const pitchY = rowH + gap;
   const pitchX = colW + gap;
   return { cols, rect, pitchY, pitchX };
+}
+
+function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
+  const liElements = Array.from(document.querySelectorAll('.bento-card'));
+  const saved = liElements.map(el => el.style.transform);
+  liElements.forEach(el => el.style.transform = '');
+  const out = fn();
+  liElements.forEach((el, i) => { el.style.transform = saved[i] });
+  return out;
 }
 
 function getPlacements(grid: HTMLElement): Placement[] {
@@ -448,7 +742,7 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
   await nextTick();
   const grid = document.getElementById('card-grid') as HTMLElement | null;
   if (!grid) return;
-
+  console.log('grow 2 row')
   const placements = getPlacements(grid);
 
   // process from top to bottom so upper cards consume their gaps first
@@ -501,9 +795,11 @@ function cardAnimation() {
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting) {
+        if(entry.target.id === 'covid-li') console.log('wow')
+        entry.target.dataset.animated = 'true';
         entry.target.style.transform = 'none';
         entry.target.style.opacity = '1';
-        observer.unobserve(entry.target)
+        observer.unobserve(entry.target);
       }
     })
   }, {threshold: .2});
@@ -528,7 +824,7 @@ async function growSinglesByOne(maxRowSpan = 7) {
   await nextTick();
   const grid = document.getElementById('card-grid') as HTMLElement | null;
   if (!grid) return;
-
+  console.log('grow 1')
   const placements = getPlacements(grid);
 
   // process top/bottom so upper cards fill their gap first
@@ -585,7 +881,11 @@ function updateColumns() {
   else if (width >= 1024) numCols.value = 3
   else if (width >= 640) numCols.value = 2
   else numCols.value = 1;
-  if(cols !== numCols.value) requestAnimationFrame(() => measureAndPack(true))
+  if(cols !== numCols.value)  requestAnimationFrame(async() => {
+    //console.log('colUpdate')
+    cols = numCols.value;
+    await measureAndPack(true);
+  })
   cols = numCols.value;
 }
 
@@ -618,10 +918,26 @@ const filteredPosts = computed(() => {
 });
 
 onMounted( async () => {
-  anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 });
+
   updateColumns();
   window.addEventListener('resize', () => requestAnimationFrame(updateColumns));
+
+  const timelineTitle = document.querySelector('.timeline-title');
+  if(!timelineTitle) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && timelineTitle)
+      { anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 })}
+      else observer.unobserve(timelineTitle);
+    });
+
+  });
+  observer.observe(timelineTitle);
+
+
 });
+
+
 
 
 let first = false;
@@ -631,8 +947,14 @@ watch([filteredPosts], async () => {
     requestAnimationFrame(() => measureAndPack());
     first = true;
   } else {
-    requestAnimationFrame(() => measureAndPack(true));
+    requestAnimationFrame(async() => {
+      console.log('watch');
+      await nextTick()
+      if(layoutInProgress) layoutInProgress = false;
+      await measureAndPack(true)
+    });
   }
+
 
   }, {immediate:true, flush: 'post'});
 
