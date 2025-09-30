@@ -41,7 +41,7 @@
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
   transition-delay: .15s;
   transition: width .75s ease-out, transform .75s ease-out;
-  background: #0014B6 !important;
+  background: url("../public/hf-covid-bg.png");
   border-radius: calc(var(--ui-radius) * 4);
   display: flex;
   flex-direction: column;
@@ -69,10 +69,10 @@
   margin: 0 !important;
 }
 #text-grow, #title-grow {
-  transition: opacity .3s;
-  text-align: left;
+  transition: opacity .2s;
+  text-align: center;
   padding-left: 25px;
-  align-self: start;
+  max-width: 50%;
 }
 
 
@@ -81,7 +81,7 @@
 
 
   <div class="max-w-screen mb-36 px-2 py-12 md:px-12 overflow-x-hidden">
-    <h1 class="text-blue-950 text-5xl md:text-9xl font-black timeline-title dark:text-blue-300">OUR TIMELINE</h1>
+    <h1 class="text-blue-950 text-4xl md:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
     <section>
       <Filters />
     </section>
@@ -93,6 +93,7 @@
       </div>
       <div v-else>
         <ul
+            :key="`grid-${rebuildToken}-${numCols}`"
             ref="gridEl"
             id="card-grid"
             class="bento-grid"
@@ -104,7 +105,7 @@
         >
           <li
               v-for="(post, i) in filteredPosts"
-              :key="i"
+              :key="post.id"
               :id="post.id"
               class="bento-card"
 
@@ -121,41 +122,48 @@
         </ul>
       </div>
     </section>
-
-    <!-- <section class="my-5 md:px-18 px-2">
-      <div class="grid md:grid-cols-2 grid-cols-1 mx-auto gap-8">
-        <decade-card v-for="i in 4" />
-      </div>
-    </section> -->
-
   </div>
 </template>
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import type { DropdownMenuItem } from '@nuxt/ui/dist/module'
-import { nextTick, onMounted, onUnmounted, toRaw, ref, useTemplateRef, watch, computed, onBeforeUnmount } from 'vue';
+import { nextTick, onMounted, ref, watch, computed } from 'vue';
 import 'gridstack/dist/gridstack.min.css';
 import { useStore } from '~/stores/store';
 
+/**
+ * Get post data
+ */
 const store = useStore();
 const { data: posts } = usePosts();
-const layoutModes = ref<DropdownMenuItem[]>([
-  { label: 'Flex', icon: 'i-lucide-user'},
-  { label: 'Grid', icon: 'i-lucide-user' },
-]);
-const selectedLayoutMode = ref<DropdownMenuItem>(layoutModes.value[0]);
+
+
+/**
+ * Set col/row/card values
+ */
 const numCols = ref(5);
 let cols = numCols.value;
 let rowHeight = 75;
-
-const gridRef = ref<HTMLElement | null>(null);
-let ro: ResizeObserver | null = null;
-
 const gap = 25;
-
 let layoutInProgress = false;
 let covidCardMade = false;
+
+
+/**
+ * Hard rebuild on numCol change / post watch
+ */
+const rebuildToken = ref(0);
+async function hardRebuild() {
+  layoutInProgress = false;
+  covidCardMade = false;
+  rebuildToken.value++;
+  await nextTick();
+  await measureAndPack()
+}
+
+/**
+ * Build bento grid / measure & update bento cards
+ */
 async function measureAndPack(reset = false) {
   if(layoutInProgress) return;
   layoutInProgress = true;
@@ -164,9 +172,9 @@ async function measureAndPack(reset = false) {
   const grid = document.querySelector('.bento-grid') ;
   if (!grid) return;
 
-  const liElements = Array.from(grid.querySelectorAll('li:not(.filler)'));
-  const styles = getComputedStyle(grid);
+  const liElements = Array.from(grid.querySelectorAll('li'));
 
+  // Make covid card if 10+ cards in grid & covid card not made yet
   if(liElements.length >= 10 && !covidCardMade) {
     const refNode = grid.children[Math.floor(grid.children.length / 2)];
     const covidLi = document.createElement('li');
@@ -174,6 +182,8 @@ async function measureAndPack(reset = false) {
     covidInner.className = 'covid-inner';
     covidLi.appendChild(covidInner);
 
+
+    // Create shrunk/grown title
     const covidTitleShrunk = document.createElement('h2');
     covidTitleShrunk.textContent = 'The COVID-19 Pandemic';
     covidTitleShrunk.id = 'title-shrunk';
@@ -185,10 +195,10 @@ async function measureAndPack(reset = false) {
     covidTitleGrow.style.opacity = '0';
     covidTitleGrow.style.display = 'none';
 
-
     covidInner.appendChild(covidTitleShrunk);
     covidInner.appendChild(covidTitleGrow);
 
+    // Create shrunk/grown texts
     const covidTextShrunk = document.createElement('p');
     covidTextShrunk.id = 'text-shrunk'
     covidTextShrunk.textContent =
@@ -207,6 +217,7 @@ async function measureAndPack(reset = false) {
     covidInner.appendChild(covidTextShrunk);
     covidInner.appendChild(covidTextGrow);
 
+    // Append covid card to center of list
     covidLi.id = 'covid-li';
     grid.insertBefore(covidLi, refNode);
     covidLi.classList.add('bento-card', 'covid-card');
@@ -217,7 +228,7 @@ async function measureAndPack(reset = false) {
     setCovidSpan(covidLi, grid as HTMLElement);
   }
 
-
+  // Reset cards if reset=true
   if(reset) {
     if(covidCardMade) setCovidSpan(document.getElementById('covid-li') as HTMLElement, grid as HTMLElement)
     liElements.forEach(el => {
@@ -226,29 +237,32 @@ async function measureAndPack(reset = false) {
       el.dataset.colspan = '1';
       el.style.gridRowEnd = 'span 1';
       el.dataset.rowspan = '1';
-      
     })
   }
   await nextTick()
 
-
+  // Ensure colspans are valid/normalized
   liElements.forEach(el => {
     if(el.id === 'covid-li') return;
     const c = parseInt(el.dataset.colspan || '1', 10);
     el.style.gridColumn = `span ${Math.max(1, Math.min(numCols.value, c))}`;
-    el.dataset.colspan = c;
+    el.dataset.colspan = `${c}`;
   })
+
+  // Assign rowspans with slight randomization based on column count
   let totalCells = 0;
   liElements.forEach(el => {
     if(el.id === 'covid-li') return;
+
     const inner = el.querySelector('.bento-inner');
     if(!inner) return;
+
     const c = parseInt(el.dataset.colspan || '1', 10);
-    const height = inner.getBoundingClientRect().height;
 
     const r = Math.floor(Math.random() * (6 - 3) + 3);
     el.style.gridRowEnd = `span ${r}`;
     el.dataset.rowspan = `${r}`;
+
     if(el.dataset.rowspan - 1 <= 2) {
       if(Math.random() <= .55) {
         el.style.gridColumn = `span ${c + 1}`;
@@ -260,15 +274,15 @@ async function measureAndPack(reset = false) {
         el.dataset.colspan = `${c + 1}`
       }
     }
-
     totalCells += r * c;
-
-
   });
 
+  // Fill all 'fill-able' gaps
   await growAcrossTwoEmptyRows(7);
   await growSinglesByOne(7);
   await nextTick();
+
+  // Recount total cells after filling
   totalCells = 0;
   for (const el of liElements) {
     const r = parseInt(el.dataset.rowspan || '1', 10);
@@ -276,10 +290,7 @@ async function measureAndPack(reset = false) {
     totalCells += r * c;
   }
 
-
-
-  Array.from(grid.querySelectorAll('.filler')).forEach(f => f.remove());
-
+  // Determine bottom cards & normalize rowspans (incomplete)
   let rows = Math.ceil(totalCells / numCols.value);
   let remainder = rows * numCols.value - totalCells;
 
@@ -301,6 +312,8 @@ async function measureAndPack(reset = false) {
       }
     }
   }
+
+  // Lock card inner heights to <li> heights
   Array.from(document.querySelectorAll('.bento-inner')).forEach(inner => {
     const div = inner.firstElementChild;
     if(div) {
@@ -309,64 +322,299 @@ async function measureAndPack(reset = false) {
     }
   })
 
+  // Measure placements without transforms
   await nextTick();
-  let placements;
-  if(reset) {
-    placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement))
-    reset = false;
-  }
-  else { placements = getPlacements(grid as HTMLElement) }
+  const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement))
   for(let c = 1; c <= 5; c++) {
     let rowCount = 0;
     let prevRow = 0;
     placements.forEach(p => {
       if(prevRow === 0) prevRow = p.row + p.rowspan;
-      let emptyRows = [];
       if(p.col === c || (p.colspan > 1 && (p.col === c + 1 || p.col === c - 1))) {
         rowCount += p.rowspan;
         prevRow = p.row + p.rowspan;
       }
     });
   }
-  if(reset) {
-
-  }
+  // Check empty gaps & re-try filling / reset if unable to fill all gaps
   try {
-    let newPlacements = getPlacements(grid as HTMLElement);
+    let newPlacements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
     let emptyGaps = gapsPerCol(newPlacements, numCols.value);
     console.log('empty gaps: ', emptyGaps);
     if(emptyGaps) { requestAnimationFrame(async () => {
-      console.log('measure')
       await growSinglesByOne(7);
       await growAcrossTwoEmptyRows(7);
       await nextTick();
-      newPlacements = getPlacements(grid as HTMLElement);
+      newPlacements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
       await nextTick();
       const newEmpty = gapsPerCol(newPlacements, numCols.value);
       if(newEmpty) {
-        layoutInProgress = false;
-        await measureAndPack(true);
+        await measureAndPack(true)
       }
     });
   }
 
+    // Add animations after computed grid placements valid
   } finally {
+      liElements.forEach(el => {
+        if (el.id === 'covid-li') el.classList.add('covid-transform');
+        else if (!el.dataset.animated) el.classList.add('transform');
+      });
+      cardAnimation();
     layoutInProgress = false;
   }
 
-  liElements.forEach(el => {
-    if(el.id === 'covid-li') el.classList.add('covid-transform');
-    else el.classList.add('transform');
-  });
 
-  cardAnimation();
 }
 
+
+/**
+ * Get bento grid placements
+ */
+type Placement = {
+  el: HTMLElement;
+  row: number;
+  col: number;
+  rowspan: number;
+  colspan: number;
+};
+function getPlacements(grid: HTMLElement): Placement[] {
+  // Get grid data / set epsilon to ensure accuracy / get all <li> elements
+  const { cols, rect, pitchY, pitchX } = getGridMetrics(grid);
+  const EPS = 0.1;
+  const items = Array.from(grid.querySelectorAll<HTMLElement>('li'));
+
+  // Get & return bento items col/row/position data
+  return items.map(el => {
+    const cs = getComputedStyle(el);
+    const colspan = parseInt(cs.getPropertyValue('--c')) ||
+        parseInt(el.dataset.colspan || '1', 10) || 1;
+    const rowspan = parseInt(cs.getPropertyValue('--r')) ||
+        parseInt(el.dataset.rowspan || '1', 10) || 1;
+
+    const r = el.getBoundingClientRect();
+    const relLeft = r.left - rect.left;
+    const relTop  = r.top  - rect.top;
+
+    const col = Math.max(1, Math.min(cols, Math.floor((relLeft + EPS) / pitchX) + 1));
+    const row = Math.max(1, Math.floor((relTop  + EPS) / pitchY) + 1);
+    return { el, row, col, rowspan, colspan };
+  });
+}
+
+
+/**
+ * Check for gaps in grid
+ */
+function gapsPerCol(placements: Placement[], cols:number) {
+  const result: Record<number, Array<{start:number,end:number}>> = {};
+  const bottoms = [];
+
+  // Get all cards of each column
+  for (let c = 1; c <= cols; c++) {
+    const intervals = placements
+        .filter(p => c >= p.col && c <= p.col + p.colspan - 1)
+        .map(p => ({ start: p.row, end: p.row + p.rowspan - 1 }))
+        .sort((a, b) => a.start - b.start || a.end - b.end);
+
+    // Merge overlapping intervals to get occupied blocks
+    const merged: Array<{start:number,end:number}> = [];
+    for (const iv of intervals) {
+      if (!merged.length || iv.start > merged[merged.length - 1].end + 1) {
+        merged.push({ ...iv });
+      } else {
+        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, iv.end);
+      }
+    }
+
+    // Check breaks in merged intervals (if interval start larger than previous interval end + 1)
+    const gaps: Array<{start:number,end:number}> = [];
+    let prevEnd = 0;
+    for (const iv of merged) {
+      if (iv.start > prevEnd + 1) gaps.push({ start: prevEnd + 1, end: iv.start - 1 });
+      prevEnd = iv.end;
+    }
+    let res;
+    let maxRow = 0;
+    for (const p of placements) {
+      if (c >= p.col && c <= p.col + p.colspan - 1) {
+        const endRow = p.row + p.rowspan - 1;
+        if (endRow > maxRow) maxRow = endRow;
+      }
+    }
+    res =  maxRow;
+    result[c] = gaps;
+
+  }
+  // Return true if gaps
+  for(let r = 1; r <= cols; r++) {
+    const gaps = result[r]
+    if(gaps && gaps.length > 0) return true;
+  }
+  return false;
+}
+
+
+/**
+ * Get grid data
+ */
+function getGridMetrics(grid: HTMLElement) {
+  const cs   = getComputedStyle(grid);
+  const cols = parseInt(cs.getPropertyValue('--cols')) || 1;
+  const rowH = parseFloat(cs.getPropertyValue('--row-h')) || 1;
+  const gap  = parseFloat(cs.gap) || 0;
+  const rect = grid.getBoundingClientRect();
+  const colW = (rect.width - gap * (cols - 1)) / cols;
+  const pitchY = rowH + gap;
+  const pitchX = colW + gap;
+  return { cols, rect, pitchY, pitchX };
+}
+
+
+/**
+ * Clear bento card transforms
+ */
+function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
+  const liElements = Array.from(document.querySelectorAll('.bento-card'));
+  const saved = liElements.map(el => el.style.transform);
+  liElements.forEach(el => el.style.transform = '');
+  const out = fn();
+  liElements.forEach((el, i) => { el.style.transform = saved[i] });
+  return out;
+}
+
+
+/**
+ * Check openings below/above cards
+ */
+function clearanceRowsBelow(me: Placement, placements: Placement[]): number {
+  const bandL = me.col;
+  const bandR = me.col + me.colspan - 1;
+  const startRowBelow = me.row + me.rowspan;
+  let nearestDelta: number | null = null;
+
+  for (const p of placements) {
+    if (p === me) continue;
+    const pL = p.col, pR = p.col + p.colspan - 1;
+    const overlaps = !(pL > bandR || pR < bandL);
+    if (!overlaps) continue;
+    const delta = p.row - startRowBelow;
+    if (delta >= 0 && (nearestDelta === null || delta < nearestDelta)) {
+      nearestDelta = delta;
+    }
+  }
+  return nearestDelta === null ? Number.POSITIVE_INFINITY : nearestDelta;
+}
+
+function firstBlockerBelowInBand(me: Placement, placements: Placement[]): Placement | null {
+  const bandL = me.col;
+  const bandR = me.col + me.colspan - 1;
+  const startRowBelow = me.row + me.rowspan;
+
+  let best: Placement | null = null;
+  for (const p of placements) {
+    if (p === me) continue;
+    const pL = p.col, pR = p.col + p.colspan - 1;
+    const overlaps = !(pL > bandR || pR < bandL);
+    if (!overlaps) continue;
+
+    const delta = p.row - startRowBelow;
+    if (delta >= 0 && (!best || delta < (best.row - startRowBelow))) {
+      best = p;
+    }
+  }
+  return best;
+}
+
+
+/**
+ * Grow single column cards with max row count
+ */
+async function growSinglesByOne(maxRowSpan = 7) {
+  await nextTick();
+  const grid = document.getElementById('card-grid') as HTMLElement | null;
+  if (!grid) return;
+  console.log('grow 1')
+  const placements = clearTransforms(grid, () => getPlacements(grid));
+
+  // process top/bottom so upper cards fill their gap first
+  placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
+
+  for (const me of placements) {
+    if (me.rowspan >= maxRowSpan) continue;
+    const emptyBelow = clearanceRowsBelow(me, placements);
+
+    if (emptyBelow === 1) {
+      const next = Math.min(maxRowSpan, me.rowspan + 1);
+      // write back the new span
+      me.el.style.gridRowEnd = `span ${next}`;
+      me.el.dataset.rowspan = String(next);
+      me.rowspan = next;
+    }
+  }
+}
+
+async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
+  await nextTick();
+  const grid = document.getElementById('card-grid') as HTMLElement | null;
+  if (!grid) return;
+  console.log('grow 2 row')
+  const placements = clearTransforms(grid, () => getPlacements(grid));
+
+  // process from top to bottom so upper cards consume their gaps first
+  placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
+
+  for (const me of placements) {
+    const emptyBelow = clearanceRowsBelow(me, placements);
+    if (emptyBelow !== 2) continue;
+
+    const below = firstBlockerBelowInBand(me, placements);
+    const meIs1Col = me.colspan === 1;
+    const belowIs1Col = !!below && below.colspan === 1;
+
+    // Only act if either side is 1-col
+    if (!meIs1Col && !belowIs1Col) continue;
+
+    // Grow any qualifying 1-col participants by +1, respecting max
+    const growMe = meIs1Col && me.rowspan < maxRowSpan;
+    const growBelow = belowIs1Col && below!.rowspan < maxRowSpan;
+
+    if (!growMe && !growBelow) continue;
+
+    if (growMe) {
+      const next = Math.min(maxRowSpan, me.rowspan + 1);
+      me.el.style.gridRowEnd = `span ${next}`;
+      me.el.dataset.rowspan = String(next);
+      me.rowspan = next;
+    }
+
+    if (below && growBelow) {
+      const next = Math.min(maxRowSpan, below.rowspan + 1);
+      below.el.style.gridRowEnd = `span ${next}`;
+      below.el.dataset.rowspan = String(next);
+      below.rowspan = next;
+    }
+  }
+  Array.from(grid.querySelectorAll('li')).forEach(el => {
+    const rows = parseInt(el.dataset.rowspan || '1');
+
+    if(rows > 6) {
+      const img = el.querySelector('img');
+      if(!img) return;
+      img.style.height = '50%';
+    }
+  })
+}
+
+
+/**
+ * Set covid span/columns depending on column count
+ */
 function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
   let colWidth = Math.floor(
       (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let covidRows = Math.floor((colWidth * 1.75) / rowHeight);
+  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
 
   if(numCols.value > 1) {
     card.style.gridColumn = 'span 2';
@@ -382,9 +630,13 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   }
 }
 
+
+/**
+ * Calculate cards in covid rows / move cards out of way / grow covid card
+ */
 function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const { pitchY } = getGridMetrics(grid);
-  const placements = getPlacements(grid);
+  const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
   const covidPlacement = placements.find(p => p.el === covidCard);
   if (!covidPlacement) return;
 
@@ -485,11 +737,6 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const inner = covidCard.querySelector('.covid-inner');
   const innerRect = inner?.getBoundingClientRect() || null;
   if(!inner || !innerRect) return;
-  const gridRect = grid.getBoundingClientRect();
-  const distFromLeft = innerRect.left - gridRect.left;
-  inner.style.transform = `translateX(${-distFromLeft}px)`;
-  inner.style.width = `${gridRect.width}px`;
-
 
   const textGrow = inner.querySelector('#text-grow');
   const textShrunk = inner.querySelector('#text-shrunk');
@@ -497,6 +744,18 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const titleShrunk = inner.querySelector('#title-shrunk');
 
   if(!textGrow || !textShrunk || !titleGrow || !titleShrunk) return;
+  textShrunk.style.opacity = '0';
+  titleShrunk.style.opacity = '0';
+  titleShrunk.addEventListener('transitionend', function spanInner() {
+    titleShrunk.removeEventListener('transitionend', spanInner);
+    const gridRect = grid.getBoundingClientRect();
+    const distFromLeft = innerRect.left - gridRect.left;
+    inner.style.transform = `translateX(${-distFromLeft}px)`;
+    inner.style.width = `${gridRect.width}px`;
+
+  })
+
+
 
   inner.addEventListener('transitionend', function shrink(e) {
     if(e.propertyName !== 'width') return;
@@ -528,12 +787,11 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       const liElements = Array.from(document.querySelectorAll('.bento-card'));
       setTimeout(() => {
         liElements.forEach(el => {
-          if(el === covidCard || el.dataset.animated !== 'true') return;
+          if(el === covidCard || el.dataset.animated !== 'true' || !el.dataset.animated) return;
           el.style.transform = 'none';
         });
       }, 500);
     }));
-
   })
 
 
@@ -551,11 +809,12 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     textGrow.style.opacity = '1';
     titleGrow.style.opacity = '1';
   });
-
-
-
 }
 
+
+/**
+ * Calculate translate for cards in covid row
+ */
 function mergeTranslateY(transformStr: string, y: number) {
   // Treat 'none' as empty
   const safe = (transformStr || '').trim();
@@ -567,312 +826,36 @@ function mergeTranslateY(transformStr: string, y: number) {
   return (base ? `${base} ` : '') + `translateY(${y}px)`;
 }
 
-function gapsPerCol(placements: Placement[], cols:number) {
 
-  const bottomRow = placements.reduce((m, p) => {
-    const end = p.row + p.rowspan - 1;
-    return Math.max(m, end)
-  }, 0)
-
-  const result: Record<number, Array<{start:number,end:number}>> = {};
-  const bottoms = [];
-  for (let c = 1; c <= cols; c++) {
-    const intervals = placements
-        .filter(p => c >= p.col && c <= p.col + p.colspan - 1)
-        .map(p => ({ start: p.row, end: p.row + p.rowspan - 1 }))
-        .sort((a, b) => a.start - b.start || a.end - b.end);
-
-    const merged: Array<{start:number,end:number}> = [];
-    for (const iv of intervals) {
-      if (!merged.length || iv.start > merged[merged.length - 1].end + 1) {
-        merged.push({ ...iv });
-      } else {
-        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, iv.end);
-      }
-    }
-
-    // gaps are the spaces between merged intervals, plus top/bottom edges
-    const gaps: Array<{start:number,end:number}> = [];
-    let prevEnd = 0; // row 0 (imaginary) so we detect a gap from row 1
-    for (const iv of merged) {
-      if (iv.start > prevEnd + 1) gaps.push({ start: prevEnd + 1, end: iv.start - 1 });
-      prevEnd = iv.end;
-    }
-    let res;
-    let maxRow = 0;
-    for (const p of placements) {
-      if (c >= p.col && c <= p.col + p.colspan - 1) {
-        const endRow = p.row + p.rowspan - 1;
-        if (endRow > maxRow) maxRow = endRow;
-      }
-    }
-    res =  maxRow;
-
-    for (const p of placements) {
-      if(p.col === c) {
-        bottoms.push(placements.find(p => res === p.row + p.rowspan - 1));
-        break;
-      }
-    }
-    result[c] = gaps;
-
-  }
-  let empty = false;
-  for(let r = 1; r <= cols; r++) {
-    const gaps = result[r]
-    if(result[r].length > 0) {
-      empty = true;
-      break;
-    }
-  }
-  return empty;
-}
-
-function getBottomRow(grid: HTMLElement) {
-  const placements = getPlacements(grid);
-  let maxEnd = 0;
-  placements.forEach(p => {
-    const end = p.row + p.rowspan - 1;
-    if(end > maxEnd) maxEnd = end;
-  })
-  return maxEnd;
-}
-
-function isOnBottomRow(el: HTMLElement, grid: HTMLElement) {
-  const placements = getPlacements(grid);
-  const me = placements.find(p => p.el === el);
-
-  if (!me) return false;
-  const bottomRow = getBottomRow(grid);
-  const myEnd = me.row + me.rowspan - 1;
-  return myEnd <= bottomRow - 2;
-}
-
-type Placement = {
-  el: HTMLElement;
-  row: number;
-  col: number;
-  rowspan: number;
-  colspan: number;
-};
-
-function getGridMetrics(grid: HTMLElement) {
-  const cs   = getComputedStyle(grid);
-  const cols = parseInt(cs.getPropertyValue('--cols')) || 1;
-  const rowH = parseFloat(cs.getPropertyValue('--row-h')) || 1;
-  const gap  = parseFloat(cs.gap) || 0;
-  const rect = grid.getBoundingClientRect();
-  const colW = (rect.width - gap * (cols - 1)) / cols;
-  const pitchY = rowH + gap;
-  const pitchX = colW + gap;
-  return { cols, rect, pitchY, pitchX };
-}
-
-function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
-  const liElements = Array.from(document.querySelectorAll('.bento-card'));
-  const saved = liElements.map(el => el.style.transform);
-  liElements.forEach(el => el.style.transform = '');
-  const out = fn();
-  liElements.forEach((el, i) => { el.style.transform = saved[i] });
-  return out;
-}
-
-function getPlacements(grid: HTMLElement): Placement[] {
-  const { cols, rect, pitchY, pitchX } = getGridMetrics(grid);
-  const EPS = 0.1;
-  const items = Array.from(grid.querySelectorAll<HTMLElement>('li:not(.filler)'));
-
-  return items.map(el => {
-    const cs = getComputedStyle(el);
-    const colspan = parseInt(cs.getPropertyValue('--c')) ||
-        parseInt(el.dataset.colspan || '1', 10) || 1;
-    const rowspan = parseInt(cs.getPropertyValue('--r')) ||
-        parseInt(el.dataset.rowspan || '1', 10) || 1;
-
-    const r = el.getBoundingClientRect();
-    const relLeft = r.left - rect.left;
-    const relTop  = r.top  - rect.top;
-
-    const col = Math.max(1, Math.min(cols, Math.floor((relLeft + EPS) / pitchX) + 1));
-    const row = Math.max(1, Math.floor((relTop  + EPS) / pitchY) + 1);
-    return { el, row, col, rowspan, colspan };
-  });
-}
-
-function clearanceRowsBelow(me: Placement, placements: Placement[]): number {
-  const bandL = me.col;
-  const bandR = me.col + me.colspan - 1;
-  const startRowBelow = me.row + me.rowspan;
-  let nearestDelta: number | null = null;
-
-  for (const p of placements) {
-    if (p === me) continue;
-    const pL = p.col, pR = p.col + p.colspan - 1;
-    const overlaps = !(pL > bandR || pR < bandL);
-    if (!overlaps) continue;
-    const delta = p.row - startRowBelow;
-    if (delta >= 0 && (nearestDelta === null || delta < nearestDelta)) {
-      nearestDelta = delta;
-    }
-  }
-  return nearestDelta === null ? Number.POSITIVE_INFINITY : nearestDelta;
-}
-
-function firstBlockerBelowInBand(me: Placement, placements: Placement[]): Placement | null {
-  const bandL = me.col;
-  const bandR = me.col + me.colspan - 1;
-  const startRowBelow = me.row + me.rowspan;
-
-  let best: Placement | null = null;
-  for (const p of placements) {
-    if (p === me) continue;
-    const pL = p.col, pR = p.col + p.colspan - 1;
-    const overlaps = !(pL > bandR || pR < bandL);
-    if (!overlaps) continue;
-
-    const delta = p.row - startRowBelow;
-    if (delta >= 0 && (!best || delta < (best.row - startRowBelow))) {
-      best = p;
-    }
-  }
-  return best;
-}
-
-async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
-  await nextTick();
-  const grid = document.getElementById('card-grid') as HTMLElement | null;
-  if (!grid) return;
-  console.log('grow 2 row')
-  const placements = getPlacements(grid);
-
-  // process from top to bottom so upper cards consume their gaps first
-  placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
-
-  for (const me of placements) {
-    const emptyBelow = clearanceRowsBelow(me, placements);
-    if (emptyBelow !== 2) continue;
-
-    const below = firstBlockerBelowInBand(me, placements);
-    const meIs1Col = me.colspan === 1;
-    const belowIs1Col = !!below && below.colspan === 1;
-
-    // Only act if either side is 1-col
-    if (!meIs1Col && !belowIs1Col) continue;
-
-    // Grow any qualifying 1-col participants by +1, respecting max
-    const growMe = meIs1Col && me.rowspan < maxRowSpan;
-    const growBelow = belowIs1Col && below!.rowspan < maxRowSpan;
-
-    if (!growMe && !growBelow) continue;
-
-    if (growMe) {
-      const next = Math.min(maxRowSpan, me.rowspan + 1);
-      me.el.style.gridRowEnd = `span ${next}`;
-      me.el.dataset.rowspan = String(next);
-      me.rowspan = next;
-    }
-
-    if (below && growBelow) {
-      const next = Math.min(maxRowSpan, below.rowspan + 1);
-      below.el.style.gridRowEnd = `span ${next}`;
-      below.el.dataset.rowspan = String(next);
-      below.rowspan = next;
-    }
-  }
-  Array.from(grid.querySelectorAll('li')).forEach(el => {
-    const rows = parseInt(el.dataset.rowspan || '1');
-
-    if(rows > 6) {
-      const img = el.querySelector('img');
-      if(!img) return;
-      img.style.height = '50%';
-    }
-  })
-}
-
+/**
+ * Set by-card animations
+ */
 function cardAnimation() {
   const cards = document.querySelectorAll<HTMLElement>('.bento-card');
+
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting) {
         if(entry.target.id === 'covid-li') console.log('wow')
-        entry.target.dataset.animated = 'true';
         entry.target.style.transform = 'none';
         entry.target.style.opacity = '1';
+        entry.target.dataset.animated = 'true';
         observer.unobserve(entry.target);
       }
     })
   }, {threshold: .2});
 
   cards.forEach(card => {
+    if(card.dataset.animated === 'true') return;
     card.style.opacity = '0';
     observer.observe(card);
   })
 }
 
 
-function isVisualRowEmpty(grid: HTMLElement, rowIndex: number) {
-  const placements = getPlacements(grid);
-  return !placements.some(p => {
-    const start = p.row;
-    const end   = p.row + p.rowspan - 1;
-    return rowIndex >= start && rowIndex <= end;
-  });
-}
-
-async function growSinglesByOne(maxRowSpan = 7) {
-  await nextTick();
-  const grid = document.getElementById('card-grid') as HTMLElement | null;
-  if (!grid) return;
-  console.log('grow 1')
-  const placements = getPlacements(grid);
-
-  // process top/bottom so upper cards fill their gap first
-  placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
-
-  for (const me of placements) {
-    if (me.rowspan >= maxRowSpan) continue;
-    const emptyBelow = clearanceRowsBelow(me, placements);
-
-    if (emptyBelow === 1) {
-      const next = Math.min(maxRowSpan, me.rowspan + 1);
-      // write back the new span
-      me.el.style.gridRowEnd = `span ${next}`;
-      me.el.dataset.rowspan = String(next);
-      me.rowspan = next;
-    }
-  }
-}
-
-function isAdjacentRowEmptyForCard(cardEl: HTMLElement, grid: HTMLElement, direction: -1 | 1) {
-  const placements = getPlacements(grid);
-  const me = placements.find(p => p.el === cardEl);
-  if (!me) return false;
-
-  const targetRow = direction === -1 ? me.row - 1 : me.row + me.rowspan;
-  if (targetRow < 1) return false;
-
-  const left  = me.col;
-  const right = me.col + me.colspan - 1;
-
-  const occupied = placements.some(p => {
-    if (p.el === cardEl) return false;
-    const pStart = p.row, pEnd = p.row + p.rowspan - 1;
-    if (targetRow < pStart || targetRow > pEnd) return false;
-    const pLeft = p.col, pRight = p.col + p.colspan - 1;
-    return !(pLeft > right || pRight < left);
-  });
-
-  return !occupied;
-}
-
-const isRowAboveEmptyForCard = (el: HTMLElement, grid: HTMLElement) =>
-    isAdjacentRowEmptyForCard(el, grid, -1);
-
-const isRowBelowEmptyForCard = (el: HTMLElement, grid: HTMLElement) =>
-    isAdjacentRowEmptyForCard(el, grid, +1);
-
-
+/**
+ * Update column count on resize
+ */
 function updateColumns() {
   const width = window.innerWidth;
 
@@ -881,11 +864,10 @@ function updateColumns() {
   else if (width >= 1024) numCols.value = 3
   else if (width >= 640) numCols.value = 2
   else numCols.value = 1;
-  if(cols !== numCols.value)  requestAnimationFrame(async() => {
-    //console.log('colUpdate')
+  if(cols !== numCols.value) {
     cols = numCols.value;
-    await measureAndPack(true);
-  })
+    hardRebuild();
+  }
   cols = numCols.value;
 }
 
@@ -960,9 +942,3 @@ watch([filteredPosts], async () => {
 
 
 </script>
-
-<style>
-/* #card-grid{
-  grid-template-rows: masonry;
-} */
-</style>
