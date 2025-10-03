@@ -41,6 +41,7 @@
   .call-to-action {
     position: relative;
     margin-bottom: -15%;
+    pointer-events: none;
   }
   .call-to-action img {
     display: block;
