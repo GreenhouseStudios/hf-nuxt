@@ -18,17 +18,23 @@
   max-height: 65%;
 }
 .bento-card {
-  opacity: 0;
-  transition: transform 1.25s, opacity .75s;
-  transition-delay: .25s;
+  opacity: .01;
+  transition: transform 1s, opacity .75s;
 }
 .transform {
   transform: translateY(150px);
 }
+
+.adjustForCovid {
+  --to-move: unset;
+  transition: transform .75s ease !important;
+  transform: var(--to-move) !important;
+}
+
 </style>
 <style>
 .covid-card {
-  opacity: 0;
+  opacity: .01;
   border-radius: calc(var(--ui-radius) * 4);
   transition: transform 1.25s, opacity .75s;
   transition-delay: .25s;
@@ -39,7 +45,7 @@
   width: 100%;
   height: 100%;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
-  transition-delay: .15s;
+  transition-delay: .25s;
   transition: width .75s ease-out, transform .75s ease-out;
   background: url("../public/hf-covid-bg.png");
   border-radius: calc(var(--ui-radius) * 4);
@@ -75,6 +81,31 @@
   max-width: 50%;
 }
 
+.impact-cards {
+  margin-top: 100px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.impact-cards > div {
+
+}
+.impact-inner {
+  height: 100%;
+}
+.impact-inner > div {
+  height: 100%;
+}
+.impact-inner img {
+  max-height: 65%;
+}
+.impact-card {
+  flex-basis: 49%;
+  margin: 5px;
+  height: 400px;
+  transition: transform 1s, opacity .75s;
+}
 
 </style>
 <template>
@@ -87,7 +118,7 @@
     </section>
      
     <!-- Card Layout (CSS Grid) -->
-    <section class="flex justify-around">
+    <section class="flex flex-col justify-around">
       <div v-if="filteredPosts.length === 0">
         No posts found.
       </div>
@@ -122,6 +153,67 @@
         </ul>
       </div>
     </section>
+    <div class="impact-cards">
+      <div class="impact-card">
+        <div class="impact-inner">
+          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
+            column hover:bg-lavender feature grow w-full">
+            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
+            <div class="hover:bg-lavender">
+              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
+                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
+                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="impact-card">
+        <div class="impact-inner">
+          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
+            column hover:bg-lavender feature grow w-full">
+            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
+            <div class="hover:bg-lavender">
+              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
+                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
+                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="impact-card">
+        <div class="impact-inner">
+          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
+            column hover:bg-lavender feature grow w-full">
+            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
+            <div class="hover:bg-lavender">
+              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
+                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
+                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="impact-card">
+        <div class="impact-inner">
+          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
+            column hover:bg-lavender feature grow w-full">
+            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
+            <div class="hover:bg-lavender">
+              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
+                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
+                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -223,8 +315,12 @@ async function measureAndPack(reset = false) {
     covidLi.classList.add('bento-card', 'covid-card');
     liElements.splice(Math.floor(grid.children.length / 2), 0, covidLi);
     covidCardMade = true;
-
-    covidLi.addEventListener('pointerenter', () => requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement)))
+    if(numCols.value > 2) {
+      covidLi.addEventListener('pointerenter', function grow() {
+        covidLi.removeEventListener('pointerenter', grow);
+        requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement));
+      })
+    }
     setCovidSpan(covidLi, grid as HTMLElement);
   }
 
@@ -614,13 +710,18 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
   let colWidth = Math.floor(
       (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
+  let covidRows = Math.floor((colWidth * 1.25) / rowHeight);
 
   if(numCols.value > 1) {
     card.style.gridColumn = 'span 2';
     card.dataset.colspan = '2';
     card.style.gridRowEnd = `span ${covidRows}`;
     card.dataset.rowspan = `${covidRows}`;
+  } else if(numCols.value === 2) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = 'span 2';
+    card.dataset.rowspan = '2';
   } else {
     card.style.gridColumn = 'span 1';
     card.dataset.colspan = '1';
@@ -731,8 +832,9 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       }
     }
 
-    p.el.style.transition = "transform 0.5s ease";
-    p.el.style.transform = mergeTranslateY(p.el.style.transform || "", deltaY);
+
+    p.el.style.setProperty('--to-move', mergeTranslateY(p.el.style.transform || "", deltaY));
+    p.el.classList.add('adjustForCovid');
   }
   const inner = covidCard.querySelector('.covid-inner');
   const innerRect = inner?.getBoundingClientRect() || null;
@@ -757,41 +859,54 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
 
 
-  inner.addEventListener('transitionend', function shrink(e) {
+  inner.addEventListener('transitionend', function grown(e) {
     if(e.propertyName !== 'width') return;
-    inner.removeEventListener('transitionend', shrink);
-    covidCard.addEventListener('pointerleave', () => requestAnimationFrame(() => {
-      inner.style.width = '100%';
-      inner.style.transform = 'none';
+    inner.removeEventListener('transitionend', grown);
+    covidCard.addEventListener('pointerleave', function shrink() {
+      covidCard.removeEventListener('pointerleave', shrink);
+      requestAnimationFrame(() => {
+        inner.style.width = '100%';
+        inner.style.transform = 'none';
 
-      textGrow.style.opacity = '0';
-      titleGrow.style.opacity = '0';
+        textGrow.style.opacity = '0';
+        titleGrow.style.opacity = '0';
 
-      inner.addEventListener('transitionend', function shrink(e) {
-        if(e.propertyName !== 'width') return;
-        inner.removeEventListener('transitionend', shrink);
-        requestAnimationFrame(() => {
-          textGrow.style.display = 'none';
-          titleGrow.style.display = 'none';
+        inner.addEventListener('transitionend', function shrunk(e) {
+          if(e.propertyName !== 'width') return;
+          inner.removeEventListener('transitionend', shrunk);
+          requestAnimationFrame(() => {
+            textGrow.style.display = 'none';
+            titleGrow.style.display = 'none';
 
-          textShrunk.style.display = '';
-          titleShrunk.style.display = '';
-          void titleShrunk.offsetWidth;
-          void textShrunk.offsetWidth;
-          textShrunk.style.opacity = '1';
-          titleShrunk.style.opacity = '1';
+            textShrunk.style.display = '';
+            titleShrunk.style.display = '';
+            void titleShrunk.offsetWidth;
+            void textShrunk.offsetWidth;
+            textShrunk.style.opacity = '1';
+            titleShrunk.style.opacity = '1';
+            const liElements = Array.from(document.querySelectorAll('.bento-card'));
+            let reset = false;
+            liElements.forEach(el => {
+              if(el.classList.contains('adjustForCovid')) {
+                el.classList.remove('adjustForCovid');
+                if(!reset) {
+                  reset = true;
+                  el.addEventListener('transitionend', () => {
+
+                    covidCard.addEventListener('pointerenter', function grow() {
+                      requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                    }, {once:true})
+                  })
+                }
+              }
+            });
+          })
+
         })
 
-      })
 
-      const liElements = Array.from(document.querySelectorAll('.bento-card'));
-      setTimeout(() => {
-        liElements.forEach(el => {
-          if(el === covidCard || el.dataset.animated !== 'true' || !el.dataset.animated) return;
-          el.style.transform = 'none';
-        });
-      }, 500);
-    }));
+      })
+    });
   })
 
 
