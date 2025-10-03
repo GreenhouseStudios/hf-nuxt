@@ -2,10 +2,10 @@
 
   <div class="hero-bg text-white flex flex-col relative justify-start items-start">
     <div class="hero-bg-overlay">
-      <div class="hero-bg-text md:w-7/10 my-2 mx-4 md:mx-24 z-50">
+      <div class="hero-bg-text md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
 
-        <h1 class="text-4xl md:text-7xl font-black title text-md mb-4 pt-5">CELEBRATING 100 YEARS</h1>
-        <p class="md:text-lg md:w-2/3 text-sm"> Over the past 100 years, we’ve transformed how local people and
+        <h1 class="text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl font-black title text-md mb-4 pt-5">CELEBRATING 100 YEARS</h1>
+        <p class="md:text-lg md:w-1/1 mt-9 xl:w-3/4 2xl:w-2/3 text-md"> Over the past 100 years, we’ve transformed how local people and
           organizations mobilize to drive positive change. Founded in 1925 by two Hartford bankers, we began with a
           vision: to create a community-wide charitable endowment that would accept “gifts, devises, and bequests” and
           serve as a trustworthy, steadfast, and responsive resource—forever.
@@ -15,12 +15,12 @@
       </div>
 
     </div>
-<!--    <Video />-->
+    <!--    <Video />-->
     <div class="vid-wrap">
       <video class="vid" src="../public/HF_LOGO.mp4" type="video/mp4"
-      muted
-      preload="auto"
-      playsinline
+             muted
+             preload="auto"
+             playsinline
       ></video>
     </div>
   </div>
@@ -61,11 +61,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, useTemplateRef, nextTick, onBeforeUnmount } from 'vue'
-import anime from 'animejs'
+import {   onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 
+let gsapDisabled = false;
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -73,105 +73,156 @@ let triggers: ScrollTrigger[] = [];
 
 
 onMounted(() => {
+  const overlay = document.querySelector<HTMLElement>('.hero-bg-overlay');
+  const hero    = document.querySelector<HTMLElement>('.hero-bg');
+  const vidWrap = document.querySelector<HTMLElement>('.vid-wrap');
+  const video   = document.querySelector<HTMLVideoElement>('.vid');
+
+  if (!overlay || !hero || !vidWrap) return;
 
 
+  // Keep CSS var in sync with overlay height
+  const setOverlayH = () => {
+    const h = overlay.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--overlay-h', `${h}px`);
+  };
+  setOverlayH();
+  const ro = new ResizeObserver(setOverlayH);
+  ro.observe(overlay);
+  // INITIAL STATES
+  // video hidden behind overlay to start
+  gsap.set('.hero-bg-overlay', { yPercent: 0, willChange: 'transform' });
+  gsap.set('.hero-bg-text',    { y: 0, autoAlpha: 1, willChange: 'transform,opacity' });
+  gsap.set('.vid-wrap',        { xPercent: -50, yPercent: -75 }); // starts farther “down”
+
+  // Entrance animations
   gsap.fromTo('.hero-bg-text',
-      {yPercent: -150, opacity: 0},
-      {yPercent: 0, opacity: 1, duration: .75, ease: 'power1.out', delay: .5}
-  )
+      { yPercent: -150, autoAlpha: 0 },
+      { yPercent: 0, autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.4 }
+  );
 
   gsap.fromTo('.vid-wrap',
-      {yPercent: -100, opacity: 0},
-      {yPercent: -50, opacity: 1, duration: .75, ease: 'power1.out', delay: .5}
-  )
+      { yPercent: -100, autoAlpha: 0 },
+      { yPercent: -50,  autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.5 }
+  );
 
-  gsap.from('.hero-bg-text', {
-    y: 0,
-    opacity: 1,
-    duration: 0.5,
-    scrollTrigger: {
-      trigger: '.hero-bg-text',
-      start: '300 top',
-      toggleActions: 'play none none reverse',
-    }
-  })
-
-  gsap.set('.hero-bg-overlay', {yPercent: 0, willChange: 'transform'})
-  gsap.set('.hero-bg-text', {y: 0, autoAlpha: 1, willChange: 'transform,opacity'})
-  gsap.set('.vid-wrap', {xPercent: -50, yPercent: -75, willChange: 'transform'})
-
+  // Main hero pin + motions
   const heroTl = gsap.timeline({
-    defaults: {ease: 'power1.out'},
+    defaults: { ease: 'power1.out' },
     scrollTrigger: {
-      trigger: '.hero-bg',
+      trigger: hero,
       start: 'top top',
-      end: '+=125%',
+      end: '+=150%',
       pin: true,
       scrub: true,
-      markers: true,
-      invalidateOnRefresh: true
+      markers: false,
+      invalidateOnRefresh: true,
+      anticipatePin: 1
     }
-  })
+  });
 
   heroTl
-      // overlay slides up and away
-      .to('.hero-bg-overlay', {yPercent: -100}, 0)
-      // hero text fades + moves up
-      .to('.hero-bg-text', {y: -80, autoAlpha: 0}, 0.0)
-      // vid comes from bottom to center
-      .to('.vid-wrap', {yPercent: -40}, 0.0)
+      .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
+      .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
+      .to('.vid-wrap',        { yPercent: -40   }, 0); // video toward center
 
-  triggers.push(heroTl.scrollTrigger!)
 
+  // Move vid off-screen
   const visionTl = gsap.timeline({
-    defaults: {ease: 'none'},
+    defaults: { ease: 'none' },
     scrollTrigger: {
       trigger: '.three-key-blocks',
-      start: 'top bottom',   // when vision enters viewport bottom
-      end: 'top top',        // until its top hits the top
+      start: 'top bottom',
+      end: 'top top',
       scrub: true,
       invalidateOnRefresh: true
     }
-  })
+  });
+  visionTl.to('.vid-wrap', { yPercent: -120 });
 
-  visionTl.to('.vid-wrap', {yPercent: -120})
+  triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
 
-  triggers.push(visionTl.scrollTrigger!)
-
-  const video = document.querySelector('.vid') as HTMLVideoElement | null;
+  // Start vid on scroll down
   let videoStarted = false;
   document.addEventListener('wheel', (event) => {
-    if(event.deltaY > 0 && !videoStarted && video) {
+    if (event.deltaY > 0 && !videoStarted && video) {
       videoStarted = true;
       video.loop = false;
-      video.play()
+      video.play();
     }
-  })
+  });
+
+  window.addEventListener('resize', sizeHeader);
+  sizeHeader();
 
 
-})
+  function sizeHeader() {
+    if(window.innerWidth < 740) {
+      if(!overlay) return;
+      gsapDisabled = true;
+      overlay.classList.add('hide');
+      triggers.forEach(t => t?.kill());
+    } else if(gsapDisabled) {
+      if(!overlay) return;
+      gsapDisabled = false;
+      overlay?.classList.remove('hide');
+
+      const heroTl = gsap.timeline({
+        defaults: { ease: 'power1.out' },
+        scrollTrigger: {
+          trigger: hero,
+          start: 'top top',
+          end: '+=150%',
+          pin: true,
+          scrub: true,
+          markers: false,
+          invalidateOnRefresh: true,
+          anticipatePin: 1
+        }
+      });
+
+      heroTl
+          .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
+          .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
+          .to('.vid-wrap',        { yPercent: -40   }, 0); // video toward center
+
+
+      // Move vid off-screen
+      const visionTl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: '.three-key-blocks',
+          start: 'top bottom',
+          end: 'top top',
+          scrub: true,
+          invalidateOnRefresh: true
+        }
+      });
+      visionTl.to('.vid-wrap', { yPercent: -120 });
+
+      triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
+
+    }
+  }
+
+});
+
+
 
 onBeforeUnmount(() => {
-  // clean up
-  triggers.forEach(t => t?.kill())
-  gsap.killTweensOf('.hero-bg-overlay')
-  gsap.killTweensOf('.hero-bg-text')
-  gsap.killTweensOf('.vid')
-})
+  triggers.forEach(t => t?.kill());
+  gsap.killTweensOf('.hero-bg-overlay');
+  gsap.killTweensOf('.hero-bg-text');
+  gsap.killTweensOf('.vid');
+});
 </script>
 
 <style>
 
-.vid-wrap {
-  position: fixed;
-  width: 800px;
-  height: fit-content;
-  top: 50%;
-  left: 50%;
-  z-index: 97;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
+.hero-bg-overlay.hide {
+  background: none;
 }
+
 .vid {
   width: 100%;
   height: auto;
@@ -188,21 +239,35 @@ onBeforeUnmount(() => {
   background-position: top;
   height: 100vh;
 }
+:root {
+  --overlay-h: 0px; /* set dynamically in JS */
+  --parkSpeed: .5s;
+}
 
-.hero-bg-fixed {
-  height: 100%;
-  width: 100vw;
-  position: absolute;
-  top: 50px;
-  right: 0;
-  background-image: url("../public/hf-hero-bg.svg");
-  background-repeat: no-repeat;
-  background-size: cover;
+/* Remove 'fixed' from the base .vid-wrap – we’ll toggle it with classes */
+.vid-wrap {
+  position: absolute;           /* base position inside .hero-bg */
+  width: 800px;
+  height: auto;
+  left: 50%;
+  top: 50%;                     /* base: centered in hero */
+  transform: translate(-50%, -50%);
+  z-index: 97;
+  pointer-events: none;
+}
+
+
+.vid {
+  width: 100%;
+  height: auto;
+  border-radius: 25px;
+  box-shadow: 0px 5px 17px 4px #000d2561;
+  transition: opacity .25s;
 }
 
 .hero-bg-text {
   position: sticky;
-  top: 150px;
+  top: 100px;
   opacity: 0;
 }
 
@@ -216,7 +281,7 @@ onBeforeUnmount(() => {
 }
 
 .hero-bg-overlay {
-  background-image: url("../public/hero.png");
+  background-image: url("../public/hero-curve-banner.png");
   background-size: 100% 100%;
   position: absolute;
   inset: 0;
@@ -279,9 +344,58 @@ onBeforeUnmount(() => {
   }
 }
 
-.demo {
-  /* display: inline-block; */
-  opacity: 0;
-  transform: translateY(10px);
+@media(max-width: 1150px) {
+  .info-line {
+    width: 75% !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, #3093FE 0%, #FFFFFF 100%) !important;
+    margin: auto 5px;
+  }
+  .three-key-blocks {
+    background-size: 125% 125% !important;
+  }
+  .info-container {
+    flex-direction: column;
+    padding-top: 15px;
+    height: 55% !important;
+  }
+  .info-text-block {
+    padding: 0 10px
+  }
+  .info-text-block > p {
+    margin: 10px auto 10px auto !important;
+    max-width: 80% !important;
+  }
+  .vid-wrap {
+    width: 600px !important;
+  }
+}
+
+@media(max-width: 725px) {
+  .three-key-blocks {
+    background-size: 135% 145% !important;
+  }
+  .info-container {
+    height: 65% !important;
+  }
+  .vid-wrap {
+    width: 75vw !important;
+  }
+}
+
+@media(max-width: 540px) {
+  .hero-bg-text > h1 {
+    text-align: center !important;
+  }
+  .vid-wrap {
+    top: 60% !important;
+  }
+  .info-container {
+    height: 70% !important;
+  }
+  .three-key-blocks {
+    height: 125vh !important;
+    background: linear-gradient(180deg, #131d8f 0%, #0043AA 70%, transparent 95%) !important;
+  }
 }
 </style>

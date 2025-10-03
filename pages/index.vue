@@ -96,6 +96,83 @@
     transform: translateY(-5px);
     box-shadow: 0px 7px 9px 0px #70bdff36;
   }
+  @media(max-width: 1200px) {
+    .stat-wrap {
+      padding: 3rem 1rem;
+    }
+    .stat {
+      font-size: xxx-large;
+    }
+    .cta-text-wrap {
+      top: 15%;
+      width: 70%;
+    }
+    .cta-text-wrap > span {
+      max-width: unset;
+    }
+  }
+  @media(max-width: 800px) {
+    .stat-wrap {
+      flex-wrap: wrap;
+      padding: 2rem 6rem;
+    }
+    .stat-text {
+      flex-basis: 50%;
+      margin-top: 2rem;
+    }
+    .stat-line {
+      display: none;
+    }
+    .cta-text-wrap {
+      width: 80%;
+      top: 10%;
+    }
+    .cta-text-wrap > span {
+      margin-bottom: 1rem;
+      font-size: xx-large;
+    }
+    .cta-btn {
+      padding: 5px 15px;
+    }
+
+  }
+  @media(max-width: 550px) {
+    .stat-wrap {
+      padding: 2rem 3rem;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 20px;
+    }
+    .stat-text {
+      flex-basis: auto;
+      margin: auto;
+    }
+    .stat {
+      margin-bottom: auto;
+    }
+    .stat-line {
+      width: 75%;
+      height: 2px;
+      display: block;
+    }
+    .cta-text-wrap {
+      top: 5px;
+    }
+    .cta-text-wrap > span{
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .call-to-action > img {
+      width: 100%
+    }
+    .call-to-action {
+      margin-bottom: -20%;
+    }
+    .cta-btn {
+      font-size: 12px
+    }
+  }
 
 
 </style>
@@ -141,44 +218,6 @@
 
 
     <Timeline />
-
-    <BlockRow class="my-24 px-12">
-      <Block class="text-center">
-        <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">How We Started</h1>
-        <h2 class="text-blue-950 dark:text-blue-300">“Health Council Opens Center on Hispanics,” The Hartford Courant Dec. 22, 1980</h2>
-
-        <h3 class="text-blue-950 dark:text-blue-300">1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated
-          society
-          in Hartford's North End until the Interracial Scholarship Fund gave him a chance to meet people of other
-          cultures.
-          Art school at UHart</h3>
-      </Block>
-      <VerticalDivider />
-      <Block class="text-center">
-        <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">Key Highlights</h1>
-        <h2 class="text-blue-950 dark:text-blue-300">“Health Council Opens Center on Hispanics,” The Hartford Courant Dec. 22, 1980</h2>
-
-        <h3 class="text-blue-950 dark:text-blue-300">1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated
-          society
-          in Hartford's North End until the Interracial Scholarship Fund gave him a chance to meet people of other
-          cultures.
-          Art school at UHart</h3>
-      </Block>
-      <VerticalDivider />
-      <Block class="text-center">
-        <h1 class="text-3xl font-bold text-blue-500 dark:text-blue-200">How We Started</h1>
-        <h2 class="text-blue-950 dark:text-blue-300">“Health Council Opens Center on Hispanics,” The Hartford Courant Dec. 22, 1980</h2>
-
-        <h3 class="text-blue-950 dark:text-blue-300">1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated
-          society
-          in Hartford's North End until the Interracial Scholarship Fund gave him a chance to meet people of other
-          cultures.
-          Art school at UHart</h3>
-      </Block>
-    </BlockRow>
   </div>
 </template>
 
@@ -187,7 +226,7 @@ import Hero from '~/components/hero.vue';
 import anime from 'animejs';
 import { onMounted, nextTick } from 'vue';
 import Vision from "~/components/vision.vue";
-
+import HeroParkBelow from "~/components/hero-park-below.vue";
 onMounted(async ()  =>  {
   anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
   await nextTick()

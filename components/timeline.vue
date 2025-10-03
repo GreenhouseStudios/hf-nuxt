@@ -81,7 +81,7 @@
 
 
   <div class="max-w-screen mb-36 px-2 py-12 md:px-12 overflow-x-hidden">
-    <h1 class="text-blue-950 text-4xl md:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
+    <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
     <section>
       <Filters />
     </section>

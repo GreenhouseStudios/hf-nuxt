@@ -6,7 +6,6 @@
 .head-text {
   font-weight: bold;
   position: relative;
-  font-size: xxx-large;
   color: #000A5D;
   line-height: 1;
 
@@ -23,7 +22,6 @@
   width: 15px;
 }
 .head-text > span {
-  font-size: 4rem;
   font-weight: bolder;
   text-shadow:
       0  1px 0 #000A5D,  0 -1px 0 #000A5D,
@@ -35,7 +33,6 @@
 .vision-vid-wrap {
   margin: 7rem auto;
   display: flex;
-  width: 65%;
   justify-content: space-between;
   align-items: center;
 }
@@ -79,6 +76,40 @@
 
   color: #007AFD; /* Optional styling */
 }
+
+@media(max-width: 1000px) {
+  .vision-vid-wrap {
+    flex-direction: column;
+    gap: 20px;
+    margin: 2rem auto;
+  }
+  .vision-text-wrap {
+    width: 75%;
+  }
+  #vision-bold {
+    text-shadow: none;
+  }
+  .head-text:after {
+    width: 7px;
+    left: -20px;
+  }
+}
+@media(max-width: 600px) {
+  .vision-text-wrap {
+    width: 90%;
+  }
+  .vision-vid {
+    width: 80vw;
+    height: 300px;
+  }
+}
+@media(max-width: 400px) {
+  .vision-head {
+    width: 95% !important;
+  }
+}
+
+
 </style>
 <style>
 .vision-char-ani {
@@ -97,12 +128,12 @@
 
 <template>
   <div class="vision-head">
-    <strong class="head-text">
+    <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
       THIS IS<br>
-      <span id="vision-bold">OUR VISION</span>
+      <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">OUR VISION</span>
     </strong>
   </div>
-  <div class="vision-vid-wrap">
+  <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
     <div class="vision-vid"></div>
     <div class="vision-text-wrap">
       <h3>SINCE 1925</h3>
@@ -124,15 +155,14 @@
 <script setup lang="ts">
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
-import {onMounted, onBeforeUnmount} from 'vue';
+import { onMounted } from 'vue';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const triggers: ScrollTrigger[] = [];
 
 onMounted(() => {
 
-  const visionHead = document.querySelector('.vision-head')
+  const visionHead = document.querySelector('.vision-head');
   if(!visionHead) return;
   gsap.fromTo(visionHead,
       {x: -200, opacity: 0},
@@ -152,7 +182,6 @@ onMounted(() => {
   const listEls = Array.from(document.querySelectorAll('.list-item'))
   if(listEls.length > 0) {
     listEls.forEach(el => {
-      console.log(listEls.indexOf(el))
       gsap.fromTo(el,
         {x: 100 + (listEls.indexOf(el) * 15), opacity: 0},
           {
@@ -166,8 +195,6 @@ onMounted(() => {
               start: 'top 85%',
               once: true
             }
-
-
           }
       )
     })
