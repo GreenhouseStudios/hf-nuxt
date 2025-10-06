@@ -222,6 +222,8 @@ import anime from 'animejs';
 import { nextTick, onMounted, ref, watch, computed } from 'vue';
 import 'gridstack/dist/gridstack.min.css';
 import { useStore } from '~/stores/store';
+import Card from "~/components/card.vue";
+import Filters from "~/components/filters.vue";
 
 /**
  * Get post data
@@ -256,7 +258,14 @@ async function hardRebuild() {
 /**
  * Build bento grid / measure & update bento cards
  */
+let packCount = 0;
 async function measureAndPack(reset = false) {
+  if(packCount > 5) {
+    packCount = 0;
+    await hardRebuild();
+  } else {
+    packCount++;
+  }
   if(layoutInProgress) return;
   layoutInProgress = true;
   await nextTick();
@@ -265,9 +274,36 @@ async function measureAndPack(reset = false) {
   if (!grid) return;
 
   const liElements = Array.from(grid.querySelectorAll('li'));
+  let postsFiltered = false;
+  if(filteredPosts.value.length < postsArray.value.length) {
+    postsFiltered = true;
+  }
 
-  // Make covid card if 10+ cards in grid & covid card not made yet
-  if(liElements.length >= 10 && !covidCardMade) {
+  if(numCols.value === 1) {
+    liElements.forEach(el => {
+      el.style.gridRowEnd = 'span 3';
+      el.dataset.rowspan = '3';
+      el.style.gridColumn = 'span 1';
+      el.dataset.colspan = '1';
+    })
+    cardAnimation();
+    return;
+  }
+  if(liElements.length < 10) {
+    const rem = liElements.length % numCols.value;
+    let emptyCols = rem === 0 ? 0 : numCols.value - rem;
+    liElements.forEach(el => {
+      el.style.gridRowEnd = 'span 5';
+      el.dataset.rowspan = '5';
+      el.style.gridColumn = 'span 1';
+      el.dataset.colspan = '1';
+
+    })
+    cardAnimation();
+    return;
+  }
+  // Make covid card if 15+ cards in grid & covid card not made yet
+  if(liElements.length >= 15 && !covidCardMade && !postsFiltered) {
     const refNode = grid.children[Math.floor(grid.children.length / 2)];
     const covidLi = document.createElement('li');
     const covidInner = document.createElement('div');
@@ -436,7 +472,6 @@ async function measureAndPack(reset = false) {
   try {
     let newPlacements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
     let emptyGaps = gapsPerCol(newPlacements, numCols.value);
-    console.log('empty gaps: ', emptyGaps);
     if(emptyGaps) { requestAnimationFrame(async () => {
       await growSinglesByOne(7);
       await growAcrossTwoEmptyRows(7);
@@ -630,7 +665,6 @@ async function growSinglesByOne(maxRowSpan = 7) {
   await nextTick();
   const grid = document.getElementById('card-grid') as HTMLElement | null;
   if (!grid) return;
-  console.log('grow 1')
   const placements = clearTransforms(grid, () => getPlacements(grid));
 
   // process top/bottom so upper cards fill their gap first
@@ -654,7 +688,6 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
   await nextTick();
   const grid = document.getElementById('card-grid') as HTMLElement | null;
   if (!grid) return;
-  console.log('grow 2 row')
   const placements = clearTransforms(grid, () => getPlacements(grid));
 
   // process from top to bottom so upper cards consume their gaps first
@@ -892,10 +925,12 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
                 if(!reset) {
                   reset = true;
                   el.addEventListener('transitionend', () => {
+                    setTimeout(() => {
+                      covidCard.addEventListener('pointerenter', function grow() {
+                        requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                      }, {once:true})
+                    }, 300);
 
-                    covidCard.addEventListener('pointerenter', function grow() {
-                      requestAnimationFrame(() => growCovidCard(covidCard, grid))
-                    }, {once:true})
                   })
                 }
               }
@@ -951,7 +986,7 @@ function cardAnimation() {
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting) {
-        if(entry.target.id === 'covid-li') console.log('wow')
+        if(entry.target.id === 'covid-li');
         entry.target.style.transform = 'none';
         entry.target.style.opacity = '1';
         entry.target.dataset.animated = 'true';
@@ -983,7 +1018,6 @@ function updateColumns() {
     cols = numCols.value;
     hardRebuild();
   }
-  cols = numCols.value;
 }
 
 const postsArray = computed(() => {
@@ -1040,6 +1074,7 @@ onMounted( async () => {
 let first = false;
 watch([filteredPosts], async () => {
   await nextTick();
+
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;
@@ -1048,7 +1083,7 @@ watch([filteredPosts], async () => {
       console.log('watch');
       await nextTick()
       if(layoutInProgress) layoutInProgress = false;
-      await measureAndPack(true)
+      await hardRebuild();
     });
   }
 

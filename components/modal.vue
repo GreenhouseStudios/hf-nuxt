@@ -3,7 +3,7 @@
     <div class="modal-overlay fixed top-0 left-0 w-full h-full bg-black bg-opacity-10 z-50 grid items-center "
       v-show="store.showModal" @click="store.toggleModal">
       <div
-        class="flex flex-col items-center justify-start gap-4 overflow-scroll modal w-11/12 h-screen md:w-4/5 md:h-4/5 bg-white 2xl:max-w-3/4">
+        class="flex flex-col items-center justify-start gap-4 overflow-y-scroll modal w-11/12 h-screen md:w-4/5 md:h-4/5 bg-white 2xl:max-w-3/4">
         <div class="">
           <slot />
         </div>
@@ -14,7 +14,7 @@
 
 <script lang="ts" setup>
 const { data: posts, isSuccess } = usePosts();
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
 import { useStore } from '~/stores/store';
 const store = useStore();
