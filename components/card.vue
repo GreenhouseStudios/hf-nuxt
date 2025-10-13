@@ -1,7 +1,12 @@
 <template>
 
-  <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative column hover:bg-lavender feature grow"
-    :class="containerClass" @click="handleCardClick">
+  <div class="flex flex-col shadow-md rounded-2xl relative column hover:bg-lavender feature grow"
+    :class="[
+        containerClass,
+        isQuote? 'overflow-visible' : 'overflow-hidden',
+        isQuote? 'z-50' : 'z-10'
+        ]"
+    @click="handleCardClick">
     <img v-if="(isDefault || isOther) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
       class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
@@ -65,6 +70,7 @@ const showModal = () => {
 </script>
 
 <style scoped>
+
 .feature {
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
 }

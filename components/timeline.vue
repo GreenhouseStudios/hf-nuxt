@@ -139,6 +139,7 @@
               :key="post.id"
               :id="post.id"
               class="bento-card"
+              :data-is-quote="post.cardOptions?.type === 'quote' ? '1' : '0'"
 
           >
             <div class="bento-inner">
@@ -493,6 +494,8 @@ async function measureAndPack(reset = false) {
       });
       cardAnimation();
     layoutInProgress = false;
+    const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
+    quotePopupAdjust(placements, numCols.value);
   }
 
 
@@ -1000,6 +1003,30 @@ function cardAnimation() {
     card.style.opacity = '0';
     observer.observe(card);
   })
+}
+
+function quotePopupAdjust(placements: Placement[], numCols: number) {
+  for(const p of placements) {
+    if(p.el.dataset.isQuote === '1') {
+      const icon = p.el.querySelector<HTMLElement>('.quote-icon');
+      if(!icon) return;
+      const onRight = (p.col + p.colspan - 1) === numCols;
+      if(onRight) {
+        icon.style.setProperty('--qi-origin', 'bottom right');
+        icon.style.setProperty('--qi-tail-angle', '225deg');
+        icon.style.setProperty('--qi-left', 'auto');
+        icon.style.setProperty('--qi-right', '0');
+        icon.style.setProperty('--qi-border-radius', '15px 15px 0 15px');
+      } else {
+        icon.style.setProperty('--qi-origin', 'bottom left');
+        icon.style.setProperty('--qi-tail-angle', '135deg');
+        icon.style.setProperty('--qi-left', '0');
+        icon.style.setProperty('--qi-right', '0');
+        icon.style.setProperty('--qi-border-radius', '15px 15px 15px 0');
+      }
+    }
+
+  }
 }
 
 
