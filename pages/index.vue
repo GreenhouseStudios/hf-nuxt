@@ -179,13 +179,8 @@
 </style>
 <template>
   <div>
-    <HeroAniBg
-      v-if="route.query.hero === 'ani'"
-    />
-    <Hero v-if="route.query.hero !== 'ani' && route.query.hero !== 'park'" />
-    <HeroParkBelow
-      v-if="route.query.hero === 'park'"
-    />
+    <Hero />
+
     <Vision />
 
     <div class="stat-wrap">
@@ -233,11 +228,8 @@ import Hero from '~/components/hero.vue';
 import anime from 'animejs';
 import { onMounted, nextTick } from 'vue';
 import Vision from "~/components/vision.vue";
-import HeroParkBelow from "~/components/hero-park-below.vue";
-import HeroAniBg from "~/components/hero-ani-bg.vue";
-import {useRoute} from '#app';
+import Timeline from "~/components/timeline.vue";
 
-const route = useRoute()
 
 onMounted(async ()  =>  {
   anime({ targets: '.text-center', opacity: [0,1], duration: 700 });

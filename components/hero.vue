@@ -1,6 +1,13 @@
 <template>
 
-  <div class="hero-bg text-white flex flex-col relative justify-start items-start">
+  <div class="hero-bg-vid text-white flex flex-col relative justify-start items-start">
+    <div class="vid-wrap-bg">
+      <video class="vid-bg" src="../public/HF_LOGO.mp4" type="video/mp4"
+             muted
+             preload="auto"
+             playsinline
+      ></video>
+    </div>
     <div class="hero-bg-overlay">
       <div class="hero-bg-text md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
 
@@ -16,13 +23,6 @@
 
     </div>
     <!--    <Video />-->
-    <div class="vid-wrap">
-      <video class="vid" src="../public/HF_LOGO.mp4" type="video/mp4"
-             muted
-             preload="auto"
-             playsinline
-      ></video>
-    </div>
   </div>
   <div class="three-key-blocks">
     <div class="info-container">
@@ -74,9 +74,9 @@ let triggers: ScrollTrigger[] = [];
 
 onMounted(() => {
   const overlay = document.querySelector<HTMLElement>('.hero-bg-overlay');
-  const hero    = document.querySelector<HTMLElement>('.hero-bg');
-  const vidWrap = document.querySelector<HTMLElement>('.vid-wrap');
-  const video   = document.querySelector<HTMLVideoElement>('.vid');
+  const hero    = document.querySelector<HTMLElement>('.hero-bg-vid');
+  const vidWrap = document.querySelector<HTMLElement>('.vid-wrap-bg');
+  const video   = document.querySelector<HTMLVideoElement>('.vid-bg');
 
   if (!overlay || !hero || !vidWrap) return;
 
@@ -93,7 +93,6 @@ onMounted(() => {
   // video hidden behind overlay to start
   gsap.set('.hero-bg-overlay', { yPercent: 0, willChange: 'transform' });
   gsap.set('.hero-bg-text',    { y: 0, autoAlpha: 1, willChange: 'transform,opacity' });
-  gsap.set('.vid-wrap',        { xPercent: -50, yPercent: -75 }); // starts farther “down”
 
   // Entrance animations
   gsap.fromTo('.hero-bg-text',
@@ -101,10 +100,6 @@ onMounted(() => {
       { yPercent: 0, autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.4 }
   );
 
-  gsap.fromTo('.vid-wrap',
-      { yPercent: -100, autoAlpha: 0 },
-      { yPercent: -50,  autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.5 }
-  );
 
   // Main hero pin + motions
   const heroTl = gsap.timeline({
@@ -124,7 +119,6 @@ onMounted(() => {
   heroTl
       .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
       .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
-      .to('.vid-wrap',        { yPercent: -40   }, 0); // video toward center
 
 
   // Move vid off-screen
@@ -138,7 +132,6 @@ onMounted(() => {
       invalidateOnRefresh: true
     }
   });
-  visionTl.to('.vid-wrap', { yPercent: -120 });
 
   triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
 
@@ -184,7 +177,6 @@ onMounted(() => {
       heroTl
           .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
           .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
-          .to('.vid-wrap',        { yPercent: -40   }, 0); // video toward center
 
 
       // Move vid off-screen
@@ -198,7 +190,6 @@ onMounted(() => {
           invalidateOnRefresh: true
         }
       });
-      visionTl.to('.vid-wrap', { yPercent: -120 });
 
       triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
 
@@ -213,7 +204,6 @@ onBeforeUnmount(() => {
   triggers.forEach(t => t?.kill());
   gsap.killTweensOf('.hero-bg-overlay');
   gsap.killTweensOf('.hero-bg-text');
-  gsap.killTweensOf('.vid');
 });
 </script>
 
@@ -223,17 +213,16 @@ onBeforeUnmount(() => {
   background: none;
 }
 
-.vid {
+.vid-bg {
   width: 100%;
-  height: auto;
-  border-radius: 25px;
+  height: 100%;
   position: relative;
   box-shadow: 0px 5px 17px 4px #000d2561;
   transition: opacity .25s;
 }
-.hero-bg {
+.hero-bg-vid {
   position: relative;
-  background-image: url("../public/hf-hero-bg-light.svg");
+  background: none;
   background-repeat: no-repeat;
   background-size: cover;
   background-position: top;
@@ -245,24 +234,15 @@ onBeforeUnmount(() => {
 }
 
 /* Remove 'fixed' from the base .vid-wrap – we’ll toggle it with classes */
-.vid-wrap {
+.vid-wrap-bg {
   position: absolute;           /* base position inside .hero-bg */
-  width: 800px;
-  height: auto;
+  width: 100%;
+  height: 100%;
   left: 50%;
   top: 50%;                     /* base: centered in hero */
   transform: translate(-50%, -50%);
   z-index: 97;
   pointer-events: none;
-}
-
-
-.vid {
-  width: 100%;
-  height: auto;
-  border-radius: 25px;
-  box-shadow: 0px 5px 17px 4px #000d2561;
-  transition: opacity .25s;
 }
 
 .hero-bg-text {

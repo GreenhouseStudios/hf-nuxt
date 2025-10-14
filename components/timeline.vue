@@ -30,9 +30,6 @@
   transition: transform .75s ease !important;
   transform: var(--to-move) !important;
 }
-
-</style>
-<style>
 .covid-card {
   opacity: .01;
   border-radius: calc(var(--ui-radius) * 4);
@@ -51,61 +48,29 @@
   border-radius: calc(var(--ui-radius) * 4);
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   z-index: 98;
 }
+
+.covid-inner > div {
+  box-shadow: none;
+}
+
 .covid-inner > * {
   text-align: center;
   color: white;
   margin-bottom: 0;
   max-width: 80%;
 }
-.covid-inner > h2 {
-  font-size: xxx-large;
-  font-weight: bolder;
-}
-.covid-inner > p {
-  font-size: large
-}
 .covid-transform {
   transform: translateY(150px);
 }
-#quote {
-  margin: 0 !important;
-}
-#text-grow, #title-grow {
-  transition: opacity .2s;
-  text-align: center;
-  padding-left: 25px;
-  max-width: 50%;
-}
 
-.impact-cards {
-  margin-top: 100px;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-.impact-cards > div {
+</style>
+<style>
 
-}
-.impact-inner {
-  height: 100%;
-}
-.impact-inner > div {
-  height: 100%;
-}
-.impact-inner img {
-  max-height: 65%;
-}
-.impact-card {
-  flex-basis: 49%;
-  margin: 5px;
-  height: 400px;
-  transition: transform 1s, opacity .75s;
-}
+
 
 </style>
 <template>
@@ -137,12 +102,15 @@
           <li
               v-for="(post, i) in filteredPosts"
               :key="post.id"
-              :id="post.id"
-              class="bento-card"
+              :id="post.cardOptions?.type === 'covid' ? 'covid-li' : post.id"
+              :class="['bento-card', { 'covid-card shadow-md': post.cardOptions?.type === 'covid' }]"
               :data-is-quote="post.cardOptions?.type === 'quote' ? '1' : '0'"
+              :data-is-covid="post?.cardOptions?.type === 'covid' ? '1' : '0'"
 
           >
-            <div class="bento-inner">
+            <div
+            :class="post.cardOptions?.type === 'covid' ? 'covid-inner' : 'bento-inner'"
+            >
               <Card
                   :post="post"
                   :x-multiplier="1"
@@ -154,67 +122,6 @@
         </ul>
       </div>
     </section>
-    <div class="impact-cards">
-      <div class="impact-card">
-        <div class="impact-inner">
-          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
-            column hover:bg-lavender feature grow w-full">
-            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
-            <div class="hover:bg-lavender">
-              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
-                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
-                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="impact-card">
-        <div class="impact-inner">
-          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
-            column hover:bg-lavender feature grow w-full">
-            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
-            <div class="hover:bg-lavender">
-              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
-                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
-                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="impact-card">
-        <div class="impact-inner">
-          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
-            column hover:bg-lavender feature grow w-full">
-            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
-            <div class="hover:bg-lavender">
-              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
-                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
-                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="impact-card">
-        <div class="impact-inner">
-          <div class="flex flex-col overflow-hidden shadow-md rounded-2xl relative
-            column hover:bg-lavender feature grow w-full">
-            <img alt="placeholder" src="https://leamh.org/hartford_foundation/wp-content/uploads/2025/05/placeholder.gif" class="min-h-24 grow object-cover shrink">
-            <div class="hover:bg-lavender">
-              <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
-                <p class="text-xl md:text-2xl font-black">The Foundation's Grants Of The 1960s</p>
-                <p class="font-light text-sm h-full line-clamp-3 overflow-hidden">Subheading Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -241,7 +148,7 @@ let cols = numCols.value;
 let rowHeight = 75;
 const gap = 25;
 let layoutInProgress = false;
-let covidCardMade = false;
+let covidCardGrow = false;
 
 
 /**
@@ -250,7 +157,7 @@ let covidCardMade = false;
 const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
-  covidCardMade = false;
+  covidCardGrow = false;
   rebuildToken.value++;
   await nextTick();
   await measureAndPack()
@@ -292,66 +199,21 @@ async function measureAndPack(reset = false) {
   }
   if(liElements.length < 10) {
     const rem = liElements.length % numCols.value;
-    let emptyCols = rem === 0 ? 0 : numCols.value - rem;
     liElements.forEach(el => {
       el.style.gridRowEnd = 'span 5';
       el.dataset.rowspan = '5';
       el.style.gridColumn = 'span 1';
       el.dataset.colspan = '1';
-
     })
     cardAnimation();
     return;
   }
   // Make covid card if 15+ cards in grid & covid card not made yet
-  if(liElements.length >= 15 && !covidCardMade && !postsFiltered) {
-    const refNode = grid.children[Math.floor(grid.children.length / 2)];
-    const covidLi = document.createElement('li');
-    const covidInner = document.createElement('div');
-    covidInner.className = 'covid-inner';
-    covidLi.appendChild(covidInner);
+  if(liElements.length >= 15 && !covidCardGrow && !postsFiltered) {
+    const covidLi = liElements.find(el => el.id === 'covid-li') ?? null;
+    if(!covidLi) return;
+    covidCardGrow = true;
 
-
-    // Create shrunk/grown title
-    const covidTitleShrunk = document.createElement('h2');
-    covidTitleShrunk.textContent = 'The COVID-19 Pandemic';
-    covidTitleShrunk.id = 'title-shrunk';
-    covidTitleShrunk.style.transition = 'opacity .3s';
-
-    const covidTitleGrow = document.createElement('h2');
-    covidTitleGrow.textContent = 'The COVID-19 Pandemic';
-    covidTitleGrow.id = 'title-grow';
-    covidTitleGrow.style.opacity = '0';
-    covidTitleGrow.style.display = 'none';
-
-    covidInner.appendChild(covidTitleShrunk);
-    covidInner.appendChild(covidTitleGrow);
-
-    // Create shrunk/grown texts
-    const covidTextShrunk = document.createElement('p');
-    covidTextShrunk.id = 'text-shrunk'
-    covidTextShrunk.textContent =
-        'The coronavirus disease 2019 (COVID-19) pandemic is a global outbreak of coronavirus - ' +
-        'an infectious disease caused by the severe acute respiratory syndrome...';
-    covidTextShrunk.style.transition = 'opacity .3s';
-
-    const covidTextGrow = document.createElement('p');
-    covidTextGrow.id = 'text-grow'
-    covidTextGrow.textContent =
-        'The coronavirus disease 2019 (COVID-19) pandemic is a global outbreak of coronavirus - ' +
-        'an infectious disease caused by the severe acute respiratory syndrome...';
-    covidTextGrow.style.opacity = '0';
-    covidTextGrow.style.display = 'none';
-
-    covidInner.appendChild(covidTextShrunk);
-    covidInner.appendChild(covidTextGrow);
-
-    // Append covid card to center of list
-    covidLi.id = 'covid-li';
-    grid.insertBefore(covidLi, refNode);
-    covidLi.classList.add('bento-card', 'covid-card');
-    liElements.splice(Math.floor(grid.children.length / 2), 0, covidLi);
-    covidCardMade = true;
     if(numCols.value > 2) {
       covidLi.addEventListener('pointerenter', function grow() {
         covidLi.removeEventListener('pointerenter', grow);
@@ -363,13 +225,14 @@ async function measureAndPack(reset = false) {
 
   // Reset cards if reset=true
   if(reset) {
-    if(covidCardMade) setCovidSpan(document.getElementById('covid-li') as HTMLElement, grid as HTMLElement)
     liElements.forEach(el => {
-      if(el.id === 'covid-li') return;
-      el.style.gridColumn = 'span 1';
-      el.dataset.colspan = '1';
-      el.style.gridRowEnd = 'span 1';
-      el.dataset.rowspan = '1';
+      if(el.id === 'covid-li') { setCovidSpan(el as HTMLElement, grid as HTMLElement) }
+      else {
+        el.style.gridColumn = 'span 1';
+        el.dataset.colspan = '1';
+        el.style.gridRowEnd = 'span 1';
+        el.dataset.rowspan = '1';
+      }
     })
   }
   await nextTick()
@@ -396,7 +259,7 @@ async function measureAndPack(reset = false) {
     el.style.gridRowEnd = `span ${r}`;
     el.dataset.rowspan = `${r}`;
 
-    if(el.dataset.rowspan - 1 <= 2) {
+    if(parseInt(el.dataset.rowspan) - 1 <= 2) {
       if(Math.random() <= .55) {
         el.style.gridColumn = `span ${c + 1}`;
         el.dataset.colspan = `${c + 1}`
@@ -440,15 +303,15 @@ async function measureAndPack(reset = false) {
       if (addRows > 0) {
         const base = parseInt(el.dataset.rowspan || '0', 10);
         el.style.gridRowEnd = `span ${Math.min(5, base + addRows)}`;
-        el.dataset.rowspan = Math.min(5, base + addRows);
+        el.dataset.rowspan = String(Math.min(5, base + addRows));
         remainder -= addRows * c;
       }
     }
   }
 
   // Lock card inner heights to <li> heights
-  Array.from(document.querySelectorAll('.bento-inner')).forEach(inner => {
-    const div = inner.firstElementChild;
+  Array.from(document.querySelectorAll<HTMLElement>('.bento-inner')).forEach(inner => {
+    const div = <HTMLElement>inner.firstElementChild;
     if(div) {
       div.style.height = `${inner.offsetHeight}px`;
       div.style.minHeight=  `${inner.offsetHeight}px`;
@@ -491,11 +354,17 @@ async function measureAndPack(reset = false) {
       liElements.forEach(el => {
         if (el.id === 'covid-li') el.classList.add('covid-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
+
+        if(el.dataset.isCovid === '1') {
+          console.log(el)
+        }
+
       });
       cardAnimation();
     layoutInProgress = false;
     const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
     quotePopupAdjust(placements, numCols.value);
+
   }
 
 
@@ -542,7 +411,6 @@ function getPlacements(grid: HTMLElement): Placement[] {
  */
 function gapsPerCol(placements: Placement[], cols:number) {
   const result: Record<number, Array<{start:number,end:number}>> = {};
-  const bottoms = [];
 
   // Get all cards of each column
   for (let c = 1; c <= cols; c++) {
@@ -609,7 +477,7 @@ function getGridMetrics(grid: HTMLElement) {
  * Clear bento card transforms
  */
 function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
-  const liElements = Array.from(document.querySelectorAll('.bento-card'));
+  const liElements = Array.from(document.querySelectorAll<HTMLElement>('.bento-card'));
   const saved = liElements.map(el => el.style.transform);
   liElements.forEach(el => el.style.transform = '');
   const out = fn();
@@ -872,17 +740,14 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     p.el.style.setProperty('--to-move', mergeTranslateY(p.el.style.transform || "", deltaY));
     p.el.classList.add('adjustForCovid');
   }
-  const inner = covidCard.querySelector('.covid-inner');
+  const inner = <HTMLElement>covidCard.querySelector('.covid-inner');
   const innerRect = inner?.getBoundingClientRect() || null;
   if(!inner || !innerRect) return;
 
-  const textGrow = inner.querySelector('#text-grow');
-  const textShrunk = inner.querySelector('#text-shrunk');
-  const titleGrow = inner.querySelector('#title-grow');
-  const titleShrunk = inner.querySelector('#title-shrunk');
+  const textGrow = <HTMLElement>inner.querySelector('#text-grow');
+  const titleShrunk = <HTMLElement>inner.querySelector('#title-shrunk');
 
-  if(!textGrow || !textShrunk || !titleGrow || !titleShrunk) return;
-  textShrunk.style.opacity = '0';
+  if(!textGrow || !titleShrunk) return;
   titleShrunk.style.opacity = '0';
   titleShrunk.addEventListener('transitionend', function spanInner() {
     titleShrunk.removeEventListener('transitionend', spanInner);
@@ -905,20 +770,15 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
         inner.style.transform = 'none';
 
         textGrow.style.opacity = '0';
-        titleGrow.style.opacity = '0';
 
         inner.addEventListener('transitionend', function shrunk(e) {
           if(e.propertyName !== 'width') return;
           inner.removeEventListener('transitionend', shrunk);
           requestAnimationFrame(() => {
             textGrow.style.display = 'none';
-            titleGrow.style.display = 'none';
 
-            textShrunk.style.display = '';
             titleShrunk.style.display = '';
             void titleShrunk.offsetWidth;
-            void textShrunk.offsetWidth;
-            textShrunk.style.opacity = '1';
             titleShrunk.style.opacity = '1';
             const liElements = Array.from(document.querySelectorAll('.bento-card'));
             let reset = false;
@@ -949,18 +809,13 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
 
   titleShrunk.style.opacity = '0';
-  textShrunk.style.opacity = '0';
   inner.addEventListener('transitionend', function grow(e) {
     if(e.propertyName !== 'width') return;
     inner.removeEventListener('transitionend', grow);
     titleShrunk.style.display = 'none';
-    textShrunk.style.display = 'none';
     textGrow.style.display = '';
-    titleGrow.style.display = '';
     void textGrow.offsetWidth;
-    void titleGrow.offsetWidth;
     textGrow.style.opacity = '1';
-    titleGrow.style.opacity = '1';
   });
 }
 
@@ -989,10 +844,10 @@ function cardAnimation() {
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting) {
-        if(entry.target.id === 'covid-li');
-        entry.target.style.transform = 'none';
-        entry.target.style.opacity = '1';
-        entry.target.dataset.animated = 'true';
+        const card = <HTMLElement> entry.target;
+        card.style.transform = 'none';
+        card.style.opacity = '1';
+        card.dataset.animated = 'true';
         observer.unobserve(entry.target);
       }
     })
@@ -1050,8 +905,8 @@ function updateColumns() {
 const postsArray = computed(() => {
   if (Array.isArray(posts.value)) {
     return posts.value.slice().sort((a: Post, b: Post) => {
-      const yearA = a.cardOptions?.year || 0;
-      const yearB = b.cardOptions?.year || 0;
+      const yearA: number = parseInt(a.cardOptions?.year) || 0;
+      const yearB: number = parseInt(b.cardOptions?.year) || 0;
       return yearB - yearA;
     });
   }

@@ -79,16 +79,15 @@ function primeDissolved(el: HTMLElement) {
     const angle = Math.random() * 2 * Math.PI;
     const radius = 8 + Math.random() * 18;
     const dx = Math.cos(angle) * radius;
-    const dy = -1 * (4 + Math.random() * 22) + Math.sin(angle) * 6;
+    const dy = -1 * (1 + Math.random() * 3) + Math.sin(angle) * 2;
     const rot = (Math.random() * 12 - 6);
-    anime.set(c, {
-      translateX: dx,
-      translateY: dy,
-      rotate: rot,
-      scale: 0.98 + Math.random() * 0.04,
-      opacity: 0,
-      filter: 'blur(4px)',
-    });
+    /*    anime.set(c, {
+          translateX: dx,
+          translateY: dy,
+          rotate: rot,
+          scale: 0.98 + Math.random() * 0.04,
+          opacity: 0,
+        });*/
   });
 }
 
@@ -98,33 +97,42 @@ function primeJumbled(el: HTMLElement) {
   chars.forEach((c) => {
     const angle = Math.random() * 2 * Math.PI;
     const radius = 8 + Math.random() * 18;
-    const dx = Math.cos(angle) * radius;
-    const dy = -1 * (8 + Math.random() * 22) + Math.sin(angle) * 6;
+    const dx = Math.cos(angle) * radius * .1;
+    const dy = (2 + Math.random() * 5) + Math.sin(angle) * 6;
     const rot = (Math.random() * 12 - 6);
-    anime.set(c, {
-      translateX: dx,
-      translateY: dy,
-      rotate: rot,
-      scale: 1,
-      opacity: 1,
-      filter: 'blur(2px)',
-    });
+    // anime.set(c, {
+    //   translateX: dx,
+    //   translateY: () => {
+    //     let neg = Math.random() < .5 ? -1 : 1;
+    //     return neg * dy;
+    //   },
+    //   rotate: rot,
+    //   scale: 1,
+    //   opacity: 1
+    // });
   });
 }
 
 function dissolveOut(el: HTMLElement) {
   const chars = el.querySelectorAll<HTMLElement>('.char');
   killTweens(el);
+  const maxX = 50;
   return anime({
     targets: chars,
-    translateX: () => (Math.random() * 60 - 30),
-    translateY: () => (-40 - Math.random() * 60),
-    rotate:     () => (Math.random() * 40 - 20),
-    opacity:    0,
-    filter:     ['blur(2px)', 'blur(8px)'],
-    easing: 'easeOutSine',
-    duration: 1000,
-    delay: anime.stagger(12, { from: 'center' }),
+    translateX: (_el: HTMLElement, i: number, l: number) => {
+      const mid = (l - 1) / 2;
+      const dir = i <= mid ? -1 : 1;
+      const norm = Math.abs(i - mid) / mid;
+      return dir * norm * maxX;
+    },
+    translateY: () => {
+      let neg = Math.random() < .5 ? -1 : 1;
+      return neg * (-3 - Math.random() * 15);
+    },
+    rotate: () => (Math.random() * 40 - 20),
+    opacity: 0,
+    easing: 'easeOutQuad',
+    duration: 550,
   }).finished;
 }
 
@@ -138,7 +146,6 @@ function assembleIn(el: HTMLElement) {
     rotate: 0,
     scale: 1,
     opacity: 1,
-    filter: ['blur(4px)', 'blur(0px)'],
     easing: 'cubicBezier(.22,.61,.36,1)',
     duration: 800,
     delay: anime.stagger(10, { from: 'center' }),
@@ -149,7 +156,6 @@ function fadeLinkIn(el: HTMLElement) {
   return anime({
     targets: el,
     opacity: 1,
-    filter: ['blur(4px)', 'blur(0px)'],
     easing: 'cubicBezier(.22,.61,.36,1)',
     duration: 800,
   }).finished
@@ -159,7 +165,6 @@ function fadeLinkOut(el: HTMLElement) {
   return anime({
     targets: el,
     opacity: 0,
-    filter: ['blur(0px)', 'blur(4px)'],
     easing: "easeOutQuad",
     duration: 1000
   }).finished;
@@ -168,11 +173,9 @@ function fadeLinkOut(el: HTMLElement) {
 function cleanupAssembled(el: HTMLElement) {
   if(!el || !el.isConnected) return;
   el.style.opacity = '1';
-  el.style.filter = 'none';
   el.querySelectorAll<HTMLElement>('.char').forEach(c => {
     c.style.transform = '';
     c.style.opacity = '';
-    c.style.filter = '';
   });
 }
 
@@ -182,12 +185,12 @@ function shimmer(el: HTMLElement) {
   anime({
     targets: chars,
     translateY: [
-      { value: -1, duration: 120, easing: 'easeOutSine' },
-      { value: 0,  duration: 180, easing: 'easeInSine' }
+      { value: -1, duration: 320, easing: 'easeOutSine' },
+      { value: 0,  duration: 350, easing: 'easeInSine' }
     ],
     opacity: [
-      { value: 0.96, duration: 120, easing: 'linear' },
-      { value: 1.00, duration: 180, easing: 'linear' }
+      { value: 0.96, duration: 320, easing: 'linear' },
+      { value: 1.00, duration: 350, easing: 'linear' }
     ],
     delay: anime.stagger(8, { from: 'center' })
   })
@@ -303,8 +306,10 @@ onMounted(() => {
 /* Keep the actual space glyph width; allow wrapping between spans */
 .char {
   display: inline-block;
-  white-space: pre;         /* don't collapse the non-breaking space */
-  vertical-align: baseline; /* avoid baseline drift after transforms */
+  white-space: pre;
+  vertical-align: baseline;
+  will-change: filter, transform, opacity;
+  transition: transform .25s;
 }
 
 /* (Optional) if you want the entire line to wrap naturally even with spans */
