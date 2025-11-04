@@ -50,7 +50,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 98;
+  z-index: 97;
 }
 
 .covid-inner > div {
@@ -103,7 +103,8 @@
               v-for="(post, i) in filteredPosts"
               :key="post.id"
               :id="post.cardOptions?.type === 'covid' ? 'covid-li' : post.id"
-              :class="['bento-card', { 'covid-card shadow-md': post.cardOptions?.type === 'covid' }]"
+              :class="['bento-card', { 'covid-card shadow-md': post.cardOptions?.type === 'covid' }, { 'quote-card': post.cardOptions.type === 'quote' }]"
+
               :data-is-quote="post.cardOptions?.type === 'quote' ? '1' : '0'"
               :data-is-covid="post?.cardOptions?.type === 'covid' ? '1' : '0'"
 
@@ -227,13 +228,14 @@ async function measureAndPack(reset = false) {
   if(reset) {
     liElements.forEach(el => {
       if(el.id === 'covid-li') { setCovidSpan(el as HTMLElement, grid as HTMLElement) }
+      else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, grid as HTMLElement) }
       else {
         el.style.gridColumn = 'span 1';
         el.dataset.colspan = '1';
         el.style.gridRowEnd = 'span 1';
         el.dataset.rowspan = '1';
       }
-    })
+    });
   }
   await nextTick()
 
@@ -245,10 +247,16 @@ async function measureAndPack(reset = false) {
     el.dataset.colspan = `${c}`;
   })
 
+  liElements.forEach(el => {
+    if (el.dataset.isQuote === '1') {
+      setQuoteSpan(el as HTMLElement, grid as HTMLElement);
+    }
+  });
+
   // Assign rowspans with slight randomization based on column count
   let totalCells = 0;
   liElements.forEach(el => {
-    if(el.id === 'covid-li') return;
+    if(el.id === 'covid-li' || el.dataset.isQuote === '1') return;
 
     const inner = el.querySelector('.bento-inner');
     if(!inner) return;
@@ -354,21 +362,66 @@ async function measureAndPack(reset = false) {
       liElements.forEach(el => {
         if (el.id === 'covid-li') el.classList.add('covid-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
-
-        if(el.dataset.isCovid === '1') {
-          console.log(el)
-        }
-
       });
       cardAnimation();
     layoutInProgress = false;
     const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
     quotePopupAdjust(placements, numCols.value);
 
+    const quotes = liElements.filter(el => el.dataset.isQuote === '1')
+
+    quotes.forEach(quote => {
+      quote.addEventListener('mouseenter', () => {
+        quote.style.zIndex = '99';
+      });
+      quote.addEventListener('mouseleave', () => {
+        quote.style.zIndex = '95';
+      })
+
+
+    })
   }
 
 
 }
+
+
+function setQuoteSpan(card: HTMLElement, grid: HTMLElement) {
+  if (!card || !grid) return;
+
+  if (numCols.value >= 5) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = 'span 4';
+    card.dataset.rowspan = '4';
+  } else if (numCols.value === 4) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = 'span 3';
+    card.dataset.rowspan = '3';
+  } else if (numCols.value === 3) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = 'span 3';
+    card.dataset.rowspan = '3';
+  } else if (numCols.value === 2) {
+    card.style.gridColumn = 'span 2';
+    card.dataset.colspan = '2';
+    card.style.gridRowEnd = 'span 3';
+    card.dataset.rowspan = '3';
+  } else {
+    // 1-col mobile: just make it taller
+    card.style.gridColumn = 'span 1';
+    card.dataset.colspan = '1';
+    card.style.gridRowEnd = 'span 4';
+    card.dataset.rowspan = '4';
+  }
+}
+
+
+
+
+
 
 
 /**
@@ -614,7 +667,7 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
   let colWidth = Math.floor(
       (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let covidRows = Math.floor((colWidth * 1.25) / rowHeight);
+  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
 
   if(numCols.value > 1) {
     card.style.gridColumn = 'span 2';
@@ -756,15 +809,8 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     inner.style.transform = `translateX(${-distFromLeft}px)`;
     inner.style.width = `${gridRect.width}px`;
 
-  })
-
-
-
-  inner.addEventListener('transitionend', function grown(e) {
-    if(e.propertyName !== 'width') return;
-    inner.removeEventListener('transitionend', grown);
-    covidCard.addEventListener('pointerleave', function shrink() {
-      covidCard.removeEventListener('pointerleave', shrink);
+    inner.addEventListener('pointerleave', function shrink() {
+      inner.removeEventListener('pointerleave', shrink);
       requestAnimationFrame(() => {
         inner.style.width = '100%';
         inner.style.transform = 'none';
@@ -782,20 +828,41 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
             titleShrunk.style.opacity = '1';
             const liElements = Array.from(document.querySelectorAll('.bento-card'));
             let reset = false;
+
+            let maxShiftEl: HTMLElement | null = null;
+            let maxAbs = -Infinity;
+            for (const [el, val] of perCardShift.entries()) {
+              const abs = Math.abs(val);
+              if (abs > maxAbs) {
+                maxAbs = abs;
+                maxShiftEl = el;
+              }
+            }
+
+            if(maxShiftEl) {
+              maxShiftEl.addEventListener('transitionend', () => {
+                inner.addEventListener('pointerenter', function grow() {
+                  requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                }, {once:true})
+
+              }, {once:true})
+            } else {
+              let firstShiftEl: HTMLElement | null = null;
+              firstShiftEl = perCardShift.keys().next().value ?? null;
+              if(firstShiftEl)
+                firstShiftEl.addEventListener('transitionend', () => {
+                setTimeout(() => {
+                  covidCard.addEventListener('pointerenter', function grow() {
+                    requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                  }, {once:true})
+                }, 300);
+
+              })
+            }
+
             liElements.forEach(el => {
               if(el.classList.contains('adjustForCovid')) {
                 el.classList.remove('adjustForCovid');
-                if(!reset) {
-                  reset = true;
-                  el.addEventListener('transitionend', () => {
-                    setTimeout(() => {
-                      covidCard.addEventListener('pointerenter', function grow() {
-                        requestAnimationFrame(() => growCovidCard(covidCard, grid))
-                      }, {once:true})
-                    }, 300);
-
-                  })
-                }
               }
             });
           })
@@ -805,7 +872,11 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
       })
     });
+
   })
+
+
+
 
 
   titleShrunk.style.opacity = '0';
@@ -962,7 +1033,6 @@ watch([filteredPosts], async () => {
     first = true;
   } else {
     requestAnimationFrame(async() => {
-      console.log('watch');
       await nextTick()
       if(layoutInProgress) layoutInProgress = false;
       await hardRebuild();

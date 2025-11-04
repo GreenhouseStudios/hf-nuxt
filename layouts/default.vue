@@ -1,6 +1,9 @@
 <template>
   <div class="overflow-visible relative">
-    <!-- Keep your nav fixed OUTSIDE smoother -->
+    <svg width="1" height="1" preserveAspectRatio="none" fill="none" stroke-width="2" style="position: fixed; z-index: 999; pointer-events: none">
+      <path id="logoPath" stroke="black" d="M1.09,3.11c4.23,22.52,85.06,421.8,384.91,505.79,131.99,36.97,348.19,24.55,396.26-96,40.45-101.44-39.33-276.53-167.49-294.13-126.63-17.38-246.23,126.42-241.02,232.85,8.45,172.59,357.13,330.93,490.21,226.72,126.82-99.3,72.03-428.54-59.53-484.62-137.86-58.76-289.14,212.72-510.64,175.66C154.42,246.07,59.59,112.71,1.09,3.11Z"/>
+
+    </svg>
     <Nav class="site-header" />
 
     <!-- ScrollSmoother structure -->
@@ -16,12 +19,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { onMounted, onBeforeUnmount, nextTick, ref, provide, type Ref } from 'vue'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import ScrollSmoother from 'gsap/ScrollSmoother'
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
+
+const navTeleportEl = ref<HTMLElement | null>(null)
+provide<Ref<HTMLElement | null>>( 'navTeleportEl', navTeleportEl)
 
 let smoother: ScrollSmoother | null = null
 let ro: ResizeObserver | null = null
@@ -65,10 +71,21 @@ onBeforeUnmount(() => {
   ro?.disconnect()
   ro = null
 })
+
 </script>
 
 <style>
 html, body { margin: 0; padding: 0; height: 100%; }
+
+html {
+  scrollbar-gutter: stable;
+}
+
+.vid {
+  height: 100%;
+  width: 100%;
+
+}
 
 .site-header {
   position: fixed;

@@ -1,14 +1,14 @@
 <template>
 
   <div class="hero-bg-vid text-white flex flex-col relative justify-start items-start">
+
     <div class="vid-wrap-bg">
-      <video class="vid-bg" src="../public/HF_LOGO.mp4" type="video/mp4"
-             muted
-             preload="auto"
-             playsinline
-      ></video>
+
+      <Hero-Vid />
+
     </div>
     <div class="hero-bg-overlay">
+
       <div class="hero-bg-text md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
 
         <h1 class="text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl font-black title text-md mb-4 pt-5">CELEBRATING 100 YEARS</h1>
@@ -22,7 +22,7 @@
       </div>
 
     </div>
-    <!--    <Video />-->
+
   </div>
   <div class="three-key-blocks">
     <div class="info-container">
@@ -61,9 +61,10 @@
 </template>
 
 <script lang="ts" setup>
-import {   onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
+import HeroVid from "~/components/hero-vid.vue";
 
 let gsapDisabled = false;
 
@@ -75,10 +76,8 @@ let triggers: ScrollTrigger[] = [];
 onMounted(() => {
   const overlay = document.querySelector<HTMLElement>('.hero-bg-overlay');
   const hero    = document.querySelector<HTMLElement>('.hero-bg-vid');
-  const vidWrap = document.querySelector<HTMLElement>('.vid-wrap-bg');
-  const video   = document.querySelector<HTMLVideoElement>('.vid-bg');
 
-  if (!overlay || !hero || !vidWrap) return;
+  if (!overlay || !hero) return;
 
 
   // Keep CSS var in sync with overlay height
@@ -100,7 +99,7 @@ onMounted(() => {
       { yPercent: 0, autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.4 }
   );
 
-
+let vidAniDone = false;
   // Main hero pin + motions
   const heroTl = gsap.timeline({
     defaults: { ease: 'power1.out' },
@@ -112,13 +111,22 @@ onMounted(() => {
       scrub: true,
       markers: false,
       invalidateOnRefresh: true,
-      anticipatePin: 1
+      anticipatePin: 1,
+      onUpdate: self => {
+        if(self.progress > .6 && !vidAniDone) lockScroll()
+      }
     }
   });
 
   heroTl
       .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
       .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
+
+
+  function lockScroll() {
+    vidAniDone = true;
+    document.body.style.overflow = 'hidden';
+  }
 
 
   // Move vid off-screen
@@ -136,14 +144,7 @@ onMounted(() => {
   triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
 
   // Start vid on scroll down
-  let videoStarted = false;
-  document.addEventListener('wheel', (event) => {
-    if (event.deltaY > 0 && !videoStarted && video) {
-      videoStarted = true;
-      video.loop = false;
-      video.play();
-    }
-  });
+
 
   window.addEventListener('resize', sizeHeader);
   sizeHeader();
@@ -221,8 +222,8 @@ onBeforeUnmount(() => {
   transition: opacity .25s;
 }
 .hero-bg-vid {
+  background-image: url("../public/hf-hero-bg-light.svg");
   position: relative;
-  background: none;
   background-repeat: no-repeat;
   background-size: cover;
   background-position: top;
@@ -233,14 +234,12 @@ onBeforeUnmount(() => {
   --parkSpeed: .5s;
 }
 
-/* Remove 'fixed' from the base .vid-wrap – we’ll toggle it with classes */
 .vid-wrap-bg {
-  position: absolute;           /* base position inside .hero-bg */
+  position: absolute;
   width: 100%;
-  height: 100%;
-  left: 50%;
-  top: 50%;                     /* base: centered in hero */
-  transform: translate(-50%, -50%);
+  height: calc(100% - 80px);
+  left: 0;
+  bottom: 0;
   z-index: 97;
   pointer-events: none;
 }

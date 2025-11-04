@@ -1,5 +1,6 @@
 <template>
   <div class="flex items-center justify-between px-4 py-4 fixed z-100 top-0 max-w-screen w-screen">
+
     <Logo></Logo>
 
     <UNavigationMenu :items="items" color="primary" class="bg-white hidden lg:flex"></UNavigationMenu>
@@ -20,12 +21,16 @@
       </template>
 
     </USlideover>
+    <div id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
+
+    </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui/dist/module';
-import { ref } from 'vue';
+import { ref, inject, onMounted, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 const router = useRouter()
 
@@ -62,10 +67,37 @@ const items = ref(<NavigationMenuItem[]>[
   ...item,
   class: 'bg-white hover:bg-gray-100 rounded-md',
 })));
+
+const vidTeleport = ref<HTMLDivElement | null>(null);
+const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
+
+onMounted(() => {
+  if(navTeleportEl) {
+    navTeleportEl.value = vidTeleport.value;
+  }
+})
+
+defineExpose({vidTeleport})
 </script>
 
 <style scoped>
 div {
   background: white;
 }
+
+#vid-teleport {
+  position: fixed;
+  width: 100%;
+  height: calc(100% - 80px);
+  bottom: 0;
+  left: 0;
+  background: none;
+}
+
+#vid-teleport > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 </style>
