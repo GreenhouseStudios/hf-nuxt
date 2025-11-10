@@ -10,24 +10,19 @@
         ref="taglineEl"
         class="w-full text-lg md:text-5xl absolute font-bold"
     >
-      {{ props.post?.cardOptions?.quoteTagline || 'HARTFORD FOUNDATION' }}
+      {{ props.post?.eventOptions?.tagline || 'HARTFORD FOUNDATION' }}
     </h2>
-    <video
-        ref="backEl"
-        class="quote-back"
-        :src="props.post?.cardOptions?.quoteLink || ''"
-        preload="metadata"
+    <div class="quote-back" ref="backEl">
+      <div class="quote-icon"></div>
+      <video
+          ref="vidEl"
+          class="quote-vid"
+          :src="props.post?.eventOptions?.videoLink || ''"
+          preload="metadata"
+      >
+      </video>
+    </div>
 
-   >
-
-
-
-
-
-
-
-
-    </video>
 
 
 
@@ -42,7 +37,8 @@ type Post = any
 const props = defineProps<{ post: Post }>()
 
 const taglineEl = ref<HTMLElement | null>(null)
-const backEl = ref<HTMLVideoElement | null>(null)
+const vidEl = ref<HTMLVideoElement | null>(null);
+const backEl = ref<HTMLElement | null>(null);
 const wrapEl = ref<HTMLElement | null>(null);
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
 
@@ -177,14 +173,16 @@ function shimmer(el: HTMLElement) {
 
 
 async function onEnter() {
-  if (!taglineEl.value || !backEl.value || !wrapEl.value) return;
+  if (!taglineEl.value || !backEl.value || !wrapEl.value || !vidEl.value) return;
 
   // OUT: author should already be jumbled & visible
   primeJumbled(taglineEl.value);
 
   // IN: quote starts dissolved (invisible, scattered)
   backEl.value.addEventListener('transitionstart', () => {
-    backEl.value?.play()
+    if(vidEl.value?.src !== '') {
+      vidEl.value?.play();
+    }
   }, {once:true})
   backEl.value.classList.toggle('visible');
   wrapEl.value.classList.toggle('bg-cetacean');
@@ -195,14 +193,14 @@ async function onEnter() {
 }
 
 async function onLeave() {
-  if (!taglineEl.value || !backEl.value || !wrapEl.value) return;
+  if (!taglineEl.value || !backEl.value || !wrapEl.value || !vidEl.value) return;
 
   // OUT: quote jumbled & visible, then dissolve out
 
   // IN: author dissolved, then assemble in
   primeDissolved(taglineEl.value);
   backEl.value.addEventListener('transitionstart', () => {
-    backEl.value?.pause();
+    vidEl.value?.pause();
   }, {once:true})
   backEl.value.classList.toggle('visible');
   wrapEl.value.classList.toggle('bg-cetacean');
@@ -263,23 +261,34 @@ p[aria-hidden="false"] {
   justify-content: space-around;
   transition: opacity 1s ease;
   opacity: 0;
-  z-index: -1;
+  width: 100%;
+  height: 100%;
+}
+.quote-back.visible { opacity: 1 }
+
+.quote-vid {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.quote-back.visible { opacity: 1 }
 
-</style>
-<style>
-.quote-char {
-  opacity: 0;
-  display: inline-block;
-  animation: fade-in 0.2s forwards;
+.quote-icon {
+  width: 36px;
+  height: 32px;
+  position: absolute;
+  top: 25px;
+  transform: scale(1.5);
+  transition: transform .25s ease, background .25s ease;
+  left: 25px;
+  background-size: contain;
+  z-index: 1;
+  background: url("../public/quote-icon.svg") no-repeat center;
 }
-.quote-word {
-  display: inline-block;
-  white-space: nowrap;
-  word-break: break-word;
+
+.quote-icon:hover {
+  cursor: pointer;
+  background: url("../public/quote-icon-light.svg") no-repeat center;
+  transform: scale(1.65);
 }
+
 </style>

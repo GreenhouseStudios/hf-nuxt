@@ -24,6 +24,24 @@ declare global {
                 };
             };
         };
+        eventOptions: {
+            postType: string;
+            cardSize: string;
+            eventYear: string;
+            teaser: string;
+            content:string;
+            image: {
+                node: {
+                    mediaItemUrl: string;
+                    sourceUrl: string;
+                };
+            };
+            tagline: string;
+            quote: string;
+            speaker: string;
+            speakerTitle: string;
+            videoLink: string;
+        };
         categories: {
             nodes: Category[];
         };

@@ -6,10 +6,10 @@
         isQuote? 'overflow-visible' : 'overflow-hidden',
         isQuote? 'z-50' : 'z-10',
         isDefault? 'shadow-md hover:bg-lavender' : '',
-        isCovid? 'justify-center' : ''
+        isMajor? 'justify-center' : ''
         ]"
     @click="handleCardClick">
-    <img v-if="(isDefault) && hasMainImage" :src="props.post?.cardOptions.mainImage.node.mediaItemUrl"
+    <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.image.node.mediaItemUrl"
       class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault"
@@ -17,7 +17,7 @@
       class="bg-auto" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <CardContent v-if="isDefault" :post="props.post" />
     <QuoteContent v-if="isQuote" :post="props.post" />
-    <CovidContent v-if="isCovid" :post="props.post" />
+    <MajorContent v-if="isMajor" :post="props.post" />
   </div>
 
 
@@ -29,7 +29,7 @@ import { ref, computed } from 'vue';
 import { useStore } from '~/stores/store';
 import QuoteContent from "~/components/quote-content.vue";
 import CardContent from "~/components/card-content.vue";
-import CovidContent from "~/components/covid-content.vue";
+import MajorContent from "~/components/major-content.vue";
 
 const props = withDefaults(defineProps<{
   post: Post;
@@ -43,11 +43,11 @@ const props = withDefaults(defineProps<{
 
 const variations = ['default', 'quote', 'covid'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
-const actualVariation = computed(() => props.post?.cardOptions?.type ? props.post?.cardOptions.type : 'default');
+const actualVariation = computed(() => props.post?.eventOptions?.postType ? props.post?.eventOptions.postType : 'default');
 const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
-const isCovid = computed(() => actualVariation.value === 'covid');
-const hasMainImage = computed(() => !!props.post?.cardOptions?.mainImage)
+const isMajor = computed(() => actualVariation.value === 'major_event');
+const hasMainImage = computed(() => !!props.post?.eventOptions?.image)
 const containerClass = computed(() => {
   let result = '';
   if (props.mode === 'fixedHeight') {

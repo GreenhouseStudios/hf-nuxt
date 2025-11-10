@@ -129,8 +129,8 @@
 <template>
   <div class="vision-head">
     <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
-      THIS IS<br>
-      <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">OUR VISION</span>
+      ABOUT THE<br>
+      <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">TIMELINE</span>
     </strong>
   </div>
   <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">

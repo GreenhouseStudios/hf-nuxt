@@ -118,7 +118,7 @@ onMounted(() => {
         tl.play();
         setTimeout(() => {
           logo.classList.remove('clipped');
-        }, 1000)
+        }, 1250)
       } else {
         logo.style.opacity = '0';
         logo.style.transition = 'none';

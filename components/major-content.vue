@@ -18,7 +18,7 @@
         {{ props?.post?.title }}
       </h2>
       <p id="text-grow" class="text-2xl" style="opacity: 0; display: none">
-        {{ props?.post?.cardOptions?.cardDescription }}
+        {{ props?.post?.eventOptions?.content }}
       </p>
 </template>
 

@@ -23,6 +23,25 @@ query GetPosts {
           }
         }
       }
+      eventOptions {
+        postType
+        cardSize
+        eventYear
+        teaser
+        content
+        image {
+          node {
+            mediaItemUrl
+            sourceUrl
+          }
+        }
+        tagline
+        quote
+        speaker
+        speakerTitle
+        videoLink
+      }
+      
       categories {
         nodes {
           slug

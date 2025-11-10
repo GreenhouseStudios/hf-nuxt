@@ -101,16 +101,16 @@
         >
           <li
               v-for="(post, i) in filteredPosts"
-              :key="post.id"
-              :id="post.cardOptions?.type === 'covid' ? 'covid-li' : post.id"
-              :class="['bento-card', { 'covid-card shadow-md': post.cardOptions?.type === 'covid' }, { 'quote-card': post.cardOptions.type === 'quote' }]"
+              :key="post?.id"
+              :id="post?.eventOptions?.postType === 'major_event' ? 'covid-li' : post?.id"
+              :class="['bento-card', { 'covid-card shadow-md': post?.eventOptions?.postType === 'major_event' }, { 'quote-card': post?.eventOptions?.postType === 'quote' }]"
 
-              :data-is-quote="post.cardOptions?.type === 'quote' ? '1' : '0'"
-              :data-is-covid="post?.cardOptions?.type === 'covid' ? '1' : '0'"
+              :data-is-quote="post?.eventOptions?.postType === 'quote' ? '1' : '0'"
+              :data-is-covid="post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
 
           >
             <div
-            :class="post.cardOptions?.type === 'covid' ? 'covid-inner' : 'bento-inner'"
+            :class="post?.eventOptions?.postType === 'major_event' ? 'covid-inner' : 'bento-inner'"
             >
               <Card
                   :post="post"
@@ -139,7 +139,6 @@ import Filters from "~/components/filters.vue";
  */
 const store = useStore();
 const { data: posts } = usePosts();
-
 
 /**
  * Set col/row/card values
@@ -180,9 +179,12 @@ async function measureAndPack(reset = false) {
   await nextTick();
 
   const grid = document.querySelector('.bento-grid') ;
-  if (!grid) return;
+  if (!grid) {
+    return;
+  }
 
   const liElements = Array.from(grid.querySelectorAll('li'));
+
   let postsFiltered = false;
   if(filteredPosts.value.length < postsArray.value.length) {
     postsFiltered = true;
@@ -806,8 +808,37 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     titleShrunk.removeEventListener('transitionend', spanInner);
     const gridRect = grid.getBoundingClientRect();
     const distFromLeft = innerRect.left - gridRect.left;
-    inner.style.transform = `translateX(${-distFromLeft}px)`;
-    inner.style.width = `${gridRect.width}px`;
+
+    let maxShiftEl: HTMLElement | null = null;
+    let maxAbs = -Infinity;
+    for (const [el, val] of perCardShift.entries()) {
+      const abs = Math.abs(val);
+      if (abs > maxAbs) {
+        maxAbs = abs;
+        maxShiftEl = el;
+      }
+    }
+
+    if(maxShiftEl) {
+      maxShiftEl.addEventListener('transitionend', () => {
+        inner.style.transform = `translateX(${-distFromLeft}px)`;
+        inner.style.width = `${gridRect.width}px`;
+      }, {once:true})
+    } else {
+      let firstShiftEl: HTMLElement | null;
+      firstShiftEl = perCardShift.keys().next().value ?? null;
+      if(firstShiftEl)
+        firstShiftEl.addEventListener('transitionend', () => {
+          setTimeout(() => {
+            inner.style.transform = `translateX(${-distFromLeft}px)`;
+            inner.style.width = `${gridRect.width}px`;
+          }, 300);
+
+        })
+    }
+
+
+
 
     inner.addEventListener('pointerleave', function shrink() {
       inner.removeEventListener('pointerleave', shrink);
@@ -976,14 +1007,14 @@ function updateColumns() {
 const postsArray = computed(() => {
   if (Array.isArray(posts.value)) {
     return posts.value.slice().sort((a: Post, b: Post) => {
-      const yearA: number = parseInt(a.cardOptions?.year) || 0;
-      const yearB: number = parseInt(b.cardOptions?.year) || 0;
+      const yearA: number = parseInt(a.eventOptions?.eventYear) || 0;
+      const yearB: number = parseInt(b.eventOptions?.eventYear) || 0;
       return yearB - yearA;
     });
   }
   return [] as Post[];
 });
-
+console.log(postsArray)
 const postsFilteredByCategory = computed(() => {
   if (store.timelineFilterCategories.length > 0) {
     return postsArray.value.filter((post: Post) => {
@@ -1027,7 +1058,7 @@ onMounted( async () => {
 let first = false;
 watch([filteredPosts], async () => {
   await nextTick();
-
+  console.log(filteredPosts)
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;
@@ -1038,6 +1069,7 @@ watch([filteredPosts], async () => {
       await hardRebuild();
     });
   }
+
 
 
   }, {immediate:true, flush: 'post'});
