@@ -5,7 +5,7 @@
   grid-template-columns: repeat(var(--cols, 4), 1fr);
   grid-auto-rows: var(--row-h, 75px);
   gap: var(--gap, 25px);
-  overflow-y: hidden;
+  overflow-y: clip;
   padding-bottom: 30px;
 }
 .bento-inner {
