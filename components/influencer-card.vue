@@ -5,13 +5,13 @@
       <div class="card-wrap rounded-2xl" ref="cardWrapEl">
         <div class="details-wrap">
           <span class="details-town text-lg font-bold shown">
-            {{ 'Town of ' + influencer.influencerDetails.town }}
+            Town of {{ influencer.influencerDetails.town || 'Hartford' }}
           </span>
           <h3 class="details-name font-bold">
             {{ influencer.influencerDetails.name }}
           </h3>
           <span class="details-title text-lg font-bold">
-            {{ influencer.influencerDetails.title }}
+            {{ influencer.influencerDetails.title || 'Influencer'}}
           </span>
         </div>
 
@@ -53,8 +53,7 @@ defineProps<{
   };
 }>();
 import { ref, onUpdated, nextTick, onMounted} from 'vue';
-const height = 300;
-const width = 300;
+
 const cardWrapEl = ref<HTMLElement | null>(null);
 let hoverSet = false;
 async function setup() {
@@ -118,6 +117,7 @@ onMounted(async () => {
   transition: transform .75s ease, opacity .5s;
   transform: translateY(125px);
   opacity: 0;
+  will-change: transform;
 }
 
 .card-wrap.hover::after {
@@ -155,6 +155,7 @@ onMounted(async () => {
   flex-direction: column;
   z-index: 1;
   transition: transform .75s ease;
+  will-change: transform;
 }
 
 .details-bg.hover {
@@ -165,12 +166,14 @@ onMounted(async () => {
 .details-name {
   color: var(--color-cetacean);
   font-size: 26px;
-  max-width: 85%;
+  max-width: 90%;
+  ;
 }
 .details-title,.details-town {
   color: #0C6DD4;
   transition: transform .75s ease, opacity .5s ease;
   max-width: 75%;
+  will-change: transform;
 }
 
 .details-title.shown, .details-town.shown {
@@ -194,16 +197,17 @@ onMounted(async () => {
   flex-direction: column;
   align-items: end;
   right: 0;
-  bottom: 0;
+  bottom: -15px;
   z-index: 2;
   width: 100%;
-  padding-right: 10%;
+  padding-right: 5%;
   transform: translateY(0);
   transition: transform .75s ease;
   text-align: end;
+  will-change: transform;
 }
 .details-wrap.hover {
-  transform: translateY(-150px);
+  transform: translateY(-125px);
 }
 
 </style>

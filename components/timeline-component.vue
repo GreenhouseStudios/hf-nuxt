@@ -868,77 +868,80 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
           setTimeout(() => {
             inner.style.transform = `translateX(${-distFromLeft}px)`;
             inner.style.width = `${gridRect.width}px`;
+
           }, 300);
 
         })
     }
 
 
+    setTimeout(() => {
+      inner.addEventListener('pointerleave', function shrink() {
+        inner.removeEventListener('pointerleave', shrink);
+        requestAnimationFrame(() => {
+          inner.style.width = '100%';
+          inner.style.transform = 'none';
 
+          textGrow.style.opacity = '0';
 
-    inner.addEventListener('pointerleave', function shrink() {
-      inner.removeEventListener('pointerleave', shrink);
-      requestAnimationFrame(() => {
-        inner.style.width = '100%';
-        inner.style.transform = 'none';
+          inner.addEventListener('transitionend', function shrunk(e) {
+            if(e.propertyName !== 'width') return;
+            inner.removeEventListener('transitionend', shrunk);
+            requestAnimationFrame(() => {
+              textGrow.style.display = 'none';
 
-        textGrow.style.opacity = '0';
+              titleShrunk.style.display = '';
+              void titleShrunk.offsetWidth;
+              titleShrunk.style.opacity = '1';
+              const liElements = Array.from(document.querySelectorAll('.bento-card'));
+              let reset = false;
 
-        inner.addEventListener('transitionend', function shrunk(e) {
-          if(e.propertyName !== 'width') return;
-          inner.removeEventListener('transitionend', shrunk);
-          requestAnimationFrame(() => {
-            textGrow.style.display = 'none';
-
-            titleShrunk.style.display = '';
-            void titleShrunk.offsetWidth;
-            titleShrunk.style.opacity = '1';
-            const liElements = Array.from(document.querySelectorAll('.bento-card'));
-            let reset = false;
-
-            let maxShiftEl: HTMLElement | null = null;
-            let maxAbs = -Infinity;
-            for (const [el, val] of perCardShift.entries()) {
-              const abs = Math.abs(val);
-              if (abs > maxAbs) {
-                maxAbs = abs;
-                maxShiftEl = el;
+              let maxShiftEl: HTMLElement | null = null;
+              let maxAbs = -Infinity;
+              for (const [el, val] of perCardShift.entries()) {
+                const abs = Math.abs(val);
+                if (abs > maxAbs) {
+                  maxAbs = abs;
+                  maxShiftEl = el;
+                }
               }
-            }
 
-            if(maxShiftEl) {
-              maxShiftEl.addEventListener('transitionend', () => {
-                inner.addEventListener('pointerenter', function grow() {
-                  requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
-                }, {once:true})
-
-              }, {once:true})
-            } else {
-              let firstShiftEl: HTMLElement | null = null;
-              firstShiftEl = perCardShift.keys().next().value ?? null;
-              if(firstShiftEl)
-                firstShiftEl.addEventListener('transitionend', () => {
-                setTimeout(() => {
-                  majorEventCard.addEventListener('pointerenter', function grow() {
+              if(maxShiftEl) {
+                maxShiftEl.addEventListener('transitionend', () => {
+                  inner.addEventListener('pointerenter', function grow() {
                     requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
                   }, {once:true})
-                }, 300);
 
-              })
-            }
+                }, {once:true})
+              } else {
+                let firstShiftEl: HTMLElement | null = null;
+                firstShiftEl = perCardShift.keys().next().value ?? null;
+                if(firstShiftEl)
+                  firstShiftEl.addEventListener('transitionend', () => {
+                    setTimeout(() => {
+                      majorEventCard.addEventListener('pointerenter', function grow() {
+                        requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
+                      }, {once:true})
+                    }, 300);
 
-            liElements.forEach(el => {
-              if(el.classList.contains('adjustForMajorEvent')) {
-                el.classList.remove('adjustForMajorEvent');
+                  })
               }
-            });
+
+              liElements.forEach(el => {
+                if(el.classList.contains('adjustForMajorEvent')) {
+                  el.classList.remove('adjustForMajorEvent');
+                }
+              });
+            })
+
           })
 
+
         })
+      });
+    }, 300)
 
 
-      })
-    });
 
   })
 

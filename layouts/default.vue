@@ -7,14 +7,11 @@
     <Nav class="site-header" />
 
     <!-- ScrollSmoother structure -->
-    <div class="smooth-wrapper">
-      <div class="smooth-content">
-        <div class="hf-page">
-          <slot />
-        </div>
-        <Footer />
-      </div>
+
+    <div class="hf-page">
+      <slot />
     </div>
+    <Footer />
   </div>
 </template>
 
@@ -24,22 +21,14 @@ import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import ScrollSmoother from 'gsap/ScrollSmoother'
 
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 
 const navTeleportEl = ref<HTMLElement | null>(null)
 provide<Ref<HTMLElement | null>>( 'navTeleportEl', navTeleportEl)
 
-let smoother: ScrollSmoother | null = null
 let ro: ResizeObserver | null = null
 
 onMounted(async () => {
   await nextTick()
-
-  if ((window as any).__smoother) {
-    smoother = (window as any).__smoother
-    smoother.refresh()
-    return
-  }
 
   const header = document.querySelector<HTMLElement>('.site-header')
   const content = document.querySelector<HTMLElement>('.smooth-content')
@@ -55,15 +44,6 @@ onMounted(async () => {
     ro.observe(header)
   }
   window.addEventListener('resize', setPadTop)
-
-  smoother = ScrollSmoother.create({
-    wrapper: '.smooth-wrapper',
-    content: '.smooth-content',
-    smooth: 0.35,
-    effects: true,
-    smoothTouch: 0.1,
-  });
-  (window as any).__smoother = smoother
 })
 
 onBeforeUnmount(() => {
@@ -79,6 +59,7 @@ html, body { margin: 0; padding: 0; height: 100%; }
 
 html {
   scrollbar-gutter: stable;
+  scroll-behavior: smooth;
 }
 
 .vid {

@@ -9,7 +9,7 @@
     </div>
     <div class="hero-bg-overlay">
 
-      <div class="hero-bg-text md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
+      <div class="hero-bg-text ani md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
 
         <h1 class="text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl font-black title text-md mb-4 pt-5">CELEBRATING 100 YEARS</h1>
         <p class="md:text-lg md:w-1/1 mt-9 xl:w-3/4 2xl:w-2/3 text-md"> Over the past 100 years, we’ve transformed how local people and
@@ -90,14 +90,12 @@ onMounted(() => {
   ro.observe(overlay);
   // INITIAL STATES
   // video hidden behind overlay to start
-  gsap.set('.hero-bg-overlay', { yPercent: 0, willChange: 'transform' });
-  gsap.set('.hero-bg-text',    { y: 0, autoAlpha: 1, willChange: 'transform,opacity' });
 
   // Entrance animations
-  gsap.fromTo('.hero-bg-text',
+/*  gsap.fromTo('.hero-bg-text',
       { yPercent: -150, autoAlpha: 0 },
       { yPercent: 0, autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.4 }
-  );
+  );*/
 
 let vidAniDone = false;
   // Main hero pin + motions
@@ -118,9 +116,13 @@ let vidAniDone = false;
     }
   });
 
-  heroTl
-      .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
-      .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
+  const bgText = document.querySelector('.hero-bg-text')
+
+  bgText?.addEventListener('animationend', () => {
+    heroTl
+        .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
+        .to('.hero-bg-text',    { yPercent: -100 },  0)  // text moves up
+  }, {once: true})
 
 
   function lockScroll() {
@@ -177,7 +179,7 @@ let vidAniDone = false;
 
       heroTl
           .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
-          .to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
+          //.to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
 
 
       // Move vid off-screen
@@ -247,7 +249,18 @@ onBeforeUnmount(() => {
 .hero-bg-text {
   position: sticky;
   top: 100px;
-  opacity: 0;
+  opacity: 1;
+  transform: translateY(-150%);
+  will-change: transform;
+}
+
+.hero-bg-text.ani {
+  animation: text-ani-in .5s ease-out .25s forwards;
+}
+
+@keyframes text-ani-in {
+  from {transform: translateY(-150%)}
+  to {transform: translateY(0)}
 }
 
 @media screen and (max-width: 768px) {
