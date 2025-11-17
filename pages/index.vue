@@ -219,7 +219,7 @@
 
 
 
-    <Timeline />
+    <TimelineComponent />
   </div>
 </template>
 
@@ -228,7 +228,7 @@ import Hero from '~/components/hero.vue';
 import anime from 'animejs';
 import { onMounted, nextTick } from 'vue';
 import Vision from "~/components/vision.vue";
-import Timeline from "~/components/timeline.vue";
+import TimelineComponent from "~/components/timeline-component.vue";
 
 
 onMounted(async ()  =>  {

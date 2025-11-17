@@ -1,7 +1,7 @@
 <template>
     <div class="px-12">
         <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
-        <section  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <section  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 justify-items-center">
             <influencer-card
                 v-for="i in influencers"
                 :key="i.id"

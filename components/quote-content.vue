@@ -46,7 +46,7 @@
             <path d="M17.2317 13.0401C19.3924 13.0401 21.1442 11.2883 21.1442 9.12757C21.1441 6.96688 19.3924 5.21528 17.2317 5.21528L17.2317 6.20069C18.8481 6.20069 20.1587 7.5111 20.1588 9.12757C20.1588 10.7189 18.8889 12.0137 17.3072 12.0537L17.2317 12.0547L17.2317 13.0401Z" fill="white"/>
             <path d="M18.0206 15.2422C21.3978 15.2421 24.1357 12.5043 24.1357 9.12716C24.1355 5.75007 21.3975 3.01261 18.0204 3.01261L18.0204 3.99778L18.0206 3.99778C20.8535 3.99782 23.1501 6.29432 23.1502 9.12716C23.1502 11.9601 20.8533 14.257 18.0204 14.257L18.0204 15.2422L18.0206 15.2422Z" fill="white"/>
           </svg>
-          <svg class="icon muted secondary" width="24" height="19" viewBox="0 0 24 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="icon muted secondary" width="25" height="18" viewBox="0 0 24 19" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1.32991 5.38312C0.595423 5.38312 -2.60268e-08 5.97854 -5.81324e-08 6.71303L-2.8948e-07 12.0056C-3.21585e-07 12.7401 0.595423 13.3356 1.32991 13.3356L6.62253 13.3356C7.35702 13.3356 7.95244 12.7401 7.95244 12.0056L7.95244 6.71303C7.95244 5.97854 7.35702 5.38312 6.62253 5.38312L1.32991 5.38312Z" fill="white"/>
             <path d="M19.1717 8.64911C18.7795 8.64911 18.4616 8.967 18.4616 9.35915V9.35915C18.4616 9.75129 18.7795 10.0692 19.1717 10.0692L23.2899 10.0692C23.682 10.0692 23.9999 9.75129 23.9999 9.35915V9.35915C23.9999 8.967 23.6821 8.64911 23.2899 8.64911L19.1717 8.64911Z" fill="white"/>
             <path d="M1.14082 8.20742C0.254209 8.7193 0.254206 9.99901 1.14082 10.5109L15.0441 18.5379C15.9307 19.0498 17.0389 18.41 17.0389 17.3862L17.0389 1.33212C17.0389 0.308347 15.9307 -0.331512 15.0441 0.180373L1.14082 8.20742Z" fill="white"/>
@@ -58,9 +58,18 @@
         </svg>
 
       </div>
+      <div class="transcript-wrap" ref="transcriptWrapEl">
+        <p class="text-1xl lg:text-2xl">
+          {{ props.post?.eventOptions?.quote + ' - ' +
+            props.post?.eventOptions?.speaker + ', ' +
+            props.post?.eventOptions?.speakerTitle
+            || "No transcript for this video."}}
+        </p>
+      </div>
       <video
           ref="vidEl"
-          class="quote-vid"
+          class="quote-vid visible"
+          style="opacity: 0"
           :src="props.post?.eventOptions?.videoLink || ''"
           preload="metadata"
       >
@@ -79,12 +88,13 @@ import anime from 'animejs'
 
 type Post = any
 const props = defineProps<{ post: Post }>()
-
+console.log(props.post?.eventOptions?.quote.length, props.post?.eventOptions?.tagline)
 const taglineEl = ref<HTMLElement | null>(null)
 const vidEl = ref<HTMLVideoElement | null>(null);
 const backEl = ref<HTMLElement | null>(null);
 const frontEl = ref<HTMLElement | null>(null);
 const wrapEl = ref<HTMLElement | null>(null);
+const transcriptWrapEl = ref<HTMLElement | null>(null);
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
 
 function wrapChars(el: HTMLElement) {
@@ -274,6 +284,15 @@ const restartVideo = () => { console.log('restarting'); if(vidEl.value) vidEl.va
 
 const checkPlaying = (vid: HTMLVideoElement) => { return vid.currentTime > 0 && !vid.paused && !vid.ended && vid.readyState > 2 }
 
+const toggleTranscript = () => {
+  if(!vidEl.value || !transcriptWrapEl.value) return;
+  vidEl.value.classList.toggle('visible');
+  transcriptWrapEl.value.classList.toggle('visible');
+  vidEl.value.currentTime = 0;
+
+  vidEl.value.pause();
+}
+
 onMounted(() => {
   if(taglineEl.value) wrapChars(taglineEl.value)
 
@@ -281,12 +300,11 @@ onMounted(() => {
     primeDissolved(taglineEl.value)
     assembleIn(taglineEl.value)
   }
-
     if(!backEl.value) return;
     const restartEl = backEl?.value.querySelector('.restart');
     const playPauseEl = backEl?.value.querySelector('.play-pause');
     const muteUnmuteEl = backEl?.value.querySelector('.mute-unmute');
-    const transcriptEl = document.querySelector('.transcript');
+    const transcriptEl = backEl?.value.querySelector('.transcript');
 
     restartEl?.addEventListener('pointerdown', restartVideo);
     playPauseEl?.addEventListener('pointerdown', () => {
@@ -301,6 +319,7 @@ onMounted(() => {
         icon.classList.toggle('toggled');
       })
     })
+    transcriptEl?.addEventListener('pointerdown', toggleTranscript);
 
 
 
@@ -340,7 +359,7 @@ p[aria-hidden="false"] {
   align-items: center;
   width: 100%;
   height: 100%;
-  transition: opacity 1s ease;
+  transition: opacity .75s ease;
   opacity: 0;
 }
 
@@ -381,7 +400,7 @@ p[aria-hidden="false"] {
   align-items: center;
   align-content: space-evenly;
   justify-content: space-around;
-  transition: opacity 1s ease;
+  transition: opacity .75s ease;
   opacity: 0;
   width: 100%;
   height: 100%;
@@ -391,6 +410,14 @@ p[aria-hidden="false"] {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .75s ease;
+  pointer-events: none;
+}
+
+.quote-vid.visible {
+  opacity: 1 !important;
 }
 
 .icons-list {
@@ -401,7 +428,7 @@ p[aria-hidden="false"] {
   justify-content: space-evenly;
   align-items: center;
   gap: 18px;
-  z-index: 2;
+  z-index: 3;
 }
 
 .icon-wrap {
@@ -455,7 +482,21 @@ p[aria-hidden="false"] {
 .restart {
   transform: translateY(-1px);
 }
+.transcript-wrap {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.transcript-wrap > p {
+  text-align: left;
+  padding: 1rem;
+}
 
-
+.transcript-wrap.visible {pointer-events: all !important;}
 
 </style>

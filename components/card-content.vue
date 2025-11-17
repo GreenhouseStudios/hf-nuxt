@@ -22,7 +22,6 @@ const props = defineProps<{
 const snippet = extractFirstParagraph(props?.post?.eventOptions?.content);
 
 
-
 function extractFirstParagraph(htmlText: string) {
   if(!htmlText) return '';
   const parser = new DOMParser();

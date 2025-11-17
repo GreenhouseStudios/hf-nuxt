@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
 }
 
 .vid-wrap-bg {
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: calc(100% - 80px);
   left: 0;

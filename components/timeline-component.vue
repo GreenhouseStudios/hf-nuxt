@@ -8,6 +8,11 @@
   overflow-y: clip;
   padding-bottom: 30px;
 }
+
+.bento-grid.computing {
+  opacity: 0;
+}
+
 .bento-inner {
   height: 100%;
 }
@@ -16,6 +21,7 @@
 }
 .bento-inner img {
   max-height: 65%;
+  min-height: 50%;
 }
 .bento-card {
   opacity: .01;
@@ -25,26 +31,26 @@
   transform: translateY(150px);
 }
 
-.adjustForCovid {
+.adjustForMajorEvent {
   --to-move: unset;
   transition: transform .75s ease !important;
   transform: var(--to-move) !important;
 }
-.covid-card {
+.major-event-card {
   opacity: .01;
   border-radius: calc(var(--ui-radius) * 4);
   transition: transform 1.25s, opacity .75s;
   transition-delay: .25s;
   position: relative;
 }
-.covid-inner {
+.major-event-inner {
   position: absolute;
   width: 100%;
   height: 100%;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
   transition-delay: .25s;
   transition: width .75s ease-out, transform .75s ease-out;
-  background: url("../public/hf-covid-bg.png");
+  background: url("../public/major-event-bg.png") no-repeat center bottom;
   border-radius: calc(var(--ui-radius) * 4);
   display: flex;
   flex-direction: column;
@@ -53,17 +59,17 @@
   z-index: 97;
 }
 
-.covid-inner > div {
+.major-event-inner > div {
   box-shadow: none;
 }
 
-.covid-inner > * {
+.major-event-inner > * {
   text-align: center;
   color: white;
   margin-bottom: 0;
   max-width: 80%;
 }
-.covid-transform {
+.major-event-transform {
   transform: translateY(150px);
 }
 
@@ -75,6 +81,16 @@
 </style>
 <template>
 
+  <!-- NOTES
+  Change grid calls to use ref
+  Fix mount/update bug when navigating between pages with component
+  Fix tap support for vids
+  Fix quote pause/play desync sometimes
+  Fix <p> in major event span
+  Design modals following Yuna's design
+  Add multi-major event support (waiting for answer from HF)
+
+  -->
 
   <div class="max-w-screen mb-36 px-2 py-12 md:px-12 overflow-x-hidden">
     <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
@@ -96,21 +112,22 @@
             :style="{
     '--cols': numCols,
     '--row-h': rowHeight + 'px',
-    '--gap': gap + 'px'
+    '--gap': gap + 'px',
+    opacity: 0
   }"
         >
           <li
               v-for="(post, i) in filteredPosts"
               :key="post?.id"
-              :id="post?.eventOptions?.postType === 'major_event' ? 'covid-li' : post?.id"
-              :class="['bento-card', { 'covid-card shadow-md': post?.eventOptions?.postType === 'major_event' }, { 'quote-card': post?.eventOptions?.postType === 'quote' }]"
-
+              :id="post?.eventOptions?.postType === 'major_event' ? 'major-event-li' : post?.id"
+              :class="['bento-card', { 'major-event-card shadow-md': post?.eventOptions?.postType === 'major_event' }, { 'quote-card': post?.eventOptions?.postType === 'quote' }]"
+              :data-card-size="post?.eventOptions?.cardSize"
               :data-is-quote="post?.eventOptions?.postType === 'quote' ? '1' : '0'"
-              :data-is-covid="post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
+              :data-is-major-event="post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
 
           >
             <div
-            :class="post?.eventOptions?.postType === 'major_event' ? 'covid-inner' : 'bento-inner'"
+            :class="post?.eventOptions?.postType === 'major_event' ? 'major-event-inner' : 'bento-inner'"
             >
               <Card
                   :post="post"
@@ -134,6 +151,7 @@ import { useStore } from '~/stores/store';
 import Card from "~/components/card.vue";
 import Filters from "~/components/filters.vue";
 
+
 /**
  * Get post data
  */
@@ -148,8 +166,21 @@ let cols = numCols.value;
 let rowHeight = 75;
 const gap = 25;
 let layoutInProgress = false;
-let covidCardGrow = false;
+let majorEventCardGrow = false;
+const smallCardRange = {
+  col: 1,
+  row: [3, 6]
+}
+const randCardRange = {
+  col: [1, 2],
+  row: [3, 7]
+}
+const lgCardRange = {
+  col: 2,
+  row: [3, 6]
+}
 
+const gridEl = ref<HTMLElement | null>(null);
 
 /**
  * Hard rebuild on numCol change / post watch
@@ -157,8 +188,9 @@ let covidCardGrow = false;
 const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
-  covidCardGrow = false;
+  majorEventCardGrow = false;
   rebuildToken.value++;
+  if(gridEl.value) gridEl.value.style.opacity = '0';
   await nextTick();
   await measureAndPack()
 }
@@ -182,6 +214,7 @@ async function measureAndPack(reset = false) {
   if (!grid) {
     return;
   }
+
 
   const liElements = Array.from(grid.querySelectorAll('li'));
 
@@ -211,25 +244,25 @@ async function measureAndPack(reset = false) {
     cardAnimation();
     return;
   }
-  // Make covid card if 15+ cards in grid & covid card not made yet
-  if(liElements.length >= 15 && !covidCardGrow && !postsFiltered) {
-    const covidLi = liElements.find(el => el.id === 'covid-li') ?? null;
-    if(!covidLi) return;
-    covidCardGrow = true;
+  // Make majorEvent card if 15+ cards in grid & majorEvent card not made yet
+  if(liElements.length >= 15 && !majorEventCardGrow && !postsFiltered) {
+    const majorEventLi = liElements.find(el => el.dataset.isMajorEvent === '1') ?? null;
+    if(!majorEventLi) return;
+    majorEventCardGrow = true;
 
     if(numCols.value > 2) {
-      covidLi.addEventListener('pointerenter', function grow() {
-        covidLi.removeEventListener('pointerenter', grow);
-        requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement));
+      majorEventLi.addEventListener('pointerenter', function grow() {
+        majorEventLi.removeEventListener('pointerenter', grow);
+        requestAnimationFrame(() => growMajorEventCard(majorEventLi, grid as HTMLElement));
       })
     }
-    setCovidSpan(covidLi, grid as HTMLElement);
+    setMajorEventSpan(majorEventLi, grid as HTMLElement);
   }
 
   // Reset cards if reset=true
   if(reset) {
     liElements.forEach(el => {
-      if(el.id === 'covid-li') { setCovidSpan(el as HTMLElement, grid as HTMLElement) }
+      if(el.dataset.isMajorEvent === '1') { setMajorEventSpan(el as HTMLElement, grid as HTMLElement) }
       else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, grid as HTMLElement) }
       else {
         el.style.gridColumn = 'span 1';
@@ -243,9 +276,16 @@ async function measureAndPack(reset = false) {
 
   // Ensure colspans are valid/normalized
   liElements.forEach(el => {
-    if(el.id === 'covid-li') return;
-    const c = parseInt(el.dataset.colspan || '1', 10);
-    el.style.gridColumn = `span ${Math.max(1, Math.min(numCols.value, c))}`;
+    if(el.dataset.isMajorEvent === '1' || el.dataset.isQuote === '1') return;
+    let c;
+    if(el.dataset.cardSize === 'large') {
+      c = lgCardRange.col;
+    } else if(el.dataset.cardSize === 'small') {
+      c = smallCardRange.col;
+    } else {
+      c = Math.random() > .25 ? randCardRange.col[0] : randCardRange.col[1];
+    }
+    el.style.gridColumn = `span ${c}`;
     el.dataset.colspan = `${c}`;
   })
 
@@ -258,34 +298,29 @@ async function measureAndPack(reset = false) {
   // Assign rowspans with slight randomization based on column count
   let totalCells = 0;
   liElements.forEach(el => {
-    if(el.id === 'covid-li' || el.dataset.isQuote === '1') return;
+    if(el.dataset.isMajorEvent === '1' || el.dataset.isQuote === '1') return;
 
     const inner = el.querySelector('.bento-inner');
     if(!inner) return;
 
     const c = parseInt(el.dataset.colspan || '1', 10);
-
-    const r = Math.floor(Math.random() * (6 - 3) + 3);
+    let r:number;
+    if(el.dataset.cardSize === 'large') {
+      r = Math.floor(Math.random() * (lgCardRange.row[1] - lgCardRange.row[0] + 1)) + lgCardRange.row[0];
+    } else if(el.dataset.cardSize === 'small') {
+      r = Math.floor(Math.random() * (smallCardRange.row[1] - smallCardRange.row[0] + 1)) + smallCardRange.row[0];
+    } else {
+      r = Math.floor(Math.random() * (randCardRange.row[1] - randCardRange.row[0] + 1)) + randCardRange.row[0];
+    }
     el.style.gridRowEnd = `span ${r}`;
     el.dataset.rowspan = `${r}`;
 
-    if(parseInt(el.dataset.rowspan) - 1 <= 2) {
-      if(Math.random() <= .55) {
-        el.style.gridColumn = `span ${c + 1}`;
-        el.dataset.colspan = `${c + 1}`
-      }
-    } else {
-      if(Math.random() <= .1) {
-        el.style.gridColumn = `span ${c + 1}`
-        el.dataset.colspan = `${c + 1}`
-      }
-    }
     totalCells += r * c;
   });
 
   // Fill all 'fill-able' gaps
-  await growAcrossTwoEmptyRows(7);
-  await growSinglesByOne(7);
+  await growAcrossTwoEmptyRows(8);
+  await growSinglesByOne(8);
   await nextTick();
 
   // Recount total cells after filling
@@ -361,8 +396,9 @@ async function measureAndPack(reset = false) {
 
     // Add animations after computed grid placements valid
   } finally {
+    if(gridEl.value) gridEl.value.style.opacity = '1';
       liElements.forEach(el => {
-        if (el.id === 'covid-li') el.classList.add('covid-transform');
+        if (el.dataset.isMajorEvent === '1') el.classList.add('major-event-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
       });
       cardAnimation();
@@ -663,19 +699,19 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
 
 
 /**
- * Set covid span/columns depending on column count
+ * Set majorEvent span/columns depending on column count
  */
-function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
+function setMajorEventSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
   let colWidth = Math.floor(
       (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
+  let majorEventRows = Math.floor((colWidth * 1.5) / rowHeight);
 
   if(numCols.value > 1) {
     card.style.gridColumn = 'span 2';
     card.dataset.colspan = '2';
-    card.style.gridRowEnd = `span ${covidRows}`;
-    card.dataset.rowspan = `${covidRows}`;
+    card.style.gridRowEnd = `span ${majorEventRows}`;
+    card.dataset.rowspan = `${majorEventRows}`;
   } else if(numCols.value === 2) {
     card.style.gridColumn = 'span 2';
     card.dataset.colspan = '2';
@@ -684,28 +720,28 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   } else {
     card.style.gridColumn = 'span 1';
     card.dataset.colspan = '1';
-    covidRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
-    card.style.gridRowEnd = `span ${covidRows}`;
-    card.dataset.rowspan = `${covidRows}`;
+    majorEventRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
+    card.style.gridRowEnd = `span ${majorEventRows}`;
+    card.dataset.rowspan = `${majorEventRows}`;
   }
 }
 
 
 /**
- * Calculate cards in covid rows / move cards out of way / grow covid card
+ * Calculate cards in majorEvent rows / move cards out of way / grow majorEvent card
  */
-function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
   const { pitchY } = getGridMetrics(grid);
   const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
-  const covidPlacement = placements.find(p => p.el === covidCard);
-  if (!covidPlacement) return;
+  const majorEventPlacement = placements.find(p => p.el === majorEventCard);
+  if (!majorEventPlacement) return;
 
-  const covidTop = covidPlacement.row;
-  const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
-  const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
+  const majorEventTop = majorEventPlacement.row;
+  const majorEventBot = majorEventPlacement.row + majorEventPlacement.rowspan - 1;
+  const majorEventMid = majorEventTop + Math.floor(majorEventPlacement.rowspan / 2);
 
-  const cTopPx = covidTop * pitchY;
-  const cBotPx = (covidPlacement.row + covidPlacement.rowspan) * pitchY;
+  const cTopPx = majorEventTop * pitchY;
+  const cBotPx = (majorEventPlacement.row + majorEventPlacement.rowspan) * pitchY;
 
   // maps for stack shifts
   const upByCol = new Map<number, number>();
@@ -716,12 +752,12 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
   // pass 1: collect overlaps and max shifts
   for (const p of placements) {
-    if (p.el === covidCard) continue;
+    if (p.el === majorEventCard) continue;
 
     const pTop = p.row;
     const pBot = p.row + p.rowspan - 1;
 
-    const overlapRows = Math.max(0, Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1);
+    const overlapRows = Math.max(0, Math.min(pBot, majorEventBot) - Math.max(pTop, majorEventTop) + 1);
     const overlapPx = overlapRows * pitchY;
 
     const colStart = p.col;
@@ -730,7 +766,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     if (overlapRows > 0) {
       // inside COVID rows
       const center = pTop + (p.rowspan - 1) / 2;
-      const delta = center < covidMid ? -overlapPx : overlapPx;
+      const delta = center < majorEventMid ? -overlapPx : overlapPx;
       perCardShift.set(p.el, delta);
 
       // record per-column max for stacks
@@ -743,11 +779,11 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       }
     } else {
       // no overlap — candidate for stacks
-      if (pBot < covidTop) {
+      if (pBot < majorEventTop) {
         for (let c = colStart; c <= colEnd; c++) {
           upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
         }
-      } else if (pTop > covidBot) {
+      } else if (pTop > majorEventBot) {
         for (let c = colStart; c <= colEnd; c++) {
           downByCol.set(c, Math.max(downByCol.get(c) ?? 0, 0));
         }
@@ -757,7 +793,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
   // pass 2: apply shifts
   for (const p of placements) {
-    if (p.el === covidCard) continue;
+    if (p.el === majorEventCard) continue;
 
     let deltaY = perCardShift.get(p.el) ?? 0;
 
@@ -793,9 +829,9 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
 
     p.el.style.setProperty('--to-move', mergeTranslateY(p.el.style.transform || "", deltaY));
-    p.el.classList.add('adjustForCovid');
+    p.el.classList.add('adjustForMajorEvent');
   }
-  const inner = <HTMLElement>covidCard.querySelector('.covid-inner');
+  const inner = <HTMLElement>majorEventCard.querySelector('.major-event-inner');
   const innerRect = inner?.getBoundingClientRect() || null;
   if(!inner || !innerRect) return;
 
@@ -873,7 +909,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
             if(maxShiftEl) {
               maxShiftEl.addEventListener('transitionend', () => {
                 inner.addEventListener('pointerenter', function grow() {
-                  requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                  requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
                 }, {once:true})
 
               }, {once:true})
@@ -883,8 +919,8 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
               if(firstShiftEl)
                 firstShiftEl.addEventListener('transitionend', () => {
                 setTimeout(() => {
-                  covidCard.addEventListener('pointerenter', function grow() {
-                    requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                  majorEventCard.addEventListener('pointerenter', function grow() {
+                    requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
                   }, {once:true})
                 }, 300);
 
@@ -892,8 +928,8 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
             }
 
             liElements.forEach(el => {
-              if(el.classList.contains('adjustForCovid')) {
-                el.classList.remove('adjustForCovid');
+              if(el.classList.contains('adjustForMajorEvent')) {
+                el.classList.remove('adjustForMajorEvent');
               }
             });
           })
@@ -923,7 +959,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
 
 /**
- * Calculate translate for cards in covid row
+ * Calculate translate for cards in majorEvent row
  */
 function mergeTranslateY(transformStr: string, y: number) {
   // Treat 'none' as empty
@@ -1032,8 +1068,10 @@ const filteredPosts = computed(() => {
   });
 });
 
-onMounted( async () => {
 
+
+onMounted( async () => {
+  await nextTick();
   updateColumns();
   window.addEventListener('resize', () => requestAnimationFrame(updateColumns));
 

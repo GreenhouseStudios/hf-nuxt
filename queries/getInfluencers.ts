@@ -11,6 +11,7 @@ export const GET_INFLUENCERS = gql`
         influencerDetails {
           name
           title
+          town
           description
           image {
             node {
