@@ -88,11 +88,11 @@ import anime from 'animejs'
 
 type Post = any
 const props = defineProps<{ post: Post }>()
-console.log(props.post?.eventOptions?.quote.length, props.post?.eventOptions?.tagline)
 const taglineEl = ref<HTMLElement | null>(null)
 const vidEl = ref<HTMLVideoElement | null>(null);
 const backEl = ref<HTMLElement | null>(null);
 const frontEl = ref<HTMLElement | null>(null);
+
 const wrapEl = ref<HTMLElement | null>(null);
 const transcriptWrapEl = ref<HTMLElement | null>(null);
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`

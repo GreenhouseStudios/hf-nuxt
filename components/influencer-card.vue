@@ -11,13 +11,13 @@
             {{ influencer.influencerDetails.name }}
           </h3>
           <span class="details-title text-lg font-bold">
-            {{ influencer.influencerDetails.title || 'Influencer'}}
+            {{ influencer.influencerDetails.title || 'Influencer' }}
           </span>
         </div>
 
         <div class="details-bg" />
         <img
-            :src="influencer.influencerDetails.image?.node?.sourceUrl || `https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${height}/${width}`"
+            :src="influencer.influencerDetails.image?.node?.sourceUrl || '../public/placeholder.gif'"
             class="bg-cover rounded-2xl headshot"
             :alt="influencer.influencerDetails.name"
         />
@@ -167,7 +167,7 @@ onMounted(async () => {
   color: var(--color-cetacean);
   font-size: 26px;
   max-width: 90%;
-  ;
+
 }
 .details-title,.details-town {
   color: #0C6DD4;
@@ -180,7 +180,6 @@ onMounted(async () => {
   transform: translateY(0) !important;
   opacity: 1 !important;
 }
-
 .details-town {
   opacity: 0;
   transform: translateY(-100px);

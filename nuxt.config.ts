@@ -41,6 +41,16 @@ export default defineNuxtConfig({
     plugins: [
 
     ],
+    server: {
+      proxy: {
+        './media': {
+          target: 'https://leamh.org',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (path) => path.replace(/^\/media/, '')
+        }
+      }
+    }
   },
   pinia: {
     storesDirs: ['./stores/**', './custom-folder/stores/**'],
@@ -58,5 +68,4 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     'nuxt-aos'
   ],
-  
 })
