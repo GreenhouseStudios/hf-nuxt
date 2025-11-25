@@ -4,16 +4,15 @@
     :class="[
         containerClass,
         isQuote? 'overflow-visible' : 'overflow-hidden',
-        isQuote? 'z-50' : 'z-10',
         isDefault? 'shadow-md hover:bg-lavender' : '',
         isMajor? 'justify-center' : ''
         ]"
     @click="handleCardClick">
-    <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.image.node.mediaItemUrl"
+    <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
       class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault"
-      :src="`https://picsum.photos/id/${Math.floor(Math.random() * 100) + 10}/${Math.floor(Math.random() * 100) + 300}/${Math.floor(Math.random() * 100) + 300}`"
+      src="/placeholder.png"
       class="bg-auto" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <CardContent v-if="isDefault" :post="props.post" />
     <QuoteContent v-if="isQuote" :post="props.post" />
@@ -47,7 +46,7 @@ const actualVariation = computed(() => props.post?.eventOptions?.postType ? prop
 const isDefault = computed(() => actualVariation.value === 'default');
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isMajor = computed(() => actualVariation.value === 'major_event');
-const hasMainImage = computed(() => !!props.post?.eventOptions?.image)
+const hasMainImage = computed(() => !!props.post?.eventOptions?.thumbnail)
 const containerClass = computed(() => {
   let result = '';
   if (props.mode === 'fixedHeight') {
@@ -64,14 +63,20 @@ const store = useStore();
 // Random choice of 2 or 4
 const randomMultiplier = 4;
 
+
+
+  const showModal = () => {
+    store.setModalPost(props.post);
+
+  }
+
+
 const handleCardClick = () => {
   if (isDefault.value) {
-    showModal();
+    showModal()
   }
 }
-const showModal = () => {
-  store.setModalPost(props.post);
-}
+
 </script>
 
 <style scoped>

@@ -1,18 +1,15 @@
 <template>
   <Transition name="fade" mode="out-in">
-    <div class="modal-overlay fixed top-0 left-0 w-full h-full bg-black bg-opacity-10 z-50 grid items-center "
-      v-show="store.showModal" @click="store.toggleModal">
-      <div
-        class="flex flex-col items-center justify-start gap-4 overflow-y-scroll modal w-11/12 h-screen md:w-4/5 md:h-4/5 bg-white 2xl:max-w-3/4">
-        <div class="">
-          <slot />
-        </div>
-      </div>
+    <div class="modal-overlay overflow-scroll fixed top-20 w-11/12 h-full bg-black bg-opacity-10 z-50 flex"
+      v-show="store.showModal">
+      <PostContent v-if="store.showModal" :post="store.modalPost" />
     </div>
   </Transition>
 </template>
 
 <script lang="ts" setup>
+import PostContent from "~/components/post-content.vue";
+
 const { data: posts, isSuccess } = usePosts();
 import { ref, onMounted, watch } from 'vue';
 
@@ -38,7 +35,8 @@ onMounted(() => {
 
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.5);
-  place-items: center;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .modal {

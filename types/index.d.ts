@@ -27,15 +27,19 @@ declare global {
         eventOptions: {
             postType: string;
             cardSize: string;
-            eventYear: string;
-            teaser: string;
-            content:string;
-            image: {
+            thumbnail: {
                 node: {
                     mediaItemUrl: string;
                     sourceUrl: string;
-                };
-            };
+                }
+            }
+            eventYear: string;
+            teaser: string;
+            heroText: string;
+            contentVideo: string;
+            contentQuote: string;
+            quoteSpeaker: string;
+            content:string;
             tagline: string;
             quote: string;
             speaker: string;

@@ -10,31 +10,22 @@ query GetPosts {
       date
       slug
       link
-      cardOptions {
-        year
-        type
-        cardDescription
-        quoteTagline
-        quoteLink
-        mainImage {
-          node {
-            mediaItemUrl
-            sourceUrl
-          }
-        }
-      }
       eventOptions {
         postType
         cardSize
+        thumbnail {
+            node {
+                mediaItemUrl
+                sourceUrl
+            }
+        }
         eventYear
         teaser
+        heroText
+        contentVideo
+        contentQuote
+        quoteSpeaker
         content
-        image {
-          node {
-            mediaItemUrl
-            sourceUrl
-          }
-        }
         tagline
         quote
         speaker

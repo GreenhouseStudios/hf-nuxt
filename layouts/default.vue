@@ -6,7 +6,6 @@
     </svg>
     <Nav class="site-header" />
 
-    <!-- ScrollSmoother structure -->
 
     <div class="hf-page">
       <slot />
