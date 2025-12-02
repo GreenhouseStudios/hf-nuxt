@@ -8,7 +8,7 @@
     <div class="quote-front visible" ref="frontEl">
       <h2
           ref="taglineEl"
-          class="w-full text-lg md:text-5xl absolute font-bold"
+          class="w-10/12 text-lg md:text-5xl absolute font-bold m-auto"
       >
         {{ props.post?.eventOptions?.tagline || 'HARTFORD FOUNDATION' }}
       </h2>
@@ -97,22 +97,44 @@ const wrapEl = ref<HTMLElement | null>(null);
 const transcriptWrapEl = ref<HTMLElement | null>(null);
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
 
-function wrapChars(el: HTMLElement) {
+function wrapCharsByWord(el: HTMLElement) {
   const text = el.textContent ?? '';
-  const frag = document.createDocumentFragment();
   el.textContent = '';
 
-  for (const ch of text) {
-    const span = document.createElement('span');
-    span.className = 'char';
-    span.style.display = 'inline-block';
-    span.style.willChange = 'transform, opacity, filter';
+  const frag = document.createDocumentFragment();
 
-    span.textContent = ch === ' ' ? '\u00A0' : ch;
-    frag.appendChild(span);
+  // Split into words + whitespace tokens, keeping spaces
+  const tokens = text.split(/(\s+)/);
+
+  for (const token of tokens) {
+    // Just spaces/newlines → keep as normal text so browser can wrap
+    if (/^\s+$/.test(token)) {
+      frag.appendChild(document.createTextNode(token));
+      continue;
+    }
+
+    // Word span
+    const wordSpan = document.createElement('span');
+    wordSpan.className = 'word';
+    wordSpan.style.display = 'inline-block';
+
+    // Char spans inside it
+    for (const ch of token) {
+      const charSpan = document.createElement('span');
+      charSpan.className = 'char';
+      charSpan.style.display = 'inline-block';
+      charSpan.style.willChange = 'transform, opacity, filter';
+      charSpan.textContent = ch;
+      wordSpan.appendChild(charSpan);
+    }
+
+    frag.appendChild(wordSpan);
   }
+
   el.appendChild(frag);
 }
+
+
 
 function killTweens(el: HTMLElement) {
   const chars = el.querySelectorAll<HTMLElement>('.char');
@@ -294,7 +316,7 @@ const toggleTranscript = () => {
 }
 
 onMounted(() => {
-  if(taglineEl.value) wrapChars(taglineEl.value)
+  if(taglineEl.value) wrapCharsByWord(taglineEl.value)
 
   if (taglineEl.value) {
     primeDissolved(taglineEl.value)
@@ -332,7 +354,6 @@ onMounted(() => {
 /* Keep the actual space glyph width; allow wrapping between spans */
 .char {
   display: inline-block;
-  white-space: pre;
   vertical-align: baseline;
   will-change: filter, transform, opacity;
   transition: transform .25s;
@@ -357,6 +378,7 @@ p[aria-hidden="false"] {
   position: absolute;
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   transition: opacity .75s ease;

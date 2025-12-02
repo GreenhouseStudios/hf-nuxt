@@ -100,7 +100,7 @@
      
     <!-- Card Layout (CSS Grid) -->
     <section class="flex flex-col justify-around">
-      <div v-if="filteredPosts.length === 0">
+      <div v-if="spacedPosts.length === 0">
         No posts found.
       </div>
       <div v-else>
@@ -117,9 +117,9 @@
   }"
         >
           <li
-              v-for="(post, i) in filteredPosts"
-              :key="post?.id"
-              :id="post?.eventOptions?.postType === 'major_event' ? 'major-event-li' : post?.id"
+              v-for="(post, i) in spacedPosts"
+              :key="post?.slug"
+              :id="post?.eventOptions?.postType === 'major_event' ? 'major-event-li' : post?.slug"
               :class="['bento-card', { 'major-event-card shadow-md': post?.eventOptions?.postType === 'major_event' }, { 'quote-card': post?.eventOptions?.postType === 'quote' }]"
               :data-card-size="post?.eventOptions?.cardSize"
               :data-is-quote="post?.eventOptions?.postType === 'quote' ? '1' : '0'"
@@ -173,11 +173,11 @@ const smallCardRange = {
 }
 const randCardRange = {
   col: [1, 2],
-  row: [3, 7]
+  row: [3, 6]
 }
 const lgCardRange = {
   col: 2,
-  row: [3, 6]
+  row: [3, 5]
 }
 
 const gridEl = ref<HTMLElement | null>(null);
@@ -221,7 +221,7 @@ async function measureAndPack(reset = false) {
   const liElements = Array.from(grid.querySelectorAll('li'));
 
   let postsFiltered = false;
-  if(filteredPosts.value.length < postsArray.value.length) {
+  if(spacedPosts.value.length < postsArray.value.length) {
     postsFiltered = true;
   }
 
@@ -1058,6 +1058,9 @@ const postsArray = computed(() => {
   }
   return [] as Post[];
 });
+
+
+
 const postsFilteredByCategory = computed(() => {
   if (store.timelineFilterCategories.length > 0) {
     return postsArray.value.filter((post: Post) => {
@@ -1069,6 +1072,76 @@ const postsFilteredByCategory = computed(() => {
   return postsArray.value;
 });
 
+const filteredPostsBase = computed<Post[]>(() => {
+  const base = postsFilteredByCategory.value;
+  const term = store.searchTerm.trim().toLowerCase();
+  if(!term) return base;
+
+  return base.filter((post: Post) =>
+    post.title.toLowerCase().includes(term)
+  );
+})
+
+const quoteInterval = computed(() => {
+  const total = filteredPostsBase.value.length;
+  if (total === 0) return 6;
+
+  const quoteCount = filteredPostsBase.value.filter(
+      post => post.eventOptions?.postType === 'quote'
+  ).length;
+
+
+  if (quoteCount === 0) return Number.POSITIVE_INFINITY;
+
+  const raw = total / (quoteCount + 2);
+
+  return Math.max(1, Math.round(raw));
+});
+
+const spacedPosts = computed(() => {
+  const base = filteredPostsBase.value;
+  if (!base.length) return [];
+
+  const interval = quoteInterval.value;
+
+  const quotePosts: Post[] = [];
+  const nonQuotePosts: Post[] = [];
+
+  for (const post of base) {
+    if (post.eventOptions?.postType === 'quote') {
+      quotePosts.push(post);
+    } else {
+      nonQuotePosts.push(post);
+    }
+  }
+
+  if (quotePosts.length === 0) return nonQuotePosts;
+
+  const result: Post[] = [];
+  let quoteIndex = 0;
+  let nonIndex = 0;
+  let sinceLastQuote = 0;
+
+  while (nonIndex < nonQuotePosts.length) {
+    result.push(nonQuotePosts[nonIndex++]);
+    sinceLastQuote++;
+
+    if (sinceLastQuote >= interval && quoteIndex < quotePosts.length) {
+      result.push(quotePosts[quoteIndex++]);
+      sinceLastQuote = 0;
+    }
+  }
+
+  while (quoteIndex < quotePosts.length) {
+    result.push(quotePosts[quoteIndex++]);
+  }
+
+  return result;
+});
+
+
+
+
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {
     return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : postsFilteredByCategory.value;
@@ -1076,7 +1149,6 @@ const filteredPosts = computed(() => {
 });
 
 
-/**** Document Generation ****/
 
 
 
@@ -1108,9 +1180,10 @@ onMounted( async () => {
 
 let first = false;
 let pdfGenerated = false;
-watch([filteredPosts], async () => {
+watch([spacedPosts], async () => {
   //if(!pdfGenerated && filteredPosts.value.length !== 0) await generateDocx(filteredPosts.value);
   await nextTick();
+
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;

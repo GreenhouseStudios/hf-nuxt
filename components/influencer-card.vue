@@ -5,7 +5,7 @@
       <div class="card-wrap rounded-2xl" ref="cardWrapEl">
         <div class="details-wrap">
           <span class="details-town text-lg font-bold shown">
-            Town of {{ influencer.influencerDetails.town || 'Hartford' }}
+            {{ influencer.influencerDetails.town || 'Hartford' }}
           </span>
           <h3 class="details-name font-bold">
             {{ influencer.influencerDetails.name }}
