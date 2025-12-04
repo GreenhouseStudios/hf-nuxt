@@ -22,7 +22,6 @@ query GetPosts {
         eventYear
         teaser
         heroText
-        contentVideo
         contentQuote
         quoteSpeaker
         content

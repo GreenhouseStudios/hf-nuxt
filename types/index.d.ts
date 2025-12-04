@@ -57,9 +57,11 @@ declare global {
         slug: string;
         link: string;
         influencerDetails: {
+          honorific: string;
           name: string;
           title: string;
           description: string;
+          town: string;
           image: {
             node: {
               mediaItemUrl: string;

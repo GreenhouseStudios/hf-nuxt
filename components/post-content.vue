@@ -48,7 +48,6 @@ onMounted(async () => {
 
   const h3Els = Array.from(contentWrap.value?.querySelectorAll('h3'));
 
-  console.log(props?.post?.eventOptions?.content)
 
   if(quoteExists) {
     quoteWrap =

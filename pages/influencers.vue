@@ -33,7 +33,6 @@ onMounted(() => {
     script.async = true;
     document.body.appendChild(script);
     setTimeout(() => {
-        console.log(influencers.value);
     }, 1000);
 });
 </script>

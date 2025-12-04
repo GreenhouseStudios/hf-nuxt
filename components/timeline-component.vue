@@ -18,10 +18,7 @@
 .bento-inner > div {
   height: 100%;
 }
-.bento-inner img {
-  max-height: 65%;
-  min-height: 50%;
-}
+
 .bento-card {
   opacity: .01;
   transition: transform 1s, opacity .75s;
@@ -151,12 +148,14 @@ import {useStore} from '~/stores/store';
 import Card from "~/components/card.vue";
 import Filters from "~/components/filters.vue";
 import { generateDocx } from '@/composables/useDocGenerate';
+import {fetchPosts, usePosts} from "~/composables/usePosts";
 
 /**
  * Get post data
  */
 const store = useStore();
 const { data: posts } = usePosts();
+console.log(fetchPosts())
 
 /**
  * Set col/row/card values
@@ -285,7 +284,7 @@ async function measureAndPack(reset = false) {
     } else if(el.dataset.cardSize === 'small') {
       c = smallCardRange.col;
     } else {
-      c = Math.random() > .25 ? randCardRange.col[0] : randCardRange.col[1];
+      c = Math.random() > .15 ? randCardRange.col[0] : randCardRange.col[1];
     }
     el.style.gridColumn = `span ${c}`;
     el.dataset.colspan = `${c}`;
@@ -1060,6 +1059,7 @@ const postsArray = computed(() => {
 });
 
 
+console.log(postsArray)
 
 const postsFilteredByCategory = computed(() => {
   if (store.timelineFilterCategories.length > 0) {
@@ -1140,15 +1140,11 @@ const spacedPosts = computed(() => {
 });
 
 
-
-
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {
     return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : postsFilteredByCategory.value;
   });
 });
-
-
 
 
 
@@ -1180,10 +1176,10 @@ onMounted( async () => {
 
 let first = false;
 let pdfGenerated = false;
-watch([spacedPosts], async () => {
+watch([filteredPosts], async () => {
   //if(!pdfGenerated && filteredPosts.value.length !== 0) await generateDocx(filteredPosts.value);
   await nextTick();
-
+  console.log(filteredPosts)
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;

@@ -9,6 +9,7 @@ export const GET_INFLUENCERS = gql`
         slug
         link
         influencerDetails {
+          honorific
           name
           title
           town

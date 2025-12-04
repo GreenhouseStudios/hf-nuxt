@@ -9,11 +9,11 @@
         ]"
     @click="handleCardClick">
     <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
-      class="min-h-24 grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
+      class="card-img grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault"
       src="/placeholder.png"
-      class="bg-auto" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
+      class="bg-auto card-img" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
     <CardContent v-if="isDefault" :post="props.post" />
     <QuoteContent v-if="isQuote" :post="props.post" />
     <MajorContent v-if="isMajor" :post="props.post" />
@@ -80,6 +80,12 @@ const handleCardClick = () => {
 </script>
 
 <style scoped>
+
+.card-img {
+  max-height: 50%;
+  object-fit: cover;
+}
+
 
 .feature {
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);

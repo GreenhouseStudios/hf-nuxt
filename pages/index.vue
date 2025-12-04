@@ -221,6 +221,23 @@
 
     <TimelineComponent />
   </div>
+
+
+  <InfluencersComponent />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </template>
 
 <script lang="ts" setup>
@@ -229,6 +246,7 @@ import anime from 'animejs';
 import { onMounted, nextTick } from 'vue';
 import Vision from "~/components/vision.vue";
 import TimelineComponent from "~/components/timeline-component.vue";
+import InfluencersComponent from "~/components/influencers-component.vue";
 
 
 onMounted(async ()  =>  {
