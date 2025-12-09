@@ -27,7 +27,7 @@
   transform: translateY(150px);
 }
 
-.adjustForMajorEvent {
+.adjustForCovid {
   --to-move: unset;
   transition: transform .75s ease !important;
   transform: var(--to-move) !important;
@@ -69,6 +69,92 @@
   transform: translateY(150px);
 }
 
+.covid-card {
+  opacity: .01;
+  border-radius: calc(var(--ui-radius) * 4);
+  transition: transform 1.25s, opacity .75s;
+  transition-delay: .25s;
+  position: relative;
+}
+
+.covid-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
+  transition-delay: .25s;
+  transition: width .75s ease-out, transform .75s ease-out;
+  background: url("../public/major-event-bg.png") no-repeat center bottom;
+  border-radius: calc(var(--ui-radius) * 4);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  padding: 25px;
+  gap: 15px;
+}
+
+.covid-post {
+  width: 15%;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  --delay: 0;
+}
+
+.covid-post img {
+  width: 100% !important;
+}
+
+.covid-post.inactive {
+  display: block;
+  animation: covid-post-inactive-ani .5s var(--delay) ease forwards;
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+@keyframes covid-post-inactive-ani {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(200px);
+  }
+}
+
+.covid-post.active {
+  display: block;
+  animation: covid-post-active-ani .5s var(--delay) ease forwards;
+  opacity: 0;
+  transform: translateY(200px);
+}
+
+@keyframes covid-post-active-ani {
+  from {
+    opacity: 0;
+    transform: translateY(200px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+#covid-title {
+  position: absolute;
+  text-align: center;
+  color: white;
+  margin-bottom: 0;
+  max-width: 80%;
+  height: fit-content !important;
+  top: 50%;
+  left: 50%;
+  transition: opacity .25s;
+  transform: translateX(-50%) translateY(-50%);
+}
 </style>
 <style>
 
@@ -85,6 +171,7 @@
   Fix <p> in major event span
   Design modals following Yuna's design
   Add multi-major event support (waiting for answer from HF)
+  Set covid modal to disable until initial transition end + cards 2 rows under
 
   -->
 
@@ -114,26 +201,56 @@
   }"
         >
           <li
-              v-for="(post, i) in spacedPosts"
-              :key="post?.slug"
-              :id="post?.eventOptions?.postType === 'major_event' ? 'major-event-li' : post?.slug"
-              :class="['bento-card', { 'major-event-card shadow-md': post?.eventOptions?.postType === 'major_event' }, { 'quote-card': post?.eventOptions?.postType === 'quote' }]"
-              :data-card-size="post?.eventOptions?.cardSize"
-              :data-is-quote="post?.eventOptions?.postType === 'quote' ? '1' : '0'"
-              :data-is-major-event="post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
+              v-for="item in timelineItems"
+              :key="item.type === 'post' ? item.post.slug : 'covid-2020'"
+              :class="[
+                'bento-card',
+                { 'major-event-card shadow-md': item.type === 'post' && item.post?.eventOptions?.postType === 'major_event' },
+                { 'quote-card': item.type === 'post' && item.post?.eventOptions?.postType === 'quote' },
+                { 'covid-card': item.type === 'covid' }
+              ]"
+              :data-card-size="item.type === 'post'
+                ? (item.post?.eventOptions?.cardSize ?? 'default')
+                : 'large'"
 
+              :data-is-quote="item.type === 'post' && item.post?.eventOptions?.postType === 'quote' ? '1' : '0'"
+              :data-is-major-event="item.type === 'post' && item.post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
+              :data-is-covid="item.type === 'covid' ? '1' : '0'"
           >
+            <!-- normal posts -->
             <div
-            :class="post?.eventOptions?.postType === 'major_event' ? 'major-event-inner' : 'bento-inner'"
+                v-if="item.type === 'post'"
+                :class="item.post?.eventOptions?.postType === 'major_event' ? 'major-event-inner' : 'bento-inner'"
             >
               <Card
-                  :post="post"
+                  :post="item.post"
                   :x-multiplier="1"
                   :y-multiplier="1"
                   mode="fixedHeight"
               />
             </div>
+
+            <div
+                v-else
+                class="bento-inner covid-inner"
+            >
+              <Card
+                  v-for="post in item.posts"
+                  :key="post.slug"
+                  :post="post"
+                  :class="'covid-post inactive'"
+                  style="display: none"
+                  :x-multiplier="1"
+                  :y-multiplier="1"
+                  mode="fixedHeight"
+              />
+              <h2 id="covid-title" class="text-6xl font-bold">COVID-19</h2>
+
+              <!-- can be a single special card or a small list of covid cards -->
+
+            </div>
           </li>
+
         </ul>
       </div>
     </section>
@@ -155,7 +272,6 @@ import {fetchPosts, usePosts} from "~/composables/usePosts";
  */
 const store = useStore();
 const { data: posts } = usePosts();
-console.log(fetchPosts())
 
 /**
  * Set col/row/card values
@@ -165,7 +281,7 @@ let cols = numCols.value;
 let rowHeight = 75;
 const gap = 25;
 let layoutInProgress = false;
-let majorEventCardGrow = false;
+let covidCardGrow = false;
 const smallCardRange = {
   col: 1,
   row: [3, 6]
@@ -180,6 +296,10 @@ const lgCardRange = {
 }
 
 const gridEl = ref<HTMLElement | null>(null);
+type TimelineItem =
+  | { type: 'post'; post: Post }
+  | { type: 'covid'; year: number; posts: Post[] }
+
 
 /**
  * Hard rebuild on numCol change / post watch
@@ -187,7 +307,7 @@ const gridEl = ref<HTMLElement | null>(null);
 const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
-  majorEventCardGrow = false;
+  covidCardGrow = false;
   rebuildToken.value++;
   if(gridEl.value) gridEl.value.style.opacity = '0';
   await nextTick();
@@ -197,7 +317,6 @@ async function hardRebuild() {
 /**
  * Build bento grid / measure & update bento cards
  */
-
 let imgChecked = false;
 let packCount = 0;
 async function measureAndPack(reset = false) {
@@ -219,10 +338,7 @@ async function measureAndPack(reset = false) {
 
   const liElements = Array.from(grid.querySelectorAll('li'));
 
-  let postsFiltered = false;
-  if(spacedPosts.value.length < postsArray.value.length) {
-    postsFiltered = true;
-  }
+
 
   if(numCols.value === 1) {
     liElements.forEach(el => {
@@ -245,25 +361,26 @@ async function measureAndPack(reset = false) {
     cardAnimation();
     return;
   }
-  // Make majorEvent card if 15+ cards in grid & majorEvent card not made yet
-  if(liElements.length >= 15 && !majorEventCardGrow && !postsFiltered) {
-    const majorEventLi = liElements.find(el => el.dataset.isMajorEvent === '1') ?? null;
-    if(!majorEventLi) return;
-    majorEventCardGrow = true;
-
-    if(numCols.value > 2) {
-      majorEventLi.addEventListener('pointerenter', function grow() {
-        majorEventLi.removeEventListener('pointerenter', grow);
-        requestAnimationFrame(() => growMajorEventCard(majorEventLi, grid as HTMLElement));
-      })
+  // Sewt covid card if 15+ cards in grid & covid card not made yet
+  if(liElements.length >= 15 && !covidCardGrow) {
+    const covidLi = liElements.find(el => el.dataset.isCovid === '1') ?? null;
+    if(covidLi) {
+      covidCardGrow = true;
+      if(numCols.value > 2) {
+        covidLi.addEventListener('pointerenter', function grow() {
+          covidLi.removeEventListener('pointerenter', grow);
+          requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement));
+        })
+      }
+      setCovidSpan(covidLi, grid as HTMLElement);
     }
-    setMajorEventSpan(majorEventLi, grid as HTMLElement);
+
   }
 
   // Reset cards if reset=true
   if(reset) {
     liElements.forEach(el => {
-      if(el.dataset.isMajorEvent === '1') { setMajorEventSpan(el as HTMLElement, grid as HTMLElement) }
+      if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, grid as HTMLElement) }
       else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, grid as HTMLElement) }
       else {
         el.style.gridColumn = 'span 1';
@@ -277,7 +394,7 @@ async function measureAndPack(reset = false) {
 
   // Ensure colspans are valid/normalized
   liElements.forEach(el => {
-    if(el.dataset.isMajorEvent === '1' || el.dataset.isQuote === '1') return;
+    if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
     let c;
     if(el.dataset.cardSize === 'large') {
       c = lgCardRange.col;
@@ -302,7 +419,7 @@ async function measureAndPack(reset = false) {
   // Assign rowspans with slight randomization based on column count
   let totalCells = 0;
   liElements.forEach(el => {
-    if(el.dataset.isMajorEvent === '1' || el.dataset.isQuote === '1') return;
+    if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
 
     const inner = el.querySelector('.bento-inner');
     if(!inner) return;
@@ -402,7 +519,7 @@ async function measureAndPack(reset = false) {
   } finally {
     if(gridEl.value) gridEl.value.style.opacity = '1';
       liElements.forEach(el => {
-        if (el.dataset.isMajorEvent === '1') el.classList.add('major-event-transform');
+        if (el.dataset.isCovid === '1') el.classList.add('major-event-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
       });
       cardAnimation();
@@ -703,19 +820,19 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
 
 
 /**
- * Set majorEvent span/columns depending on column count
+ * Set covid span/columns depending on column count
  */
-function setMajorEventSpan(card: HTMLElement, grid: HTMLElement) {
+function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
   let colWidth = Math.floor(
       (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let majorEventRows = Math.floor((colWidth * 1.5) / rowHeight);
+  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
 
   if(numCols.value > 1) {
     card.style.gridColumn = 'span 2';
     card.dataset.colspan = '2';
-    card.style.gridRowEnd = `span ${majorEventRows}`;
-    card.dataset.rowspan = `${majorEventRows}`;
+    card.style.gridRowEnd = `span ${covidRows}`;
+    card.dataset.rowspan = `${covidRows}`;
   } else if(numCols.value === 2) {
     card.style.gridColumn = 'span 2';
     card.dataset.colspan = '2';
@@ -724,28 +841,28 @@ function setMajorEventSpan(card: HTMLElement, grid: HTMLElement) {
   } else {
     card.style.gridColumn = 'span 1';
     card.dataset.colspan = '1';
-    majorEventRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
-    card.style.gridRowEnd = `span ${majorEventRows}`;
-    card.dataset.rowspan = `${majorEventRows}`;
+    covidRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
+    card.style.gridRowEnd = `span ${covidRows}`;
+    card.dataset.rowspan = `${covidRows}`;
   }
+  console.log(covidRows)
 }
 
 
 /**
- * Calculate cards in majorEvent rows / move cards out of way / grow majorEvent card
+ * Calculate cards in covid rows / move cards out of way / grow covid card
  */
-function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
+function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const { pitchY } = getGridMetrics(grid);
   const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
-  const majorEventPlacement = placements.find(p => p.el === majorEventCard);
-  if (!majorEventPlacement) return;
+  const covidPlacement = placements.find(p => p.el === covidCard);
+  if (!covidPlacement) return;
+  const covidTop = covidPlacement.row;
+  const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
+  const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
 
-  const majorEventTop = majorEventPlacement.row;
-  const majorEventBot = majorEventPlacement.row + majorEventPlacement.rowspan - 1;
-  const majorEventMid = majorEventTop + Math.floor(majorEventPlacement.rowspan / 2);
-
-  const cTopPx = majorEventTop * pitchY;
-  const cBotPx = (majorEventPlacement.row + majorEventPlacement.rowspan) * pitchY;
+  const cTopPx = covidTop * pitchY;
+  const cBotPx = (covidPlacement.row + covidPlacement.rowspan) * pitchY;
 
   // maps for stack shifts
   const upByCol = new Map<number, number>();
@@ -756,12 +873,12 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
 
   // pass 1: collect overlaps and max shifts
   for (const p of placements) {
-    if (p.el === majorEventCard) continue;
+    if (p.el === covidCard) continue;
 
     const pTop = p.row;
     const pBot = p.row + p.rowspan - 1;
 
-    const overlapRows = Math.max(0, Math.min(pBot, majorEventBot) - Math.max(pTop, majorEventTop) + 1);
+    const overlapRows = Math.max(0, Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1);
     const overlapPx = overlapRows * pitchY;
 
     const colStart = p.col;
@@ -770,7 +887,7 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
     if (overlapRows > 0) {
       // inside COVID rows
       const center = pTop + (p.rowspan - 1) / 2;
-      const delta = center < majorEventMid ? -overlapPx : overlapPx;
+      const delta = center < covidMid ? -overlapPx : overlapPx;
       perCardShift.set(p.el, delta);
 
       // record per-column max for stacks
@@ -783,11 +900,11 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
       }
     } else {
       // no overlap — candidate for stacks
-      if (pBot < majorEventTop) {
+      if (pBot < covidTop) {
         for (let c = colStart; c <= colEnd; c++) {
           upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
         }
-      } else if (pTop > majorEventBot) {
+      } else if (pTop > covidBot) {
         for (let c = colStart; c <= colEnd; c++) {
           downByCol.set(c, Math.max(downByCol.get(c) ?? 0, 0));
         }
@@ -797,7 +914,7 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
 
   // pass 2: apply shifts
   for (const p of placements) {
-    if (p.el === majorEventCard) continue;
+    if (p.el === covidCard) continue;
 
     let deltaY = perCardShift.get(p.el) ?? 0;
 
@@ -833,140 +950,158 @@ function growMajorEventCard(majorEventCard: HTMLElement, grid: HTMLElement) {
 
 
     p.el.style.setProperty('--to-move', mergeTranslateY(p.el.style.transform || "", deltaY));
-    p.el.classList.add('adjustForMajorEvent');
+    p.el.classList.add('adjustForCovid');
   }
-  const inner = <HTMLElement>majorEventCard.querySelector('.major-event-inner');
+  const inner = <HTMLElement>covidCard.querySelector('.covid-inner');
   const innerRect = inner?.getBoundingClientRect() || null;
   if(!inner || !innerRect) return;
 
-  const textGrow = <HTMLElement>inner.querySelector('#text-grow');
-  const titleShrunk = <HTMLElement>inner.querySelector('#title-shrunk');
+  const innerPosts: HTMLElement[] = Array.from(inner.querySelectorAll('.covid-post'));
 
-  if(!textGrow || !titleShrunk) return;
-  titleShrunk.style.opacity = '0';
-  titleShrunk.addEventListener('transitionend', function spanInner() {
-    titleShrunk.removeEventListener('transitionend', spanInner);
-    const gridRect = grid.getBoundingClientRect();
-    const distFromLeft = innerRect.left - gridRect.left;
+  const covidTitle = <HTMLElement>covidCard.querySelector('#covid-title');
 
-    let maxShiftEl: HTMLElement | null = null;
-    let maxAbs = -Infinity;
-    for (const [el, val] of perCardShift.entries()) {
-      const abs = Math.abs(val);
-      if (abs > maxAbs) {
-        maxAbs = abs;
-        maxShiftEl = el;
-      }
+  const gridRect = grid.getBoundingClientRect();
+  const distFromLeft = innerRect.left - gridRect.left;
+
+  let maxShiftEl: HTMLElement | null = null;
+  let maxAbs = -Infinity;
+  for (const [el, val] of perCardShift.entries()) {
+    const abs = Math.abs(val);
+    if (abs > maxAbs) {
+      maxAbs = abs;
+      maxShiftEl = el;
+    }
+  }
+
+  if(maxShiftEl) {
+    maxShiftEl.addEventListener('transitionend', () => {
+      inner.style.transform = `translateX(${-distFromLeft}px)`;
+      inner.style.width = `${gridRect.width}px`;
+      covidTitle.style.opacity = '0';
+    }, {once:true})
+  } else {
+    let firstShiftEl: HTMLElement | null;
+    firstShiftEl = perCardShift.keys().next().value ?? null;
+    if(firstShiftEl) {
+      firstShiftEl.addEventListener('transitionend', () => {
+        setTimeout(() => {
+          inner.style.transform = `translateX(${-distFromLeft}px)`;
+          inner.style.width = `${gridRect.width}px`;
+          covidTitle.style.opacity = '0';
+        }, 300);
+
+      })
     }
 
-    if(maxShiftEl) {
-      maxShiftEl.addEventListener('transitionend', () => {
-        inner.style.transform = `translateX(${-distFromLeft}px)`;
-        inner.style.width = `${gridRect.width}px`;
-      }, {once:true})
-    } else {
-      let firstShiftEl: HTMLElement | null;
-      firstShiftEl = perCardShift.keys().next().value ?? null;
-      if(firstShiftEl)
-        firstShiftEl.addEventListener('transitionend', () => {
-          setTimeout(() => {
-            inner.style.transform = `translateX(${-distFromLeft}px)`;
-            inner.style.width = `${gridRect.width}px`;
+  }
 
-          }, 300);
+  inner.addEventListener('transitionend', function grown() {
+    inner.removeEventListener('transitionend', grown);
 
-        })
-    }
+    let delay = .5;
+    innerPosts.forEach(covidPost => {
 
-
-    setTimeout(() => {
-      inner.addEventListener('pointerleave', function shrink() {
-        inner.removeEventListener('pointerleave', shrink);
-        requestAnimationFrame(() => {
-          inner.style.width = '100%';
-          inner.style.transform = 'none';
-
-          textGrow.style.opacity = '0';
-
-          inner.addEventListener('transitionend', function shrunk(e) {
-            if(e.propertyName !== 'width') return;
-            inner.removeEventListener('transitionend', shrunk);
-            requestAnimationFrame(() => {
-              textGrow.style.display = 'none';
-
-              titleShrunk.style.display = '';
-              void titleShrunk.offsetWidth;
-              titleShrunk.style.opacity = '1';
-              const liElements = Array.from(document.querySelectorAll('.bento-card'));
-              let reset = false;
-
-              let maxShiftEl: HTMLElement | null = null;
-              let maxAbs = -Infinity;
-              for (const [el, val] of perCardShift.entries()) {
-                const abs = Math.abs(val);
-                if (abs > maxAbs) {
-                  maxAbs = abs;
-                  maxShiftEl = el;
-                }
-              }
-
-              if(maxShiftEl) {
-                maxShiftEl.addEventListener('transitionend', () => {
-                  inner.addEventListener('pointerenter', function grow() {
-                    requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
-                  }, {once:true})
-
-                }, {once:true})
-              } else {
-                let firstShiftEl: HTMLElement | null = null;
-                firstShiftEl = perCardShift.keys().next().value ?? null;
-                if(firstShiftEl)
-                  firstShiftEl.addEventListener('transitionend', () => {
-                    setTimeout(() => {
-                      majorEventCard.addEventListener('pointerenter', function grow() {
-                        requestAnimationFrame(() => growMajorEventCard(majorEventCard, grid))
-                      }, {once:true})
-                    }, 300);
-
-                  })
-              }
-
-              liElements.forEach(el => {
-                if(el.classList.contains('adjustForMajorEvent')) {
-                  el.classList.remove('adjustForMajorEvent');
-                }
-              });
-            })
-
-          })
-
-
-        })
-      });
-    }, 300)
-
+      covidPost.style.setProperty('--delay', `${delay += .15}s`)
+      covidPost.style.display = 'block';
+      covidPost.classList.replace('inactive', 'active');
+    })
 
 
   })
 
+  setTimeout(() => {
+    inner.addEventListener('pointerleave', function triggerShrink() {
+      inner.removeEventListener('pointerleave', triggerShrink);
+      let delay = 0;
+
+      innerPosts.forEach(covidPost => {
+        covidPost.style.setProperty('--delay', `${delay}s`)
+        delay += .1;
+        covidPost.classList.replace('active', 'inactive')
+        covidPost.addEventListener('animationend', () => covidPost.style.display = 'none', {once:true})
+      })
+
+      shrink()
+
+    });
+  }, 300)
 
 
 
+  function shrink() {
+    requestAnimationFrame(() => {
 
-  titleShrunk.style.opacity = '0';
+      inner.style.transitionDelay = '.5s';
+
+      inner.style.width = '100%';
+      inner.style.transform = 'none';
+
+
+
+      inner.addEventListener('transitionend', function shrunk(e) {
+        if(e.propertyName !== 'width') return;
+        inner.removeEventListener('transitionend', shrunk);
+        inner.style.transitionDelay = 'unset';
+        requestAnimationFrame(() => {
+          covidTitle.style.opacity = '1';
+          const liElements = Array.from(document.querySelectorAll('.bento-card'));
+          let reset = false;
+          let maxShiftEl: HTMLElement | null = null;
+          let maxAbs = -Infinity;
+          for (const [el, val] of perCardShift.entries()) {
+            const abs = Math.abs(val);
+            if (abs > maxAbs) {
+              maxAbs = abs;
+              maxShiftEl = el;
+            }
+          }
+
+          if(maxShiftEl) {
+            maxShiftEl.addEventListener('transitionend', () => {
+              inner.addEventListener('pointerenter', function grow() {
+                requestAnimationFrame(() => growCovidCard(covidCard, grid))
+              }, {once:true})
+
+            }, {once:true})
+          } else {
+            let firstShiftEl: HTMLElement | null = null;
+            firstShiftEl = perCardShift.keys().next().value ?? null;
+            if(firstShiftEl)
+              firstShiftEl.addEventListener('transitionend', () => {
+                setTimeout(() => {
+                  covidCard.addEventListener('pointerenter', function grow() {
+                    requestAnimationFrame(() => growCovidCard(covidCard, grid))
+                  }, {once:true})
+                }, 300);
+
+              })
+          }
+
+          liElements.forEach(el => {
+            if(el.classList.contains('adjustForCovid')) {
+              el.classList.remove('adjustForCovid');
+            }
+          });
+        })
+
+      })
+
+
+    })
+  }
+
+
+
+  covidTitle.style.opacity = '0';
   inner.addEventListener('transitionend', function grow(e) {
     if(e.propertyName !== 'width') return;
     inner.removeEventListener('transitionend', grow);
-    titleShrunk.style.display = 'none';
-    textGrow.style.display = '';
-    void textGrow.offsetWidth;
-    textGrow.style.opacity = '1';
   });
 }
 
 
 /**
- * Calculate translate for cards in majorEvent row
+ * Calculate translate for cards in covid row
  */
 function mergeTranslateY(transformStr: string, y: number) {
   // Treat 'none' as empty
@@ -1059,7 +1194,6 @@ const postsArray = computed(() => {
 });
 
 
-console.log(postsArray)
 
 const postsFilteredByCategory = computed(() => {
   if (store.timelineFilterCategories.length > 0) {
@@ -1082,6 +1216,7 @@ const filteredPostsBase = computed<Post[]>(() => {
   );
 })
 
+
 const quoteInterval = computed(() => {
   const total = filteredPostsBase.value.length;
   if (total === 0) return 6;
@@ -1098,32 +1233,36 @@ const quoteInterval = computed(() => {
   return Math.max(1, Math.round(raw));
 });
 
+
+
+
 const spacedPosts = computed(() => {
-  const base = filteredPostsBase.value;
+  const base = filteredPostsBase.value.filter(
+    post => post.eventOptions?.postType !== 'covid_post'
+  )
   if (!base.length) return [];
 
   const interval = quoteInterval.value;
 
   const quotePosts: Post[] = [];
-  const nonQuotePosts: Post[] = [];
-
+  const defaultPosts: Post[] = [];
   for (const post of base) {
     if (post.eventOptions?.postType === 'quote') {
       quotePosts.push(post);
     } else {
-      nonQuotePosts.push(post);
+      defaultPosts.push(post)
     }
   }
 
-  if (quotePosts.length === 0) return nonQuotePosts;
+  if (quotePosts.length === 0) return defaultPosts;
 
   const result: Post[] = [];
   let quoteIndex = 0;
   let nonIndex = 0;
   let sinceLastQuote = 0;
 
-  while (nonIndex < nonQuotePosts.length) {
-    result.push(nonQuotePosts[nonIndex++]);
+  while (nonIndex < defaultPosts.length) {
+    result.push(defaultPosts[nonIndex++]);
     sinceLastQuote++;
 
     if (sinceLastQuote >= interval && quoteIndex < quotePosts.length) {
@@ -1136,9 +1275,61 @@ const spacedPosts = computed(() => {
     result.push(quotePosts[quoteIndex++]);
   }
 
+
   return result;
 });
 
+const shouldMakeCovid = computed(() => {
+  return !!filteredPostsBase.value
+      .filter(post => post.eventOptions?.postType === 'covid_post')
+      .length;
+})
+
+const covidPosts = computed(() => {
+  return filteredPostsBase.value.filter(
+      post => post.eventOptions?.postType === 'covid_post'
+  );
+})
+
+const COVID_YEAR = 2020;
+
+const timelineItems = computed<TimelineItem[]>(() => {
+  const base = spacedPosts.value;
+  const covid = covidPosts.value;
+  const hasCovid = covid.length > 0;
+
+  if(!base.length && !hasCovid) return [];
+
+  const above: TimelineItem[] = [];
+  const equal: TimelineItem[] = [];
+  const below: TimelineItem[] = [];
+
+  for(const post of base) {
+    const year = parseInt(post.eventOptions?.eventYear || '0', 10);
+    const item: TimelineItem = { type: 'post', post }
+
+    if(year > COVID_YEAR) above.push(item);
+    else if(year === COVID_YEAR) equal.push(item);
+    else below.push(item);
+  }
+
+  const result: TimelineItem[] = [];
+
+  result.push(...above);
+  result.push(...equal);
+
+  if(hasCovid) {
+    result.push({
+      type: 'covid',
+      year: COVID_YEAR,
+      posts: covid
+    })
+  }
+
+  result.push(...below);
+
+  return result;
+})
 
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {
@@ -1148,7 +1339,7 @@ const filteredPosts = computed(() => {
 
 
 
-
+console.log(timelineItems)
 
 
 onMounted( async () => {
@@ -1179,7 +1370,6 @@ let pdfGenerated = false;
 watch([filteredPosts], async () => {
   //if(!pdfGenerated && filteredPosts.value.length !== 0) await generateDocx(filteredPosts.value);
   await nextTick();
-  console.log(filteredPosts)
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;

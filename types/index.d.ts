@@ -12,18 +12,6 @@ declare global {
         date: string;
         slug: string;
         link: string;
-        cardOptions: {
-            year: string;
-            type: string;
-            cardDescription: string;
-            quoteAuthor: string;
-            mainImage: {
-                node: {
-                    mediaItemUrl: string;
-                    sourceUrl: string;
-                };
-            };
-        };
         eventOptions: {
             postType: string;
             cardSize: string;

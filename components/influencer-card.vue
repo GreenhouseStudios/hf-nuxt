@@ -132,9 +132,37 @@ async function aniSize() {
   }
 }
 
+function resizeAdjust() {
+  if(!cardImgEl.value || !cardInnerEl.value || !cardWrapEl.value || !gridWrapEl.value) {
+    return;
+
+
+  }
+
+
+  const rect = gridWrapEl.value.getBoundingClientRect();
+
+  const gridWrapH = Math.floor(rect.height);
+  const gridWrapW = Math.floor(rect.width);
+
+
+
+  if(!props.isActive) {
+    cardImgEl.value.style.height = `${gridWrapH}px`;
+    cardImgEl.value.style.width = `${gridWrapW}px`;
+  }
+
+  cardInnerEl.value.style.height = `${gridWrapH}px`;
+  cardInnerEl.value.style.width = `${gridWrapW}px`;
+
+
+}
+
 onMounted(async () => {
   await setup();
   await aniSize();
+
+  window.addEventListener('resize', resizeAdjust)
 })
 
 
@@ -222,7 +250,7 @@ watch(
   object-position: center top;
   justify-self: flex-end;
   float: right;
-  margin-left: .25rem;
+  margin-left: .75rem;
   margin-bottom: .25rem;
 }
 

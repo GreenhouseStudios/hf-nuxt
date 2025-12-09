@@ -1,5 +1,5 @@
 <template>
-  <div class="hover:bg-lavender max-h-72">
+  <div :class="['hover:bg-lavender', props?.post?.eventOptions?.postType === 'covid_post' ? 'bg-white' : '']">
     <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
       <p class=" font-bold text-sm md:text-xl">{{ props?.post?.eventOptions?.eventYear }}</p>
       <p class="text-xl md:text-2xl font-black">{{ props?.post?.title }}</p>
@@ -8,7 +8,12 @@
       </p>
 
     </div>
-    <div class="bg-gradient-to-t from-gray-50 to-transparent absolute h-12 bottom-0 right-0 left-0">
+    <div :class="[
+        'bg-gradient-to-t',, 'h-12', 'bottom-0', 'right-0', 'left-0', 'from-grey-50',
+         props?.post?.eventOptions?.postType === 'covid_post'
+          ?'to-white'
+          : 'to-transparent absolute'
+        ]">
     </div>
   </div>
 </template>

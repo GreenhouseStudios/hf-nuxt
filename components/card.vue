@@ -1,11 +1,12 @@
 <template>
 
-  <div class="flex flex-col rounded-2xl relative column feature grow"
+  <div class="flex flex-col rounded-2xl relative column grow"
     :class="[
         containerClass,
         isQuote? 'overflow-visible' : 'overflow-hidden',
         isDefault? 'shadow-md hover:bg-lavender' : '',
-        isMajor? 'justify-center' : ''
+        isMajor? 'justify-center' : '',
+        isCovid? 'feature-covid' : 'feature'
         ]"
     @click="handleCardClick">
     <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
@@ -43,9 +44,10 @@ const props = withDefaults(defineProps<{
 const variations = ['default', 'quote', 'covid'];
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
 const actualVariation = computed(() => props.post?.eventOptions?.postType ? props.post?.eventOptions.postType : 'default');
-const isDefault = computed(() => actualVariation.value === 'default');
+const isDefault = computed(() => actualVariation.value === 'default' || actualVariation.value === 'covid_post')
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isMajor = computed(() => actualVariation.value === 'major_event');
+const isCovid = computed(() => actualVariation.value === 'covid_post');
 const hasMainImage = computed(() => !!props.post?.eventOptions?.thumbnail)
 const containerClass = computed(() => {
   let result = '';
@@ -84,11 +86,15 @@ const handleCardClick = () => {
 .card-img {
   max-height: 50%;
   object-fit: cover;
+  width: 100%;
 }
 
 
 .feature {
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
+}
+.feature-covid {
+  box-shadow: 0px 0px 20px rgb(123 57 1);
 }
 
 /* card */
