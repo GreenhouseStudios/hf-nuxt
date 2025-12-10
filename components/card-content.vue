@@ -9,10 +9,10 @@
 
     </div>
     <div :class="[
-        'bg-gradient-to-t',, 'h-12', 'bottom-0', 'right-0', 'left-0', 'from-grey-50',
-         props?.post?.eventOptions?.postType === 'covid_post'
-          ?'to-white'
-          : 'to-transparent absolute'
+        'h-12', 'bottom-0', 'right-0', 'left-0',
+         props?.post?.eventOptions?.postType !== 'covid_post'
+          ? 'absolute gradient-default'
+          : ''
         ]">
     </div>
   </div>
@@ -46,5 +46,10 @@ const fillerText = (text: string, multiplier: number) => {
 
 
 <style scoped>
+
+.gradient-default {
+  background: linear-gradient(180deg, transparent 0%, #ffffffd9 75%);
+}
+
 
 </style>

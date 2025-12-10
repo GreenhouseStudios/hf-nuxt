@@ -23,6 +23,11 @@
   opacity: .01;
   transition: transform 1s, opacity .75s;
 }
+
+.bento-card:not(.covid-card) {
+  cursor: pointer;
+}
+
 .transform {
   transform: translateY(150px);
 }
@@ -96,10 +101,12 @@
 }
 
 .covid-post {
+  display: block;
   width: 15%;
   min-height: 100% !important;
   max-height: 100% !important;
   --delay: 0;
+  cursor: pointer;
 }
 
 .covid-post img {
@@ -107,7 +114,6 @@
 }
 
 .covid-post.inactive {
-  display: block;
   animation: covid-post-inactive-ani .5s var(--delay) ease forwards;
   opacity: 1;
   transform: translateY(0px);
@@ -125,7 +131,6 @@
 }
 
 .covid-post.active {
-  display: block;
   animation: covid-post-active-ani .5s var(--delay) ease forwards;
   opacity: 0;
   transform: translateY(200px);
@@ -164,12 +169,8 @@
 <template>
 
   <!-- NOTES
-  Change grid calls to use ref
-  Fix mount/update bug when navigating between pages with component
   Fix tap support for vids
   Fix quote pause/play desync sometimes
-  Fix <p> in major event span
-  Design modals following Yuna's design
   Add multi-major event support (waiting for answer from HF)
   Set covid modal to disable until initial transition end + cards 2 rows under
 
@@ -184,7 +185,7 @@
      
     <!-- Card Layout (CSS Grid) -->
     <section class="flex flex-col justify-around">
-      <div v-if="spacedPosts.length === 0">
+      <div v-if="timelineItems.length === 0">
         No posts found.
       </div>
       <div v-else>
@@ -330,13 +331,10 @@ async function measureAndPack(reset = false) {
   layoutInProgress = true;
   await nextTick();
 
-  const grid = document.querySelector('.bento-grid') ;
-  if (!grid) {
-    return;
-  }
+  if (!gridEl.value) return;
 
 
-  const liElements = Array.from(grid.querySelectorAll('li'));
+  const liElements = Array.from(gridEl.value.querySelectorAll('li'));
 
 
 
@@ -368,11 +366,14 @@ async function measureAndPack(reset = false) {
       covidCardGrow = true;
       if(numCols.value > 2) {
         covidLi.addEventListener('pointerenter', function grow() {
+          if(covidState.value !== 'idle') return;
+          covidState.value = 'opening';
+
           covidLi.removeEventListener('pointerenter', grow);
-          requestAnimationFrame(() => growCovidCard(covidLi, grid as HTMLElement));
+          requestAnimationFrame(() => growCovidCard(covidLi, gridEl.value as HTMLElement));
         })
       }
-      setCovidSpan(covidLi, grid as HTMLElement);
+      setCovidSpan(covidLi, gridEl.value as HTMLElement);
     }
 
   }
@@ -380,8 +381,8 @@ async function measureAndPack(reset = false) {
   // Reset cards if reset=true
   if(reset) {
     liElements.forEach(el => {
-      if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, grid as HTMLElement) }
-      else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, grid as HTMLElement) }
+      if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, gridEl.value as HTMLElement) }
+      else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement) }
       else {
         el.style.gridColumn = 'span 1';
         el.dataset.colspan = '1';
@@ -412,7 +413,7 @@ async function measureAndPack(reset = false) {
 
   liElements.forEach(el => {
     if (el.dataset.isQuote === '1') {
-      setQuoteSpan(el as HTMLElement, grid as HTMLElement);
+      setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement);
     }
   });
 
@@ -486,7 +487,7 @@ async function measureAndPack(reset = false) {
 
   // Measure placements without transforms
   await nextTick();
-  const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement))
+  const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement))
   for(let c = 1; c <= 5; c++) {
     let rowCount = 0;
     let prevRow = 0;
@@ -500,13 +501,13 @@ async function measureAndPack(reset = false) {
   }
   // Check empty gaps & re-try filling / reset if unable to fill all gaps
   try {
-    let newPlacements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
+    let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
     let emptyGaps = gapsPerCol(newPlacements, numCols.value);
     if(emptyGaps) { requestAnimationFrame(async () => {
       await growSinglesByOne(7);
       await growAcrossTwoEmptyRows(7);
       await nextTick();
-      newPlacements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
+      newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
       await nextTick();
       const newEmpty = gapsPerCol(newPlacements, numCols.value);
       if(newEmpty) {
@@ -524,7 +525,7 @@ async function measureAndPack(reset = false) {
       });
       cardAnimation();
     layoutInProgress = false;
-    const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
+    const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
     quotePopupAdjust(placements, numCols.value);
 
     const quotes = liElements.filter(el => el.dataset.isQuote === '1')
@@ -746,9 +747,8 @@ function firstBlockerBelowInBand(me: Placement, placements: Placement[]): Placem
  */
 async function growSinglesByOne(maxRowSpan = 7) {
   await nextTick();
-  const grid = document.getElementById('card-grid') as HTMLElement | null;
-  if (!grid) return;
-  const placements = clearTransforms(grid, () => getPlacements(grid));
+  if (!gridEl.value) return;
+  const placements = clearTransforms(gridEl.value, () => getPlacements(gridEl.value as HTMLElement));
 
   // process top/bottom so upper cards fill their gap first
   placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
@@ -769,9 +769,8 @@ async function growSinglesByOne(maxRowSpan = 7) {
 
 async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
   await nextTick();
-  const grid = document.getElementById('card-grid') as HTMLElement | null;
-  if (!grid) return;
-  const placements = clearTransforms(grid, () => getPlacements(grid));
+  if (!gridEl.value) return;
+  const placements = clearTransforms(gridEl.value, () => getPlacements(gridEl.value as HTMLElement));
 
   // process from top to bottom so upper cards consume their gaps first
   placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
@@ -807,7 +806,7 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
       below.rowspan = next;
     }
   }
-  Array.from(grid.querySelectorAll('li')).forEach(el => {
+  Array.from(gridEl.value.querySelectorAll('li')).forEach(el => {
     const rows = parseInt(el.dataset.rowspan || '1');
 
     if(rows > 6) {
@@ -852,11 +851,21 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
 /**
  * Calculate cards in covid rows / move cards out of way / grow covid card
  */
+
+const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
+
 function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const { pitchY } = getGridMetrics(grid);
-  const placements = clearTransforms(grid as HTMLElement, () => getPlacements(grid as HTMLElement));
+  const placements = clearTransforms(grid, () =>
+      getPlacements(grid)
+  );
+
   const covidPlacement = placements.find(p => p.el === covidCard);
-  if (!covidPlacement) return;
+  if (!covidPlacement) {
+    covidState.value = 'idle';
+    return;
+  }
+
   const covidTop = covidPlacement.row;
   const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
   const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
@@ -871,14 +880,17 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   // per-card shift (only for cards overlapping COVID rows)
   const perCardShift = new Map<HTMLElement, number>();
 
-  // pass 1: collect overlaps and max shifts
+  // ---------- PASS 1: collect overlaps & per-card shifts ----------
   for (const p of placements) {
     if (p.el === covidCard) continue;
 
     const pTop = p.row;
     const pBot = p.row + p.rowspan - 1;
 
-    const overlapRows = Math.max(0, Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1);
+    const overlapRows = Math.max(
+        0,
+        Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1
+    );
     const overlapPx = overlapRows * pitchY;
 
     const colStart = p.col;
@@ -890,7 +902,6 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       const delta = center < covidMid ? -overlapPx : overlapPx;
       perCardShift.set(p.el, delta);
 
-      // record per-column max for stacks
       for (let c = colStart; c <= colEnd; c++) {
         if (delta < 0) {
           upByCol.set(c, Math.max(upByCol.get(c) ?? 0, overlapPx));
@@ -899,7 +910,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
         }
       }
     } else {
-      // no overlap — candidate for stacks
+      // candidates for stacks above/below
       if (pBot < covidTop) {
         for (let c = colStart; c <= colEnd; c++) {
           upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
@@ -912,14 +923,15 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     }
   }
 
-  // pass 2: apply shifts
+  // ---------- PASS 2: apply shifts ----------
+  let anyShift = false;
+
   for (const p of placements) {
     if (p.el === covidCard) continue;
 
     let deltaY = perCardShift.get(p.el) ?? 0;
 
     if (deltaY === 0) {
-      // check stacks for non-overlapping cards
       const pTopPx = p.row * pitchY;
       const pBotPx = (p.row + p.rowspan) * pitchY;
 
@@ -943,160 +955,167 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       } else if (downPx > 0 && upPx === 0) {
         deltaY = downPx;
       } else if (upPx > 0 && downPx > 0) {
-        // pick the stronger one (just in case)
-        deltaY = (downPx >= upPx) ? downPx : -upPx;
+        deltaY = downPx >= upPx ? downPx : -upPx;
       }
     }
 
+    if (deltaY !== 0) anyShift = true;
 
-    p.el.style.setProperty('--to-move', mergeTranslateY(p.el.style.transform || "", deltaY));
-    p.el.classList.add('adjustForCovid');
+    p.el.style.setProperty(
+        '--to-move',
+        mergeTranslateY(p.el.style.transform || '', deltaY)
+    );
+    p.el.classList.add('adjustForCovid'); // CSS has transform transition
   }
-  const inner = <HTMLElement>covidCard.querySelector('.covid-inner');
-  const innerRect = inner?.getBoundingClientRect() || null;
-  if(!inner || !innerRect) return;
 
-  const innerPosts: HTMLElement[] = Array.from(inner.querySelectorAll('.covid-post'));
+  const inner = covidCard.querySelector<HTMLElement>('.covid-inner');
+  const covidTitle = covidCard.querySelector<HTMLElement>('#covid-title');
+  if (!inner || !covidTitle) {
+    covidState.value = 'idle';
+    return;
+  }
 
-  const covidTitle = <HTMLElement>covidCard.querySelector('#covid-title');
+  // reset inner to a known base state
+  const prevTransition = inner.style.transition;
+  inner.style.transition = 'none';
+  inner.style.transform = 'none';
+  inner.style.width = '100%';
+  // force reflow so browser applies these immediately
+  void inner.offsetWidth;
 
   const gridRect = grid.getBoundingClientRect();
+  const innerRect = inner.getBoundingClientRect();
   const distFromLeft = innerRect.left - gridRect.left;
+  const fullWidth = gridRect.width;
 
-  let maxShiftEl: HTMLElement | null = null;
-  let maxAbs = -Infinity;
-  for (const [el, val] of perCardShift.entries()) {
-    const abs = Math.abs(val);
-    if (abs > maxAbs) {
-      maxAbs = abs;
-      maxShiftEl = el;
-    }
+  inner.style.transition =
+      prevTransition || 'width .75s ease-out, transform .75s ease-out';
+
+
+  const innerPosts: HTMLElement[] = Array.from(
+      inner.querySelectorAll('.covid-post')
+  );
+
+  // ------------ PHASE 2: banner expansion ------------
+  function startInnerExpansion() {
+    if(!inner || !covidTitle) return;
+
+    covidTitle.style.opacity = '0';
+    inner.style.transitionDelay = '0s';
+
+    inner.style.transform = `translateX(${-distFromLeft}px)`;
+    inner.style.width = `${fullWidth}px`;
+
+    inner.addEventListener(
+        'transitionend',
+        function grown(e) {
+          if (e.propertyName !== 'width') return;
+          inner.removeEventListener('transitionend', grown);
+
+          let delay = 0;
+          innerPosts.forEach(covidPost => {
+            covidPost.style.display = 'block';
+            covidPost.style.setProperty('--delay', `${delay}s`);
+            covidPost.classList.replace('inactive', 'active');
+            delay += 0.15;
+
+          });
+
+          if (!innerPosts.length) {
+            armPointerLeave();
+            return;
+          }
+
+          innerPosts[innerPosts.length - 1].addEventListener(
+              'animationend',
+              function allowShrink() {
+                covidState.value = 'open';
+                armPointerLeave();
+              },
+              { once: true }
+          );
+        }
+    );
   }
 
-  if(maxShiftEl) {
-    maxShiftEl.addEventListener('transitionend', () => {
-      inner.style.transform = `translateX(${-distFromLeft}px)`;
-      inner.style.width = `${gridRect.width}px`;
-      covidTitle.style.opacity = '0';
-    }, {once:true})
+  // Wait approximately for per-card shift
+  const SHIFT_DURATION_MS = 750;
+  if (anyShift) {
+    setTimeout(startInnerExpansion, SHIFT_DURATION_MS);
   } else {
-    let firstShiftEl: HTMLElement | null;
-    firstShiftEl = perCardShift.keys().next().value ?? null;
-    if(firstShiftEl) {
-      firstShiftEl.addEventListener('transitionend', () => {
-        setTimeout(() => {
-          inner.style.transform = `translateX(${-distFromLeft}px)`;
-          inner.style.width = `${gridRect.width}px`;
-          covidTitle.style.opacity = '0';
-        }, 300);
-
-      })
-    }
-
+    startInnerExpansion();
   }
 
-  inner.addEventListener('transitionend', function grown() {
-    inner.removeEventListener('transitionend', grown);
+  // ----------------- pointerleave + shrink -----------------
+  function armPointerLeave() {
+    const onLeave = function triggerShrink() {
+      if (covidState.value !== 'open') return;
 
-    let delay = .5;
-    innerPosts.forEach(covidPost => {
+      covidState.value = 'closing';
+      covidCard.removeEventListener('pointerleave', onLeave);
 
-      covidPost.style.setProperty('--delay', `${delay += .15}s`)
-      covidPost.style.display = 'block';
-      covidPost.classList.replace('inactive', 'active');
-    })
-
-
-  })
-
-  setTimeout(() => {
-    inner.addEventListener('pointerleave', function triggerShrink() {
-      inner.removeEventListener('pointerleave', triggerShrink);
       let delay = 0;
-
       innerPosts.forEach(covidPost => {
-        covidPost.style.setProperty('--delay', `${delay}s`)
-        delay += .1;
-        covidPost.classList.replace('active', 'inactive')
-        covidPost.addEventListener('animationend', () => covidPost.style.display = 'none', {once:true})
-      })
+        covidPost.style.setProperty('--delay', `${delay}s`);
+        delay += 0.1;
+        covidPost.classList.replace('active', 'inactive');
+      });
 
-      shrink()
+      shrink();
+    };
 
-    });
-  }, 300)
-
-
+    covidCard.addEventListener('pointerleave', onLeave);
+  }
 
   function shrink() {
+    if(!inner || !covidTitle) return;
     requestAnimationFrame(() => {
-
       inner.style.transitionDelay = '.5s';
-
       inner.style.width = '100%';
       inner.style.transform = 'none';
 
+      inner.addEventListener(
+          'transitionend',
+          function shrunk(e) {
+            if (e.propertyName !== 'width') return;
+            inner.removeEventListener('transitionend', shrunk);
+            inner.style.transitionDelay = 'unset';
 
+            innerPosts.forEach(covidPost => {
+              covidPost.style.display = 'none';
+            });
 
-      inner.addEventListener('transitionend', function shrunk(e) {
-        if(e.propertyName !== 'width') return;
-        inner.removeEventListener('transitionend', shrunk);
-        inner.style.transitionDelay = 'unset';
-        requestAnimationFrame(() => {
-          covidTitle.style.opacity = '1';
-          const liElements = Array.from(document.querySelectorAll('.bento-card'));
-          let reset = false;
-          let maxShiftEl: HTMLElement | null = null;
-          let maxAbs = -Infinity;
-          for (const [el, val] of perCardShift.entries()) {
-            const abs = Math.abs(val);
-            if (abs > maxAbs) {
-              maxAbs = abs;
-              maxShiftEl = el;
-            }
+            requestAnimationFrame(() => {
+              covidTitle.style.opacity = '1';
+
+              const liElements = Array.from(
+                  document.querySelectorAll<HTMLElement>('.bento-card')
+              );
+
+              liElements.forEach(el => {
+                el.classList.remove('adjustForCovid');
+              });
+
+              // Re-arm hover after cards have had time to transition back
+              setTimeout(() => {
+                covidState.value = 'idle';
+                covidCard.addEventListener(
+                    'pointerenter',
+                    function grow() {
+                      if (covidState.value !== 'idle') return;
+                      covidState.value = 'opening';
+                      requestAnimationFrame(() =>
+                          growCovidCard(covidCard, grid)
+                      );
+                    },
+                    { once: true }
+                );
+              }, SHIFT_DURATION_MS);
+            });
           }
-
-          if(maxShiftEl) {
-            maxShiftEl.addEventListener('transitionend', () => {
-              inner.addEventListener('pointerenter', function grow() {
-                requestAnimationFrame(() => growCovidCard(covidCard, grid))
-              }, {once:true})
-
-            }, {once:true})
-          } else {
-            let firstShiftEl: HTMLElement | null = null;
-            firstShiftEl = perCardShift.keys().next().value ?? null;
-            if(firstShiftEl)
-              firstShiftEl.addEventListener('transitionend', () => {
-                setTimeout(() => {
-                  covidCard.addEventListener('pointerenter', function grow() {
-                    requestAnimationFrame(() => growCovidCard(covidCard, grid))
-                  }, {once:true})
-                }, 300);
-
-              })
-          }
-
-          liElements.forEach(el => {
-            if(el.classList.contains('adjustForCovid')) {
-              el.classList.remove('adjustForCovid');
-            }
-          });
-        })
-
-      })
-
-
-    })
+      );
+    });
   }
-
-
-
-  covidTitle.style.opacity = '0';
-  inner.addEventListener('transitionend', function grow(e) {
-    if(e.propertyName !== 'width') return;
-    inner.removeEventListener('transitionend', grow);
-  });
 }
 
 
@@ -1236,48 +1255,56 @@ const quoteInterval = computed(() => {
 
 
 
-const spacedPosts = computed(() => {
-  const base = filteredPostsBase.value.filter(
-    post => post.eventOptions?.postType !== 'covid_post'
-  )
+function spaceQuotes(base: Post[]): Post[] {
   if (!base.length) return [];
 
-  const interval = quoteInterval.value;
-
-  const quotePosts: Post[] = [];
-  const defaultPosts: Post[] = [];
-  for (const post of base) {
-    if (post.eventOptions?.postType === 'quote') {
-      quotePosts.push(post);
-    } else {
-      defaultPosts.push(post)
-    }
-  }
+  const quotePosts = base.filter(p => p.eventOptions?.postType === 'quote');
+  const defaultPosts = base.filter(p => p.eventOptions?.postType !== 'quote');
 
   if (quotePosts.length === 0) return defaultPosts;
+
+  const quoteCount = quotePosts.length;
+  const raw = base.length / quoteCount;
+  const interval = Math.max(1, Math.round(raw));
 
   const result: Post[] = [];
   let quoteIndex = 0;
   let nonIndex = 0;
   let sinceLastQuote = 0;
 
+  const firstQuoteOffset = 1; // “a couple in”
+  let firstQuotePlaced = false;
+
   while (nonIndex < defaultPosts.length) {
     result.push(defaultPosts[nonIndex++]);
     sinceLastQuote++;
 
-    if (sinceLastQuote >= interval && quoteIndex < quotePosts.length) {
+    if (!firstQuotePlaced &&
+        sinceLastQuote >= firstQuoteOffset &&
+        quoteIndex < quotePosts.length) {
+      // place the very first quote a bit earlier
+      result.push(quotePosts[quoteIndex++]);
+      firstQuotePlaced = true;
+      sinceLastQuote = 0;
+    } else if (
+        firstQuotePlaced &&
+        sinceLastQuote >= interval &&
+        quoteIndex < quotePosts.length
+    ) {
+      // then use the normal interval
       result.push(quotePosts[quoteIndex++]);
       sinceLastQuote = 0;
     }
   }
 
+  // any leftover quotes just append at the end
   while (quoteIndex < quotePosts.length) {
     result.push(quotePosts[quoteIndex++]);
   }
 
-
   return result;
-});
+}
+
 
 const shouldMakeCovid = computed(() => {
   return !!filteredPostsBase.value
@@ -1294,42 +1321,55 @@ const covidPosts = computed(() => {
 const COVID_YEAR = 2020;
 
 const timelineItems = computed<TimelineItem[]>(() => {
-  const base = spacedPosts.value;
+  // start from filteredPostsBase, but ignore covid here
+  const nonCovid = filteredPostsBase.value.filter(
+      p => p.eventOptions?.postType !== 'covid_post'
+  );
   const covid = covidPosts.value;
   const hasCovid = covid.length > 0;
 
-  if(!base.length && !hasCovid) return [];
+  if (!nonCovid.length && !hasCovid) return [];
 
-  const above: TimelineItem[] = [];
-  const equal: TimelineItem[] = [];
-  const below: TimelineItem[] = [];
+  const aboveBase: Post[] = [];
+  const equalBase: Post[] = [];
+  const belowBase: Post[] = [];
 
-  for(const post of base) {
+  for (const post of nonCovid) {
     const year = parseInt(post.eventOptions?.eventYear || '0', 10);
-    const item: TimelineItem = { type: 'post', post }
-
-    if(year > COVID_YEAR) above.push(item);
-    else if(year === COVID_YEAR) equal.push(item);
-    else below.push(item);
+    if (year > COVID_YEAR) aboveBase.push(post);
+    else if (year === COVID_YEAR) equalBase.push(post);
+    else belowBase.push(post);
   }
+
+  // apply spacing inside each bucket
+  const aboveSpaced = spaceQuotes(aboveBase);
+  const equalSpaced = spaceQuotes(equalBase);
+  const belowSpaced = spaceQuotes(belowBase);
 
   const result: TimelineItem[] = [];
 
-  result.push(...above);
-  result.push(...equal);
+  for (const post of aboveSpaced) {
+    result.push({ type: 'post', post });
+  }
 
-  if(hasCovid) {
+  for (const post of equalSpaced) {
+    result.push({ type: 'post', post });
+  }
+
+  if (hasCovid) {
     result.push({
       type: 'covid',
       year: COVID_YEAR,
-      posts: covid
-    })
+      posts: covid,
+    });
   }
 
-  result.push(...below);
+  for (const post of belowSpaced) {
+    result.push({ type: 'post', post });
+  }
 
   return result;
-})
+});
 
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {
