@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between px-4 py-4 fixed z-100 top-0 max-w-screen w-screen">
+  <div class="flex items-center justify-between px-4 py-4 fixed z-100 top-0 ">
 
     <Logo></Logo>
 
@@ -72,7 +72,7 @@ const vidTeleport = ref<HTMLDivElement | null>(null);
 const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
 
 onMounted(() => {
-  if(navTeleportEl) {
+  if(navTeleportEl && window.innerWidth > 1150) {
     navTeleportEl.value = vidTeleport.value;
   }
 })

@@ -61,7 +61,9 @@ const vidEl = ref<HTMLVideoElement | null>(null);
 const shouldTeleport = ref(false);
 
 
-
+defineExpose({
+  vidEl
+})
 
 
 const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
@@ -69,7 +71,6 @@ const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null)
 
 onMounted(() => {
 
-  // tested inset: inset(25% 58% 20% 10%) | tested transform translateX(-888px) translateY(-2px) scale(.082)
   const cropped = <HTMLElement>document.querySelector('.cropped-logo');
   const logo = document.getElementById('nav-img');
   if(!cropped || !logo) return;
@@ -100,6 +101,9 @@ onMounted(() => {
     vidEl.value.play();
     vidEl.value.addEventListener('ended', () => {
       if(!vidEl.value) return;
+      console.log('wow');
+
+
       document.body.style.overflow = '';
       vidEl.value.classList.add('animate');
       if(move) {
@@ -126,7 +130,8 @@ onMounted(() => {
         logo.style.clipPath = 'none';
         vidEl.value.addEventListener('animationend', () => {
           cropped.classList.add('fade');
-          logo.classList.add('fade')
+          logo.classList.add('fade');
+          console.log('bruh')
         })
       }
 

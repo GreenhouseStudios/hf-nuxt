@@ -4,7 +4,7 @@
 
     <div class="vid-wrap-bg">
 
-      <Hero-Vid />
+      <Hero-Vid ref="vidElRef" />
 
     </div>
     <div class="hero-bg-overlay">
@@ -51,20 +51,17 @@
       </div>
     </div>
   </div>
-  <!-- <div class="bg-zaffre text-white h-screen p-4 relative">
-      <span ref="demo" class="demo sticky top-0 left-0">
-        Intersection Observer in Action 👌
-      </span>
-    </div> -->
+
 
 
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import HeroVid from "~/components/hero-vid.vue";
+import { nextTick } from "vue";
 
 let gsapDisabled = false;
 
@@ -72,12 +69,17 @@ gsap.registerPlugin(ScrollTrigger)
 
 let triggers: ScrollTrigger[] = [];
 
+const vidElRef = ref<InstanceType<typeof HeroVid> | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick();
   const overlay = document.querySelector<HTMLElement>('.hero-bg-overlay');
   const hero    = document.querySelector<HTMLElement>('.hero-bg-vid');
 
   if (!overlay || !hero) return;
+
+  const video = vidElRef.value?.vidEl;
+
 
 
   // Keep CSS var in sync with overlay height
@@ -104,19 +106,44 @@ let vidAniDone = false;
     scrollTrigger: {
       trigger: hero,
       start: 'top top',
-      end: '+=150%',
+      end: '+=125%',
       pin: true,
       scrub: true,
       markers: false,
       invalidateOnRefresh: true,
       anticipatePin: 1,
       onUpdate: self => {
-        if(self.progress > .6 && !vidAniDone) lockScroll()
+        if(self.progress > .6) {
+          if(window.innerWidth > 1150 && !vidAniDone) lockScroll();
+          else if(!vidAniDone && video) {
+            console.log(video)
+            video.play()
+            vidAniDone = true;
+          }
+        }
       }
     }
   });
 
-  const bgText = document.querySelector('.hero-bg-text')
+  const bgText = overlay.querySelector<HTMLElement>('.hero-bg-text')
+
+  video?.addEventListener('ended', () => {
+    const st = heroTl.scrollTrigger;
+
+
+    if(st) {
+      if(window.innerWidth > 1150) {
+        st.kill(true);
+        if(bgText) bgText.style.position = 'relative';
+      } else {
+        st.vars.end = '+=75%';
+        st.refresh();
+      }
+    }
+  })
+
+
+
 
   bgText?.addEventListener('animationend', () => {
     heroTl
@@ -168,7 +195,7 @@ let vidAniDone = false;
         scrollTrigger: {
           trigger: hero,
           start: 'top top',
-          end: '+=150%',
+          end: '+=125%',
           pin: true,
           scrub: true,
           markers: false,
@@ -265,7 +292,7 @@ onBeforeUnmount(() => {
 
 @media screen and (max-width: 768px) {
   .hero-bg-text {
-    top: 20px;
+    top: 80px;
   }
   .hero-bg {
     height: 1000px;
@@ -274,7 +301,7 @@ onBeforeUnmount(() => {
 
 .hero-bg-overlay {
   background-image: url("../public/hero-curve-banner.png");
-  background-size: 100% 100%;
+  background-size: cover;
   position: absolute;
   inset: 0;
   height: 100%;
@@ -358,8 +385,14 @@ onBeforeUnmount(() => {
     margin: 10px auto 10px auto !important;
     max-width: 80% !important;
   }
-  .vid-wrap {
-    width: 600px !important;
+  .vid-wrap-bg {
+    width: 90% !important;
+    height: auto;
+    border-radius: 25px;
+    overflow: hidden;
+    left: 50%;
+    transform: translateX(-50%) translateY(50%);
+    bottom: 50%;
   }
 }
 

@@ -127,27 +127,30 @@
 </style>
 
 <template>
-  <div class="vision-head">
-    <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
-      ABOUT THE<br>
-      <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">TIMELINE</span>
-    </strong>
-  </div>
-  <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
-    <div class="vision-vid"></div>
-    <div class="vision-text-wrap">
-      <h3>SINCE 1925</h3>
-      <p>
-        We are committed to providing our customers with the best service,
-        to serve, to create, and lorem ipsum. We are proud of everyone's achievement.
-      </p>
-      <ul class="vision-list">
-        <li class="list-item">bullet point</li>
-        <li class="list-item">bullet point</li>
-        <li class="list-item">bullet point</li>
-      </ul>
+  <section class="overflow-x-clip">
+    <div class="vision-head">
+      <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
+        ABOUT THE<br>
+        <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">TIMELINE</span>
+      </strong>
     </div>
-  </div>
+    <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
+      <div class="vision-vid"></div>
+      <div class="vision-text-wrap">
+        <h3>SINCE 1925</h3>
+        <p>
+          We are committed to providing our customers with the best service,
+          to serve, to create, and lorem ipsum. We are proud of everyone's achievement.
+        </p>
+        <ul class="vision-list">
+          <li class="list-item">bullet point</li>
+          <li class="list-item">bullet point</li>
+          <li class="list-item">bullet point</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
 
 
 </template>

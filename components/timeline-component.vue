@@ -101,7 +101,7 @@
 }
 
 .covid-post {
-  display: block;
+  display: flex;
   width: 15%;
   min-height: 100% !important;
   max-height: 100% !important;
@@ -147,6 +147,20 @@
   }
 }
 
+@media(max-width: 1280px) {
+  .covid-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    transform: translateY(-50%);
+    top: 50%
+  }
+  .covid-post {
+    width: auto;
+    height: 100% !important;
+  }
+}
+
 
 #covid-title {
   position: absolute;
@@ -176,7 +190,7 @@
 
   -->
 
-  <div class="max-w-screen mb-36 px-2 py-12 md:px-12 overflow-x-hidden">
+  <div class="mb-36 px-2 py-12 md:px-12 overflow-x-hidden" style="width: 99vw">
     <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
 
     <section>
@@ -188,7 +202,7 @@
       <div v-if="timelineItems.length === 0">
         No posts found.
       </div>
-      <div v-else>
+      <div ref="gridWrapEl" v-else>
         <ul
             :key="`grid-${rebuildToken}-${numCols}`"
             ref="gridEl"
@@ -296,6 +310,8 @@ const lgCardRange = {
   row: [3, 5]
 }
 
+const gridWrapEl = ref<HTMLElement | null>(null);
+
 const gridEl = ref<HTMLElement | null>(null);
 type TimelineItem =
   | { type: 'post'; post: Post }
@@ -309,11 +325,17 @@ const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
   covidCardGrow = false;
+
+  if(gridWrapEl.value) gridWrapEl.value.style.opacity = '0';
+
   rebuildToken.value++;
-  if(gridEl.value) gridEl.value.style.opacity = '0';
   await nextTick();
   await measureAndPack()
+
+  if(gridWrapEl.value) gridWrapEl.value.style.opacity = '1'
 }
+
+
 
 /**
  * Build bento grid / measure & update bento cards
@@ -370,7 +392,10 @@ async function measureAndPack(reset = false) {
           covidState.value = 'opening';
 
           covidLi.removeEventListener('pointerenter', grow);
-          requestAnimationFrame(() => growCovidCard(covidLi, gridEl.value as HTMLElement));
+          requestAnimationFrame(() => {
+            if(numCols.value <= 3) growCovidCard(covidLi, gridEl.value as HTMLElement);
+            else spanCovidCard(covidLi, gridEl.value as HTMLElement)
+          });
         })
       }
       setCovidSpan(covidLi, gridEl.value as HTMLElement);
@@ -499,21 +524,28 @@ async function measureAndPack(reset = false) {
       }
     });
   }
+  const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()));
+
   // Check empty gaps & re-try filling / reset if unable to fill all gaps
   try {
     let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
     let emptyGaps = gapsPerCol(newPlacements, numCols.value);
-    if(emptyGaps) { requestAnimationFrame(async () => {
+    if(emptyGaps) {
+
+
+      await nextFrame();
+
       await growSinglesByOne(7);
       await growAcrossTwoEmptyRows(7);
       await nextTick();
+
       newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
       await nextTick();
       const newEmpty = gapsPerCol(newPlacements, numCols.value);
       if(newEmpty) {
-        await measureAndPack(true)
+        layoutInProgress = false;
+        return await measureAndPack(true)
       }
-    });
   }
 
     // Add animations after computed grid placements valid
@@ -823,28 +855,195 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
  */
 function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
-  let colWidth = Math.floor(
-      (grid.getBoundingClientRect().width / numCols.value - ((numCols.value - 1) * 25))) + 25;
-  let covidRows = Math.floor((colWidth * 1.5) / rowHeight);
+  switch(numCols.value) {
+    case 1:
+      card.style.gridColumn = 'span 1';
+      card.dataset.colspan = '1';
+      card.style.gridRowEnd = 'span 3';
+      card.dataset.rowspan = '3';
+      break;
 
-  if(numCols.value > 1) {
-    card.style.gridColumn = 'span 2';
-    card.dataset.colspan = '2';
-    card.style.gridRowEnd = `span ${covidRows}`;
-    card.dataset.rowspan = `${covidRows}`;
-  } else if(numCols.value === 2) {
-    card.style.gridColumn = 'span 2';
-    card.dataset.colspan = '2';
-    card.style.gridRowEnd = 'span 2';
-    card.dataset.rowspan = '2';
-  } else {
-    card.style.gridColumn = 'span 1';
-    card.dataset.colspan = '1';
-    covidRows = Math.floor(grid.getBoundingClientRect().width / rowHeight);
-    card.style.gridRowEnd = `span ${covidRows}`;
-    card.dataset.rowspan = `${covidRows}`;
+    case 2:
+      card.style.gridColumn = 'span 2';
+      card.dataset.colspan = '2';
+      card.style.gridRowEnd = 'span 3';
+      card.dataset.rowspan = '3';
+      break;
+
+    case 3:
+      card.style.gridColumn = 'span 3';
+      card.dataset.colspan = '3';
+      card.style.gridRowEnd = 'span 3';
+      card.dataset.rowspan = '3';
+      break;
+
+    case 4:
+    case 5:
+    default:
+      card.style.gridColumn = 'span 2';
+      card.dataset.colspan = '2';
+      card.style.gridRowEnd = 'span 4';
+      card.dataset.rowspan = '3';
+      break;
   }
-  console.log(covidRows)
+}
+
+
+function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+
+  const placements = clearTransforms(grid, () =>
+      getPlacements(grid)
+  );
+
+  const covidPlacement = placements.find(p => p.el === covidCard);
+  if(!covidPlacement) {
+    covidState.value = 'idle';
+    return;
+  }
+
+  const above = placements.filter(p => p.row < covidPlacement.row);
+  const below = placements.filter(p => p.row > covidPlacement.row);
+
+  const inner = covidCard.querySelector<HTMLElement>('.covid-inner');
+  const covidTitle = covidCard.querySelector<HTMLElement>('#covid-title');
+  if (!inner || !covidTitle) {
+    covidState.value = 'idle';
+    return;
+  }
+
+  // reset inner to a known base state
+  const prevTransition = inner.style.transition;
+  inner.style.transition = 'none';
+  inner.style.height = '100%';
+  // force reflow so browser applies these immediately
+  void inner.offsetHeight;
+
+  const gridRect = grid.getBoundingClientRect();
+  const innerRect = inner.getBoundingClientRect();
+
+  inner.style.transition = 'height .75s ease, transform .75s ease-out';
+
+
+  const innerPosts: HTMLElement[] = Array.from(
+      inner.querySelectorAll('.covid-post')
+  );
+
+  // ------------ PHASE 1: banner growth ------------
+  function startInnerGrowth() {
+    if(!inner || !covidTitle) return;
+
+    covidTitle.style.opacity = '0';
+
+    inner.style.height = `${rowHeight * 8 - gap}px`;
+
+    inner.addEventListener(
+        'transitionend',
+        function grown(e) {
+          if (e.propertyName !== 'height') return;
+          inner.removeEventListener('transitionend', grown);
+
+          let delay = 0;
+          innerPosts.forEach(covidPost => {
+            covidPost.style.display = 'flex';
+            covidPost.style.setProperty('--delay', `${delay}s`);
+            covidPost.classList.replace('inactive', 'active');
+            delay += 0.15;
+
+          });
+
+          if (!innerPosts.length) {
+            armPointerLeave();
+            return;
+          }
+
+          innerPosts[innerPosts.length - 1].addEventListener(
+              'animationend',
+              function allowShrink() {
+                covidState.value = 'open';
+                armPointerLeave();
+              },
+              { once: true }
+          );
+        }
+    );
+  }
+
+  above.forEach(p => {
+    p.el.style.setProperty('--to-move', `translateY(-${rowHeight * 2}px)`);
+    p.el.classList.add('adjustForCovid');
+  });
+  below.forEach(p => {
+    p.el.style.setProperty('--to-move', `translateY(${rowHeight * 2}px)`);
+    p.el.classList.add('adjustForCovid');
+  })
+
+  startInnerGrowth();
+
+  // ----------------- pointerleave + shrink -----------------
+  function armPointerLeave() {
+    const onLeave = function triggerShrink() {
+      if (covidState.value !== 'open') return;
+
+      covidState.value = 'closing';
+      covidCard.removeEventListener('pointerleave', onLeave);
+
+      let delay = innerPosts.length * 0.1;
+      innerPosts.forEach(covidPost => {
+        covidPost.style.setProperty('--delay', `${delay}s`);
+        delay -= 0.1;
+        covidPost.classList.replace('active', 'inactive');
+      });
+
+      shrink();
+    };
+
+    covidCard.addEventListener('pointerleave', onLeave);
+  }
+
+  function shrink() {
+    if(!inner || !covidTitle) return;
+    innerPosts[0].addEventListener('animationend', () => {
+      requestAnimationFrame(() => {
+        inner.style.transitionDelay = '1.25s';
+        inner.style.height = '100%';
+
+        inner.style.transition = 'height 1s ease, transform .75s ease'
+
+        innerPosts.forEach(covidPost => {
+          covidPost.style.display = 'none';
+        });
+
+        covidTitle.style.opacity = '1';
+
+        const liElements = Array.from(
+            document.querySelectorAll<HTMLElement>('.bento-card')
+        );
+
+        liElements.forEach(el => {
+          el.classList.remove('adjustForCovid');
+        });
+
+
+        // Re-arm hover after cards have had time to transition back
+        setTimeout(() => {
+          covidState.value = 'idle';
+          covidCard.addEventListener(
+              'pointerenter',
+              function grow() {
+                if (covidState.value !== 'idle') return;
+                covidState.value = 'opening';
+                requestAnimationFrame(() =>
+                    growCovidCard(covidCard, grid)
+                );
+              },
+              { once: true }
+          );
+        }, 500);
+
+      })
+    }, {once:true})
+
+  }
 }
 
 
@@ -854,7 +1053,7 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
 
 const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
 
-function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   const { pitchY } = getGridMetrics(grid);
   const placements = clearTransforms(grid, () =>
       getPlacements(grid)
@@ -1014,7 +1213,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
           let delay = 0;
           innerPosts.forEach(covidPost => {
-            covidPost.style.display = 'block';
+            covidPost.style.display = 'flex';
             covidPost.style.setProperty('--delay', `${delay}s`);
             covidPost.classList.replace('inactive', 'active');
             delay += 0.15;
@@ -1038,6 +1237,8 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
     );
   }
 
+
+
   // Wait approximately for per-card shift
   const SHIFT_DURATION_MS = 750;
   if (anyShift) {
@@ -1045,6 +1246,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
   } else {
     startInnerExpansion();
   }
+
 
   // ----------------- pointerleave + shrink -----------------
   function armPointerLeave() {
@@ -1105,7 +1307,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
                       if (covidState.value !== 'idle') return;
                       covidState.value = 'opening';
                       requestAnimationFrame(() =>
-                          growCovidCard(covidCard, grid)
+                          spanCovidCard(covidCard, grid)
                       );
                     },
                     { once: true }

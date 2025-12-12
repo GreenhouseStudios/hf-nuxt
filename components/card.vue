@@ -4,9 +4,9 @@
     :class="[
         containerClass,
         isQuote? 'overflow-visible' : 'overflow-hidden',
-        isDefault? 'shadow-md hover:bg-lavender' : '',
+        isDefault? 'shadow-md hover:bg-lavender bg-white' : '',
         isMajor? 'justify-center' : '',
-        isCovid? 'feature-covid' : 'feature'
+        isCovid? 'feature-covid h-full' : 'feature'
         ]"
     @click="handleCardClick">
     <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
@@ -15,7 +15,9 @@
     <img v-else-if="isDefault"
       src="/placeholder.png"
       class="bg-auto card-img" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
-    <CardContent v-if="isDefault" :post="props.post" />
+    <CardContent v-if="isDefault" :post="props.post"
+      :class="isCovid ? 'flex-1' : ''"
+    />
     <QuoteContent v-if="isQuote" :post="props.post" />
     <MajorContent v-if="isMajor" :post="props.post" />
   </div>

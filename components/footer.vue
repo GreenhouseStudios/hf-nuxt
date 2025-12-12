@@ -1,6 +1,6 @@
 <template>
     <footer class="max-w-screen border-t-2 border-gray-300 mt-56 text-sm bg-blue-950 text-white">
-        <section class="p-16 grid md:grid-cols-3 grid-cols-1 gap-4">
+        <section class="p-16 flex flex-wrap gap-4">
             <about class="pr-12"></about>
             <!-- <address></address> -->
              <Block>

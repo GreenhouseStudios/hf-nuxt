@@ -51,6 +51,7 @@ onMounted(() => {
 <style>
 body {
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
 .no-scroll {
