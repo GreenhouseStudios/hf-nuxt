@@ -44,25 +44,21 @@ const isOpen = ref(false);
 
 const items = ref(<NavigationMenuItem[]>[
   {
+    label: 'HFPG Primary Site',
+    to: 'https://www.hfpg.org/'
+  },
+  {
     label: 'OVERVIEW',
-    to: '/',
+    to: '#',
   },
   {
     label: 'OUR TIMELINE',
-    to: '/timeline',
+    to: '#timeline',
   },
   {
     label: '100 INFLUENCERS',
-    to: '/influencers',
+    to: '#influencers',
   },
-  {
-    label: 'MAKE AN IMPACT',
-    to: '/impact'
-  },
-  {
-    label: 'CONTACT US',
-    to: '/contact',
-  }
 ].map((item) => ({
   ...item,
   class: 'bg-white hover:bg-gray-100 rounded-md',

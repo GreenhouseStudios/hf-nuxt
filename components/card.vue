@@ -5,8 +5,7 @@
         containerClass,
         isQuote? 'overflow-visible' : 'overflow-hidden',
         isDefault? 'shadow-md hover:bg-lavender bg-white' : '',
-        isMajor? 'justify-center' : '',
-        isCovid? 'feature-covid h-full' : 'feature'
+        'feature'
         ]"
     @click="handleCardClick">
     <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
@@ -19,7 +18,6 @@
       :class="isCovid ? 'flex-1' : ''"
     />
     <QuoteContent v-if="isQuote" :post="props.post" />
-    <MajorContent v-if="isMajor" :post="props.post" />
   </div>
 
 
@@ -38,6 +36,7 @@ const props = withDefaults(defineProps<{
   mode: 'fixedHeight' | 'autoHeight';
   xMultiplier?: number;
   yMultiplier?: number;
+  covidShown?: boolean;
 }>(), {
   xMultiplier: 1,
   yMultiplier: 1
@@ -48,8 +47,8 @@ const variations = ['default', 'quote', 'covid'];
 const actualVariation = computed(() => props.post?.eventOptions?.postType ? props.post?.eventOptions.postType : 'default');
 const isDefault = computed(() => actualVariation.value === 'default' || actualVariation.value === 'covid_post')
 const isQuote = computed(() => actualVariation.value === 'quote');
-const isMajor = computed(() => actualVariation.value === 'major_event');
 const isCovid = computed(() => actualVariation.value === 'covid_post');
+console.log(props.covidShown)
 const hasMainImage = computed(() => !!props.post?.eventOptions?.thumbnail)
 const containerClass = computed(() => {
   let result = '';

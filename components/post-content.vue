@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick } from 'vue';
+import { computed, onMounted, ref, nextTick, watch } from 'vue';
 import { useStore } from "~/stores/store";
 
 const contentWrap = ref<HTMLElement | null>(null);
@@ -190,26 +190,36 @@ onMounted(async () => {
 
   const socialWrap = document.createElement('div');
   socialWrap.className = 'social-wrap';
+  socialWrap.setAttribute('data-interactive', '');
 
   const socialLabel = document.createElement('span');
   socialLabel.textContent = 'Share:';
   socialLabel.classList.add('p-3', 'text-1xl', 'font-bold')
   socialWrap.appendChild(socialLabel)
 
-  const socialX = document.createElement('div');
-  socialX.classList.add('social-icon', 'social-x', 'footer-icon');
-  socialWrap.appendChild(socialX)
+  const socialLinked = document.createElement('a');
+  socialLinked.classList.add('social-icon', 'social-linked', 'footer-icon');
+  socialLinked.setAttribute('href', 'https://www.linkedin.com/');
+  socialLinked.setAttribute('target', '_blank')
+  socialWrap.appendChild(socialLinked)
 
-  const socialFB = document.createElement('div');
+  const socialFB = document.createElement('a');
   socialFB.classList.add('social-icon', 'social-fb', 'footer-icon');
+  socialFB.setAttribute('href', 'https://www.facebook.com/');
+  socialFB.setAttribute('target', '_blank')
   socialWrap.appendChild(socialFB)
 
-  const socialYT = document.createElement('div');
+
+  const socialYT = document.createElement('a');
   socialYT.classList.add('social-icon', 'social-yt', 'footer-icon');
+  socialYT.setAttribute('href', 'https://www.youtube.com/');
+  socialYT.setAttribute('target', '_blank')
   socialWrap.appendChild(socialYT)
 
-  const socialInst = document.createElement('div');
+  const socialInst = document.createElement('a');
   socialInst.classList.add('social-icon', 'social-inst', 'footer-icon');
+  socialInst.setAttribute('href', 'https://www.instagram.com/');
+  socialInst.setAttribute('target', '_blank')
   socialWrap.appendChild(socialInst)
 
   postFooterWrap.appendChild(socialWrap)
@@ -217,7 +227,27 @@ onMounted(async () => {
   contentWrap.value.appendChild(postFooterWrap);
 
 
-  document.addEventListener('pointerdown', () => store.toggleModal(), { once:true });
+  function onDocPointerDown(e: PointerEvent) {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    if (target.closest('[data-interactive]')) return;
+
+
+    store.toggleModal();
+  }
+
+  watch(
+      () => store.showModal,
+      (open) => {
+        if (open) {
+          document.addEventListener('pointerdown', onDocPointerDown, true);
+        } else {
+          document.removeEventListener('pointerdown', onDocPointerDown, true);
+        }
+      },
+      { immediate: true }
+  );
 
 
 })
@@ -455,8 +485,8 @@ onMounted(async () => {
 
 
 
-.social-x {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-twitter-x' viewBox='0 0 16 16'%3E%3Cpath d='M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z'/%3E%3C/svg%3E");
+.social-linked {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2716%27%20height%3D%2716%27%20fill%3D%27currentColor%27%20viewBox%3D%270%200%2016%2016%27%3E%3Cpath%20d%3D%27M0%201.146C0%20.513.526%200%201.175%200h13.65C15.474%200%2016%20.513%2016%201.146v13.708c0%20.633-.526%201.146-1.175%201.146H1.175C.526%2016%200%2015.487%200%2014.854zm4.943%2012.248V6.169H2.542v7.225zm-1.2-8.212c.837%200%201.358-.554%201.358-1.248-.015-.709-.52-1.248-1.342-1.248S2.4%203.226%202.4%203.934c0%20.694.521%201.248%201.327%201.248zm4.908%208.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878%201.232-.878.869%200%201.216.662%201.216%201.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274%200-1.845.7-2.165%201.193v.025h-.016l.016-.025V6.169h-2.4c.03.678%200%207.225%200%207.225z%27/%3E%3C/svg%3E");
 }
 
 .social-fb {

@@ -25,7 +25,7 @@
 
         <div class="details-bg" />
         <img
-            :src="influencer.influencerDetails.image?.node?.sourceUrl || './public/placeholder.png'"
+            :src="influencer.influencerDetails.image?.node?.sourceUrl || '/placeholder.png'"
             class="bg-cover rounded-2xl headshot"
             :alt="influencer.influencerDetails.name"
             ref="cardImgEl"

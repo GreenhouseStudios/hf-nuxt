@@ -183,15 +183,17 @@
 <template>
 
   <!-- NOTES
-  Fix tap support for vids
-  Fix quote pause/play desync sometimes
-  Add multi-major event support (waiting for answer from HF)
   Set covid modal to disable until initial transition end + cards 2 rows under
 
   -->
 
   <div class="mb-36 px-2 py-12 md:px-12 overflow-x-hidden" style="width: 99vw">
-    <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300">CENTENNIAL TIMELINE</h1>
+    <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+    xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300
+    ps-3 md:ps-0
+    "
+
+    >CENTENNIAL TIMELINE</h1>
 
     <section>
       <Filters />
@@ -201,7 +203,7 @@
     <section class="flex flex-col justify-around">
       <div v-if="timelineItems.length === 0">
         No posts found.
-      </div>
+       </div>
       <div ref="gridWrapEl" v-else>
         <ul
             :key="`grid-${rebuildToken}-${numCols}`"
@@ -209,11 +211,11 @@
             id="card-grid"
             class="bento-grid py-10"
             :style="{
-    '--cols': numCols,
-    '--row-h': rowHeight + 'px',
-    '--gap': gap + 'px',
-    opacity: 0
-  }"
+              '--cols': numCols,
+              '--row-h': rowHeight + 'px',
+              '--gap': gap + 'px',
+              opacity: 0
+            }"
         >
           <li
               v-for="item in timelineItems"
@@ -259,7 +261,7 @@
                   :y-multiplier="1"
                   mode="fixedHeight"
               />
-              <h2 id="covid-title" class="text-6xl font-bold">COVID-19</h2>
+              <h2 id="covid-title" class="text-5xl md:text-6xl font-bold">COVID-19</h2>
 
               <!-- can be a single special card or a small list of covid cards -->
 
@@ -325,7 +327,7 @@ const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
   covidCardGrow = false;
-
+  covidState.value = 'idle';
   if(gridWrapEl.value) gridWrapEl.value.style.opacity = '0';
 
   rebuildToken.value++;
@@ -346,234 +348,233 @@ async function measureAndPack(reset = false) {
   if(packCount > 5) {
     packCount = 0;
     await hardRebuild();
-  } else {
-    packCount++;
-  }
+  } else packCount++;
+
   if(layoutInProgress) return;
   layoutInProgress = true;
-  await nextTick();
-
-  if (!gridEl.value) return;
 
 
-  const liElements = Array.from(gridEl.value.querySelectorAll('li'));
+  try {
+    await nextTick();
+    if(!gridEl.value) return;
 
+    const liElements = Array.from(gridEl.value.querySelectorAll('li'));
 
+    // Set covid card if 15+ cards in grid & covid card not made yet
+    if(!covidCardGrow && shouldMakeCovid) {
+      const covidLi = liElements.find(el => el.dataset.isCovid === '1') ?? null;
+      if(covidLi) {
+        covidCardGrow = true;
 
-  if(numCols.value === 1) {
-    liElements.forEach(el => {
-      el.style.gridRowEnd = 'span 3';
-      el.dataset.rowspan = '3';
-      el.style.gridColumn = 'span 1';
-      el.dataset.colspan = '1';
-    })
-    cardAnimation();
-    return;
-  }
-  if(liElements.length < 10) {
-    const rem = liElements.length % numCols.value;
-    liElements.forEach(el => {
-      el.style.gridRowEnd = 'span 5';
-      el.dataset.rowspan = '5';
-      el.style.gridColumn = 'span 1';
-      el.dataset.colspan = '1';
-    })
-    cardAnimation();
-    return;
-  }
-  // Sewt covid card if 15+ cards in grid & covid card not made yet
-  if(liElements.length >= 15 && !covidCardGrow) {
-    const covidLi = liElements.find(el => el.dataset.isCovid === '1') ?? null;
-    if(covidLi) {
-      covidCardGrow = true;
-      if(numCols.value > 2) {
-        covidLi.addEventListener('pointerenter', function grow() {
-          if(covidState.value !== 'idle') return;
-          covidState.value = 'opening';
+        attachCovidOpen(covidLi)
 
-          covidLi.removeEventListener('pointerenter', grow);
-          requestAnimationFrame(() => {
-            if(numCols.value <= 3) growCovidCard(covidLi, gridEl.value as HTMLElement);
-            else spanCovidCard(covidLi, gridEl.value as HTMLElement)
-          });
-        })
+        setCovidSpan(covidLi, gridEl.value as HTMLElement);
       }
-      setCovidSpan(covidLi, gridEl.value as HTMLElement);
+
     }
 
-  }
-
-  // Reset cards if reset=true
-  if(reset) {
-    liElements.forEach(el => {
-      if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, gridEl.value as HTMLElement) }
-      else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement) }
-      else {
+    if(numCols.value === 1) {
+      liElements.forEach(el => {
+        const rand = Math.random();
+        const rowspan = rand < .75 ? 3 : 4;
+        el.style.gridRowEnd = `span ${rowspan}`;
+        el.dataset.rowspan = `${rowspan}`;
         el.style.gridColumn = 'span 1';
         el.dataset.colspan = '1';
-        el.style.gridRowEnd = 'span 1';
-        el.dataset.rowspan = '1';
+      })
+      cardAnimation();
+      return;
+    }
+    if(liElements.length < 10) {
+      const rem = liElements.length % numCols.value;
+      liElements.forEach(el => {
+        el.style.gridRowEnd = 'span 5';
+        el.dataset.rowspan = '5';
+        el.style.gridColumn = 'span 1';
+        el.dataset.colspan = '1';
+      })
+      cardAnimation();
+      return;
+    }
+
+
+
+    // Reset cards if reset=true
+    if(reset) {
+      liElements.forEach(el => {
+        if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, gridEl.value as HTMLElement) }
+        else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement) }
+        else {
+          el.style.gridColumn = 'span 1';
+          el.dataset.colspan = '1';
+          el.style.gridRowEnd = 'span 1';
+          el.dataset.rowspan = '1';
+        }
+      });
+    }
+    await nextTick();
+
+    // Ensure colspans are valid/normalized
+    liElements.forEach(el => {
+      if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
+      let c;
+      if(el.dataset.cardSize === 'large') {
+        c = lgCardRange.col;
+      } else if(el.dataset.cardSize === 'small') {
+        c = smallCardRange.col;
+      } else {
+        c = Math.random() > .15 ? randCardRange.col[0] : randCardRange.col[1];
+      }
+      el.style.gridColumn = `span ${c}`;
+      el.dataset.colspan = `${c}`;
+
+    })
+
+    imgChecked = true;
+
+    liElements.forEach(el => {
+      if (el.dataset.isQuote === '1') {
+        setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement);
       }
     });
-  }
-  await nextTick()
 
-  // Ensure colspans are valid/normalized
-  liElements.forEach(el => {
-    if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
-    let c;
-    if(el.dataset.cardSize === 'large') {
-      c = lgCardRange.col;
-    } else if(el.dataset.cardSize === 'small') {
-      c = smallCardRange.col;
-    } else {
-      c = Math.random() > .15 ? randCardRange.col[0] : randCardRange.col[1];
-    }
-    el.style.gridColumn = `span ${c}`;
-    el.dataset.colspan = `${c}`;
+    // Assign rowspans with slight randomization based on column count
+    let totalCells = 0;
+    liElements.forEach(el => {
+      if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
 
-  })
+      const inner = el.querySelector('.bento-inner');
+      if(!inner) return;
 
-  imgChecked = true;
-
-  liElements.forEach(el => {
-    if (el.dataset.isQuote === '1') {
-      setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement);
-    }
-  });
-
-  // Assign rowspans with slight randomization based on column count
-  let totalCells = 0;
-  liElements.forEach(el => {
-    if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
-
-    const inner = el.querySelector('.bento-inner');
-    if(!inner) return;
-
-    const c = parseInt(el.dataset.colspan || '1', 10);
-    let r:number;
-    if(el.dataset.cardSize === 'large') {
-      r = Math.floor(Math.random() * (lgCardRange.row[1] - lgCardRange.row[0] + 1)) + lgCardRange.row[0];
-    } else if(el.dataset.cardSize === 'small') {
-      r = Math.floor(Math.random() * (smallCardRange.row[1] - smallCardRange.row[0] + 1)) + smallCardRange.row[0];
-    } else {
-      r = Math.floor(Math.random() * (randCardRange.row[1] - randCardRange.row[0] + 1)) + randCardRange.row[0];
-    }
-    el.style.gridRowEnd = `span ${r}`;
-    el.dataset.rowspan = `${r}`;
-
-    totalCells += r * c;
-  });
-
-  // Fill all 'fill-able' gaps
-  await growAcrossTwoEmptyRows(8);
-  await growSinglesByOne(8);
-  await nextTick();
-
-  // Recount total cells after filling
-  totalCells = 0;
-  for (const el of liElements) {
-    const r = parseInt(el.dataset.rowspan || '1', 10);
-    const c = parseInt(el.dataset.colspan || '1', 10);
-    totalCells += r * c;
-  }
-
-  // Determine bottom cards & normalize rowspans (incomplete)
-  let rows = Math.ceil(totalCells / numCols.value);
-  let remainder = rows * numCols.value - totalCells;
-
-  if (remainder > 0) {
-    const lastBottom = Math.max(...liElements.map(el => el.offsetTop + el.offsetHeight));
-    const lastRowEls = liElements
-        .filter(el => el.offsetTop + el.offsetHeight >= lastBottom - 1)
-        .sort((a, b) => (parseInt(a.dataset.colspan || '1') - parseInt(b.dataset.colspan || '1')));
-
-    for(const el of lastRowEls) {
-      if (remainder === 0) break;
       const c = parseInt(el.dataset.colspan || '1', 10);
-      const addRows = Math.floor(remainder / c);
-      if (addRows > 0) {
-        const base = parseInt(el.dataset.rowspan || '0', 10);
-        el.style.gridRowEnd = `span ${Math.min(5, base + addRows)}`;
-        el.dataset.rowspan = String(Math.min(5, base + addRows));
-        remainder -= addRows * c;
+      let r:number;
+      if(el.dataset.cardSize === 'large') {
+        r = Math.floor(Math.random() * (lgCardRange.row[1] - lgCardRange.row[0] + 1)) + lgCardRange.row[0];
+      } else if(el.dataset.cardSize === 'small') {
+        r = Math.floor(Math.random() * (smallCardRange.row[1] - smallCardRange.row[0] + 1)) + smallCardRange.row[0];
+      } else {
+        r = Math.floor(Math.random() * (randCardRange.row[1] - randCardRange.row[0] + 1)) + randCardRange.row[0];
       }
-    }
-  }
+      el.style.gridRowEnd = `span ${r}`;
+      el.dataset.rowspan = `${r}`;
 
-  // Lock card inner heights to <li> heights
-  Array.from(document.querySelectorAll<HTMLElement>('.bento-inner')).forEach(inner => {
-    const div = <HTMLElement>inner.firstElementChild;
-    if(div) {
-      div.style.height = `${inner.offsetHeight}px`;
-      div.style.minHeight=  `${inner.offsetHeight}px`;
-    }
-  })
-
-  // Measure placements without transforms
-  await nextTick();
-  const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement))
-  for(let c = 1; c <= 5; c++) {
-    let rowCount = 0;
-    let prevRow = 0;
-    placements.forEach(p => {
-      if(prevRow === 0) prevRow = p.row + p.rowspan;
-      if(p.col === c || (p.colspan > 1 && (p.col === c + 1 || p.col === c - 1))) {
-        rowCount += p.rowspan;
-        prevRow = p.row + p.rowspan;
-      }
+      totalCells += r * c;
     });
-  }
-  const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()));
 
-  // Check empty gaps & re-try filling / reset if unable to fill all gaps
-  try {
-    let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
-    let emptyGaps = gapsPerCol(newPlacements, numCols.value);
-    if(emptyGaps) {
+    // Fill all 'fill-able' gaps
+    await growAcrossTwoEmptyRows(8);
+    await growSinglesByOne(8);
+    await nextTick();
 
+    // Recount total cells after filling
+    totalCells = 0;
+    for (const el of liElements) {
+      const r = parseInt(el.dataset.rowspan || '1', 10);
+      const c = parseInt(el.dataset.colspan || '1', 10);
+      totalCells += r * c;
+    }
 
-      await nextFrame();
+    // Determine bottom cards & normalize rowspans (incomplete)
+    let rows = Math.ceil(totalCells / numCols.value);
+    let remainder = rows * numCols.value - totalCells;
 
-      await growSinglesByOne(7);
-      await growAcrossTwoEmptyRows(7);
-      await nextTick();
+    if (remainder > 0) {
+      const lastBottom = Math.max(...liElements.map(el => el.offsetTop + el.offsetHeight));
+      const lastRowEls = liElements
+          .filter(el => el.offsetTop + el.offsetHeight >= lastBottom - 1)
+          .sort((a, b) => (parseInt(a.dataset.colspan || '1') - parseInt(b.dataset.colspan || '1')));
 
-      newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
-      await nextTick();
-      const newEmpty = gapsPerCol(newPlacements, numCols.value);
-      if(newEmpty) {
-        layoutInProgress = false;
-        return await measureAndPack(true)
+      for(const el of lastRowEls) {
+        if (remainder === 0) break;
+        const c = parseInt(el.dataset.colspan || '1', 10);
+        const addRows = Math.floor(remainder / c);
+        if (addRows > 0) {
+          const base = parseInt(el.dataset.rowspan || '0', 10);
+          el.style.gridRowEnd = `span ${Math.min(5, base + addRows)}`;
+          el.dataset.rowspan = String(Math.min(5, base + addRows));
+          remainder -= addRows * c;
+        }
       }
-  }
+    }
 
-    // Add animations after computed grid placements valid
-  } finally {
-    if(gridEl.value) gridEl.value.style.opacity = '1';
+    // Lock card inner heights to <li> heights
+    Array.from(document.querySelectorAll<HTMLElement>('.bento-inner')).forEach(inner => {
+      const div = <HTMLElement>inner.firstElementChild;
+      if(div) {
+        div.style.height = `${inner.offsetHeight}px`;
+        div.style.minHeight=  `${inner.offsetHeight}px`;
+      }
+    })
+
+    // Measure placements without transforms
+    await nextTick();
+    const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement))
+    for(let c = 1; c <= 5; c++) {
+      let rowCount = 0;
+      let prevRow = 0;
+      placements.forEach(p => {
+        if(prevRow === 0) prevRow = p.row + p.rowspan;
+        if(p.col === c || (p.colspan > 1 && (p.col === c + 1 || p.col === c - 1))) {
+          rowCount += p.rowspan;
+          prevRow = p.row + p.rowspan;
+        }
+      });
+    }
+    const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()));
+
+    // Check empty gaps & re-try filling / reset if unable to fill all gaps
+    try {
+      let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
+      let emptyGaps = gapsPerCol(newPlacements, numCols.value);
+      if(emptyGaps) {
+
+
+        await nextFrame();
+
+        await growSinglesByOne(7);
+        await growAcrossTwoEmptyRows(7);
+        await nextTick();
+
+        newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
+        await nextTick();
+        const newEmpty = gapsPerCol(newPlacements, numCols.value);
+        if(newEmpty) {
+          layoutInProgress = false;
+          return await measureAndPack(true)
+        }
+      }
+
+      // Add animations after computed grid placements valid
+    } finally {
+      if(gridEl.value) gridEl.value.style.opacity = '1';
       liElements.forEach(el => {
         if (el.dataset.isCovid === '1') el.classList.add('major-event-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
       });
       cardAnimation();
-    layoutInProgress = false;
-    const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
-    quotePopupAdjust(placements, numCols.value);
+      layoutInProgress = false;
+      const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
+      quotePopupAdjust(placements, numCols.value);
 
-    const quotes = liElements.filter(el => el.dataset.isQuote === '1')
+      const quotes = liElements.filter(el => el.dataset.isQuote === '1')
 
-    quotes.forEach(quote => {
-      quote.addEventListener('mouseenter', () => {
-        quote.style.zIndex = '11';
-      });
-      quote.addEventListener('mouseleave', () => {
-        quote.style.zIndex = '9';
+      quotes.forEach(quote => {
+        quote.addEventListener('mouseenter', () => {
+          quote.style.zIndex = '11';
+        });
+        quote.addEventListener('mouseleave', () => {
+          quote.style.zIndex = '9';
+        })
+
+
       })
+    }
 
 
-    })
+  } finally {
+    if (gridEl.value) gridEl.value.style.opacity = '1';
+    layoutInProgress = false;
   }
-
 
 }
 
@@ -610,10 +611,10 @@ function setQuoteSpan(card: HTMLElement, grid: HTMLElement) {
   }
 }
 
-
-
-
-
+function shouldOpenFromPointer(e: PointerEvent) {
+  if (e.pointerType === 'mouse') return e.type === 'pointerenter';
+  return e.type === 'pointerdown';
+}
 
 
 /**
@@ -888,8 +889,33 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   }
 }
 
+function attachCovidOpen(covidLi: HTMLElement) {
+  const open = (e: PointerEvent) => {
+    if (!shouldOpenFromPointer(e)) return;
+    if (covidState.value !== 'idle') return;
 
-function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+    covidState.value = 'opening';
+
+    if (e.pointerType !== 'mouse') e.stopPropagation();
+
+    covidLi.removeEventListener('pointerenter', open);
+    covidLi.removeEventListener('pointerdown', open);
+
+    requestAnimationFrame(() => {
+      const isTouch = e.pointerType !== 'mouse';
+      if (numCols.value <= 3)
+        growCovidCard(covidLi, gridEl.value as HTMLElement, isTouch);
+      else
+        spanCovidCard(covidLi, gridEl.value as HTMLElement, isTouch);
+    });
+  };
+
+  covidLi.addEventListener('pointerenter', open);
+  covidLi.addEventListener('pointerdown', open);
+}
+
+
+function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
 
   const placements = clearTransforms(grid, () =>
       getPlacements(grid)
@@ -981,11 +1007,14 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
   // ----------------- pointerleave + shrink -----------------
   function armPointerLeave() {
-    const onLeave = function triggerShrink() {
+    const close = () => {
       if (covidState.value !== 'open') return;
-
       covidState.value = 'closing';
-      covidCard.removeEventListener('pointerleave', onLeave);
+
+      // cleanup listeners
+      covidCard.removeEventListener('pointerleave', onLeaveMouse);
+      covidCard.removeEventListener('pointerdown', onTapCardAgain);
+      document.removeEventListener('pointerdown', onOutsideTap, true);
 
       let delay = innerPosts.length * 0.1;
       innerPosts.forEach(covidPost => {
@@ -997,8 +1026,32 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
       shrink();
     };
 
-    covidCard.addEventListener('pointerleave', onLeave);
+    const onLeaveMouse = () => close();
+
+    // Tap again on the card to close (optional, but nice)
+    const onTapCardAgain = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      e.stopPropagation();
+      close();
+    };
+
+    // Tap anywhere else closes
+    const onOutsideTap = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      // if tap is inside the card, ignore (card handler handles it)
+      if (covidCard.contains(e.target as Node)) return;
+      close();
+    };
+
+    covidCard.addEventListener('pointerleave', onLeaveMouse);
+
+    if (touch) {
+      covidCard.addEventListener('pointerdown', onTapCardAgain);
+      // capture=true so it fires even if something stops bubbling later
+      document.addEventListener('pointerdown', onOutsideTap, true);
+    }
   }
+
 
   function shrink() {
     if(!inner || !covidTitle) return;
@@ -1027,19 +1080,8 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
         // Re-arm hover after cards have had time to transition back
         setTimeout(() => {
           covidState.value = 'idle';
-          covidCard.addEventListener(
-              'pointerenter',
-              function grow() {
-                if (covidState.value !== 'idle') return;
-                covidState.value = 'opening';
-                requestAnimationFrame(() =>
-                    growCovidCard(covidCard, grid)
-                );
-              },
-              { once: true }
-          );
+          attachCovidOpen(covidCard);
         }, 500);
-
       })
     }, {once:true})
 
@@ -1053,7 +1095,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
 const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
 
-function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
+function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
   const { pitchY } = getGridMetrics(grid);
   const placements = clearTransforms(grid, () =>
       getPlacements(grid)
@@ -1250,23 +1292,49 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
 
   // ----------------- pointerleave + shrink -----------------
   function armPointerLeave() {
-    const onLeave = function triggerShrink() {
+    const close = () => {
       if (covidState.value !== 'open') return;
-
       covidState.value = 'closing';
-      covidCard.removeEventListener('pointerleave', onLeave);
 
-      let delay = 0;
+      // cleanup listeners
+      covidCard.removeEventListener('pointerleave', onLeaveMouse);
+      covidCard.removeEventListener('pointerdown', onTapCardAgain);
+      document.removeEventListener('pointerdown', onOutsideTap, true);
+
+      let delay = innerPosts.length * 0.1;
       innerPosts.forEach(covidPost => {
         covidPost.style.setProperty('--delay', `${delay}s`);
-        delay += 0.1;
+        delay -= 0.1;
         covidPost.classList.replace('active', 'inactive');
       });
 
       shrink();
     };
 
-    covidCard.addEventListener('pointerleave', onLeave);
+    const onLeaveMouse = () => close();
+
+    // Tap again on the card to close (optional, but nice)
+    const onTapCardAgain = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      e.stopPropagation();
+      close();
+    };
+
+    // Tap anywhere else closes
+    const onOutsideTap = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      // if tap is inside the card, ignore (card handler handles it)
+      if (covidCard.contains(e.target as Node)) return;
+      close();
+    };
+
+    covidCard.addEventListener('pointerleave', onLeaveMouse);
+
+    if (touch) {
+      covidCard.addEventListener('pointerdown', onTapCardAgain);
+      // capture=true so it fires even if something stops bubbling later
+      document.addEventListener('pointerdown', onOutsideTap, true);
+    }
   }
 
   function shrink() {
@@ -1301,17 +1369,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement) {
               // Re-arm hover after cards have had time to transition back
               setTimeout(() => {
                 covidState.value = 'idle';
-                covidCard.addEventListener(
-                    'pointerenter',
-                    function grow() {
-                      if (covidState.value !== 'idle') return;
-                      covidState.value = 'opening';
-                      requestAnimationFrame(() =>
-                          spanCovidCard(covidCard, grid)
-                      );
-                    },
-                    { once: true }
-                );
+                attachCovidOpen(covidCard);
               }, SHIFT_DURATION_MS);
             });
           }
@@ -1463,56 +1521,35 @@ function spaceQuotes(base: Post[]): Post[] {
   const quotePosts = base.filter(p => p.eventOptions?.postType === 'quote');
   const defaultPosts = base.filter(p => p.eventOptions?.postType !== 'quote');
 
-  if (quotePosts.length === 0) return defaultPosts;
+  if (!quotePosts.length) return defaultPosts; // keep original order without quotes
 
-  const quoteCount = quotePosts.length;
-  const raw = base.length / quoteCount;
-  const interval = Math.max(1, Math.round(raw));
+  const interval = Math.max(1, Math.round(base.length / quotePosts.length));
 
   const result: Post[] = [];
-  let quoteIndex = 0;
-  let nonIndex = 0;
-  let sinceLastQuote = 0;
+  let q = 0, d = 0, since = 0;
 
-  const firstQuoteOffset = 1; // “a couple in”
-  let firstQuotePlaced = false;
+  // optional: if you want the first quote to appear later, increase this
+  const firstQuoteOffset = 1;
+  let firstPlaced = false;
 
-  while (nonIndex < defaultPosts.length) {
-    result.push(defaultPosts[nonIndex++]);
-    sinceLastQuote++;
+  while (d < defaultPosts.length) {
+    result.push(defaultPosts[d++]);
+    since++;
 
-    if (!firstQuotePlaced &&
-        sinceLastQuote >= firstQuoteOffset &&
-        quoteIndex < quotePosts.length) {
-      // place the very first quote a bit earlier
-      result.push(quotePosts[quoteIndex++]);
-      firstQuotePlaced = true;
-      sinceLastQuote = 0;
-    } else if (
-        firstQuotePlaced &&
-        sinceLastQuote >= interval &&
-        quoteIndex < quotePosts.length
-    ) {
-      // then use the normal interval
-      result.push(quotePosts[quoteIndex++]);
-      sinceLastQuote = 0;
+    const shouldPlaceFirst = !firstPlaced && since >= firstQuoteOffset && q < quotePosts.length;
+    const shouldPlaceNext  = firstPlaced && since >= interval && q < quotePosts.length;
+
+    if (shouldPlaceFirst || shouldPlaceNext) {
+      result.push(quotePosts[q++]);
+      firstPlaced = true;
+      since = 0;
     }
   }
 
-  // any leftover quotes just append at the end
-  while (quoteIndex < quotePosts.length) {
-    result.push(quotePosts[quoteIndex++]);
-  }
-
+  while (q < quotePosts.length) result.push(quotePosts[q++]);
   return result;
 }
 
-
-const shouldMakeCovid = computed(() => {
-  return !!filteredPostsBase.value
-      .filter(post => post.eventOptions?.postType === 'covid_post')
-      .length;
-})
 
 const covidPosts = computed(() => {
   return filteredPostsBase.value.filter(
@@ -1522,56 +1559,56 @@ const covidPosts = computed(() => {
 
 const COVID_YEAR = 2020;
 
+let shouldMakeCovid = true;
+
 const timelineItems = computed<TimelineItem[]>(() => {
-  // start from filteredPostsBase, but ignore covid here
   const nonCovid = filteredPostsBase.value.filter(
       p => p.eventOptions?.postType !== 'covid_post'
   );
+
   const covid = covidPosts.value;
   const hasCovid = covid.length > 0;
 
   if (!nonCovid.length && !hasCovid) return [];
 
-  const aboveBase: Post[] = [];
-  const equalBase: Post[] = [];
-  const belowBase: Post[] = [];
-
-  for (const post of nonCovid) {
-    const year = parseInt(post.eventOptions?.eventYear || '0', 10);
-    if (year > COVID_YEAR) aboveBase.push(post);
-    else if (year === COVID_YEAR) equalBase.push(post);
-    else belowBase.push(post);
-  }
-
-  // apply spacing inside each bucket
-  const aboveSpaced = spaceQuotes(aboveBase);
-  const equalSpaced = spaceQuotes(equalBase);
-  const belowSpaced = spaceQuotes(belowBase);
+  shouldMakeCovid = filteredPostsBase.value.length >= postsArray.value.length;
 
   const result: TimelineItem[] = [];
 
-  for (const post of aboveSpaced) {
-    result.push({ type: 'post', post });
-  }
+  if(shouldMakeCovid) {
+    // space quotes across the entire timeline (quotes can move across years)
+    const spaced = spaceQuotes(nonCovid);
 
-  for (const post of equalSpaced) {
-    result.push({ type: 'post', post });
-  }
-
-  if (hasCovid) {
-    result.push({
-      type: 'covid',
-      year: COVID_YEAR,
-      posts: covid,
+    // insert covid wrapper at 2020 position
+    let insertAt = spaced.findIndex(p => {
+      const year = parseInt(p.eventOptions?.eventYear || '0', 10);
+      return year <= COVID_YEAR;
     });
-  }
+    if (insertAt === -1) insertAt = spaced.length;
 
-  for (const post of belowSpaced) {
-    result.push({ type: 'post', post });
+
+    for (let i = 0; i < spaced.length; i++) {
+      if (hasCovid && i === insertAt) {
+        result.push({ type: 'covid', year: COVID_YEAR, posts: covid });
+      }
+      result.push({ type: 'post', post: spaced[i] });
+    }
+
+    if (hasCovid && insertAt === spaced.length) {
+      result.push({ type: 'covid', year: COVID_YEAR, posts: covid });
+    }
+
+  } else {
+    const spaced = spaceQuotes(filteredPostsBase.value);
+
+    for(let i = 0; i < spaced.length; i++) {
+      result.push({ type: 'post', post: spaced[i]})
+    }
   }
 
   return result;
 });
+
 
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {

@@ -17,6 +17,7 @@ html {
   pointer-events: none;
   position: relative;
   z-index: 1;
+  height: 100vh;
 }
 
 .cropped-logo.fade {
@@ -28,6 +29,7 @@ html {
 }
 
 .cropped-logo {
+  height: 100vh;
   pointer-events: none;
   will-change: transform, top, left;
   transition: top 1s, left .25s, opacity .5s ease-in;
@@ -39,7 +41,6 @@ html {
   left: 0;
   top: 0;
   width: 100%;
-  height: 100%;
   z-index: -1;
   background-image: url("../public/hf_logo_crop.png");
   background-size: cover;
@@ -131,7 +132,6 @@ onMounted(() => {
         vidEl.value.addEventListener('animationend', () => {
           cropped.classList.add('fade');
           logo.classList.add('fade');
-          console.log('bruh')
         })
       }
 

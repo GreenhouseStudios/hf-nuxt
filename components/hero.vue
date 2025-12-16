@@ -1,15 +1,15 @@
 <template>
 
-  <div class="hero-bg-vid text-white flex flex-col relative justify-start items-start">
+  <div class="hero-bg text-white flex flex-col relative justify-start items-start" ref="heroBgEl" >
 
-    <div class="vid-wrap-bg">
+    <div class="vid-wrap-bg" ref="vidWrapEl">
 
-      <Hero-Vid ref="vidElRef" />
+      <Hero-Vid ref="vidEl" v-if="!isMobile"/>
 
     </div>
-    <div class="hero-bg-overlay">
+    <div class="hero-bg-overlay" ref="heroOverlayEl">
 
-      <div class="hero-bg-text ani md:w-8/10 lg:w-8/10 my-2 mx-4 md:mx-24 z-50">
+      <div class="hero-bg-text ani w-11/12 md:w-9/10 lg:w-8/10 my-2 mx-auto mx-4 md:mx-24 z-50" ref="heroTextEl">
 
         <h1 class="text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl font-black title text-md mb-4 pt-5">CELEBRATING 100 YEARS</h1>
         <p class="md:text-lg md:w-1/1 mt-9 xl:w-3/4 2xl:w-2/3 text-md"> Over the past 100 years, we’ve transformed how local people and
@@ -21,221 +21,194 @@
         <!-- <img src="../public/hero_curve_banner.png" alt=""> -->
       </div>
 
+      <div class="vid-wrap-mobile" v-if="isMobile" ref="vidMobileWrapEl">
+        <video
+            class="hero-vid"
+            ref="vidMobileEl"
+            src="../public/HF_LOGO.mp4"
+            type="video/mp4"
+            muted
+            preload="auto"
+            playsinline
+            style="object-fit: cover; width: 100%; height: 100%"
+        >
+        </video>
+      </div>
+
+
     </div>
 
+    <AboutTimeline id="about" />
+
   </div>
-  <div class="three-key-blocks">
-    <div class="info-container">
-      <div class="info-text-block">
-        <h2>HOW WE STARTED</h2>
-        <p>1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated society in Hartford's North Fund gave him a chance to meet people
-          of other cultures. Art school at UHart
-        </p>
-      </div>
-      <div class="info-line"></div>
-      <div class="info-text-block">
-        <h2>KEY HIGHLIGHTS</h2>
-        <p>1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated society in Hartford's North Fund gave him a chance to meet people
-          of other cultures. Art school at UHart
-        </p>
-      </div>
-      <div class="info-line" style="transform-origin: top; transform: scaleY(1.3)"></div>
-      <div class="info-text-block">
-        <h2>KEY CONTRIBUTORS</h2>
-        <p>1998: Jonathan Bruce, the 49-year-old director of The Craftery Gallery in Hartford,
-          lived in a segregated society in Hartford's North Fund gave him a chance to meet people
-          of other cultures. Art school at UHart
-        </p>
-      </div>
-    </div>
-  </div>
-
-
-
-</template>
+  </template>
 
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref, nextTick, computed } from 'vue'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
-import HeroVid from "~/components/hero-vid.vue";
-import { nextTick } from "vue";
+import HeroVid from '~/components/hero-vid.vue'
+import AboutTimeline from "~/components/about-timeline.vue";
+const width = ref(window.innerWidth)
 
-let gsapDisabled = false;
+const isMobile = computed(() => width.value < 768)
+
+function onResize() {
+  width.value = window.innerWidth
+}
+
+
 
 gsap.registerPlugin(ScrollTrigger)
 
-let triggers: ScrollTrigger[] = [];
+const vidEl = ref<InstanceType<typeof HeroVid> | null>(null)
+const vidMobileWrapEl = ref<HTMLElement | null>(null);
+const vidWrapEl = ref<HTMLElement | null>(null);
 
-const vidElRef = ref<InstanceType<typeof HeroVid> | null>(null)
+let mm: gsap.MatchMedia | null = null
+
+const heroBgEl = ref<HTMLElement | null>(null);
+const heroOverlayEl = ref<HTMLElement | null>(null);
+const heroTextEl = ref<HTMLElement | null>(null)
+
 
 onMounted(async () => {
+  await nextTick()
+
+
   await nextTick();
-  const overlay = document.querySelector<HTMLElement>('.hero-bg-overlay');
-  const hero    = document.querySelector<HTMLElement>('.hero-bg-vid');
+  console.log(heroBgEl.value)
 
-  if (!overlay || !hero) return;
+  const video = vidEl.value?.vidEl ?? null
 
-  const video = vidElRef.value?.vidEl;
-
-
-
-  // Keep CSS var in sync with overlay height
+  // Keep CSS var in sync with overlay height (regardless of breakpoint)
   const setOverlayH = () => {
-    const h = overlay.getBoundingClientRect().height;
-    document.documentElement.style.setProperty('--overlay-h', `${h}px`);
-  };
-  setOverlayH();
-  const ro = new ResizeObserver(setOverlayH);
-  ro.observe(overlay);
-  // INITIAL STATES
-  // video hidden behind overlay to start
+    const h = heroOverlayEl.value?.getBoundingClientRect().height
+    document.documentElement.style.setProperty('--overlay-h', `${h}px`)
+  }
+  setOverlayH()
+  const ro = new ResizeObserver(setOverlayH)
+  //ro.observe(heroOverlayEl.value)
 
-  // Entrance animations
-/*  gsap.fromTo('.hero-bg-text',
-      { yPercent: -150, autoAlpha: 0 },
-      { yPercent: 0, autoAlpha: 1, duration: 0.75, ease: 'power1.out', delay: 0.4 }
-  );*/
+  // If you still need this
 
-let vidAniDone = false;
-  // Main hero pin + motions
-  const heroTl = gsap.timeline({
-    defaults: { ease: 'power1.out' },
-    scrollTrigger: {
-      trigger: hero,
-      start: 'top top',
-      end: '+=125%',
-      pin: true,
-      scrub: true,
-      markers: false,
-      invalidateOnRefresh: true,
-      anticipatePin: 1,
-      onUpdate: self => {
-        if(self.progress > .6) {
-          if(window.innerWidth > 1150 && !vidAniDone) lockScroll();
-          else if(!vidAniDone && video) {
-            console.log(video)
-            video.play()
-            vidAniDone = true;
+
+  window.addEventListener('resize', onResize)
+
+  let vidAniDone = false;
+
+  function lockScroll(tl: gsap.core.Timeline) {
+    vidAniDone = true
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => {
+      onEnded(tl);
+    }, 250)
+  }
+
+  const isMobile = computed(() => window.innerWidth < 768)
+
+  mm = gsap.matchMedia()
+
+  // <= 740px: disable visuals + ensure any running trigger is gone
+  mm.add('(max-width: 740px)', () => {
+    const overlay = heroOverlayEl.value
+    const text = heroTextEl.value
+    overlay?.classList.add('hide')
+
+    gsap.set([overlay, text], { clearProps: 'transform' })
+
+    return () => overlay?.classList.remove('hide')
+  })
+
+
+  // > 740px: create ScrollTrigger + timeline, auto-killed when resizing down
+  mm.add('(min-width: 741px)', () => {
+    const hero = heroBgEl.value
+    const overlay = heroOverlayEl.value
+    const text = heroTextEl.value
+    if (!hero || !overlay || !text) return
+
+    // make sure sticky isn't active on desktop
+    gsap.set([overlay, text], { clearProps: 'position,top' })
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: hero,
+        start: 'top top',
+        end: window.innerWidth <= 1150 ? '+=175%' : '+=120%',
+        scrub: true,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: self => {
+          if(!vidAniDone) {
+            if(heroOverlayEl.value) {
+              const rect = heroOverlayEl.value.getBoundingClientRect();
+              if(window.innerWidth > 1150) {
+                console.log(rect.bottom)
+                if(rect.bottom <= 400) {
+                  lockScroll(tl)
+                }
+              } else {
+                if(!vidWrapEl.value) return;
+                const vidRect = vidWrapEl.value.getBoundingClientRect();
+                if(rect.bottom < vidRect.top - 25) {
+                  video?.play();
+                  vidAniDone = true;
+                }
+              }
+            }
           }
+
+
         }
       }
+    })
+
+    tl.to(overlay, { yPercent: -100, ease: 'none' }, 0)
+    if (window.innerWidth <= 1150 && vidWrapEl.value) {
+      gsap.set(vidWrapEl.value, { yPercent: 15 })
+
+      tl.to(
+          vidWrapEl.value,
+          { yPercent: 30, ease: "none" },
+          0
+      )
+      tl.to(
+          vidWrapEl.value,
+          { yPercent: 30, ease: 'none' },
+          .35
+      )
+
     }
-  });
-
-  const bgText = overlay.querySelector<HTMLElement>('.hero-bg-text')
-
-  video?.addEventListener('ended', () => {
-    const st = heroTl.scrollTrigger;
-
-
-    if(st) {
-      if(window.innerWidth > 1150) {
-        st.kill(true);
-        if(bgText) bgText.style.position = 'relative';
-      } else {
-        st.vars.end = '+=75%';
-        st.refresh();
-      }
+    return () => {
+      tl.scrollTrigger?.kill(true)
+      tl.kill()
+      gsap.set([overlay, text], { clearProps: 'transform' })
     }
   })
 
 
+  const onEnded = (tl: gsap.core.Timeline | null) => {
+    const st = tl?.scrollTrigger
 
+    if (!st) return
 
-  bgText?.addEventListener('animationend', () => {
-    heroTl
-        .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
-        .to('.hero-bg-text',    { yPercent: -100 },  0)  // text moves up
-  }, {once: true})
-
-
-  function lockScroll() {
-    vidAniDone = true;
-    document.body.style.overflow = 'hidden';
-  }
-
-
-  // Move vid off-screen
-  const visionTl = gsap.timeline({
-    defaults: { ease: 'none' },
-    scrollTrigger: {
-      trigger: '.three-key-blocks',
-      start: 'top bottom',
-      end: 'top top',
-      scrub: true,
-      invalidateOnRefresh: true
-    }
-  });
-
-  triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
-
-  // Start vid on scroll down
-
-
-  window.addEventListener('resize', sizeHeader);
-  sizeHeader();
-
-
-  function sizeHeader() {
-    if(window.innerWidth < 740) {
-      if(!overlay) return;
-      gsapDisabled = true;
-      overlay.classList.add('hide');
-      triggers.forEach(t => t?.kill());
-    } else if(gsapDisabled) {
-      if(!overlay) return;
-      gsapDisabled = false;
-      overlay?.classList.remove('hide');
-
-      const heroTl = gsap.timeline({
-        defaults: { ease: 'power1.out' },
-        scrollTrigger: {
-          trigger: hero,
-          start: 'top top',
-          end: '+=125%',
-          pin: true,
-          scrub: true,
-          markers: false,
-          invalidateOnRefresh: true,
-          anticipatePin: 1
-        }
-      });
-
-      heroTl
-          .to('.hero-bg-overlay', { yPercent: -100 }, 0)  // overlay slides up/out
-          //.to('.hero-bg-text',    { yPercent: -100 }, 0)  // text moves up
-
-
-      // Move vid off-screen
-      const visionTl = gsap.timeline({
-        defaults: { ease: 'none' },
-        scrollTrigger: {
-          trigger: '.three-key-blocks',
-          start: 'top bottom',
-          end: 'top top',
-          scrub: true,
-          invalidateOnRefresh: true
-        }
-      });
-
-      triggers.push(heroTl.scrollTrigger!, visionTl.scrollTrigger!);
-
+    if (window.innerWidth > 1150) {
+      st.kill(true)
+      if (heroTextEl.value) heroTextEl.value.style.position = 'relative'
+    } else if (window.innerWidth > 740) {
+      st.vars.end = '+=50%'
+      st.refresh()
     }
   }
 
-});
 
+})
 
-
-onBeforeUnmount(() => {
-  triggers.forEach(t => t?.kill());
-  gsap.killTweensOf('.hero-bg-overlay');
-  gsap.killTweensOf('.hero-bg-text');
-});
 </script>
+
 
 <style>
 
@@ -250,16 +223,15 @@ onBeforeUnmount(() => {
   box-shadow: 0px 5px 17px 4px #000d2561;
   transition: opacity .25s;
 }
-.hero-bg-vid {
-  background-image: url("../public/hf-hero-bg-light.svg");
+.hero-bg {
   position: relative;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: top;
-  height: 100vh;
+  min-height: 150vh;
+  background:
+      linear-gradient(transparent, transparent) no-repeat top / cover,
+      url('/hf-hero-bg-curve.svg') no-repeat top / 130% auto;
 }
 :root {
-  --overlay-h: 0px; /* set dynamically in JS */
+  --overlay-h: 0px;
   --parkSpeed: .5s;
 }
 
@@ -273,8 +245,18 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.hero-bg-text {
+.vid-wrap-mobile {
   position: sticky;
+  width: 97% !important;
+  height: auto;
+  margin: auto auto 25px;
+  border-radius: 25px;
+  overflow: hidden;
+  top: 50%;
+}
+
+.hero-bg-text {
+  position: relative;
   top: 100px;
   opacity: 1;
   transform: translateY(-150%);
@@ -294,18 +276,17 @@ onBeforeUnmount(() => {
   .hero-bg-text {
     top: 80px;
   }
-  .hero-bg {
-    height: 1000px;
-  }
+
 }
 
 .hero-bg-overlay {
   background-image: url("../public/hero-curve-banner.png");
   background-size: cover;
-  position: absolute;
   inset: 0;
-  height: 100%;
+  height: 120vh;
   z-index: 98;
+  position: relative;
+  will-change: transform;
 }
 
 
@@ -363,6 +344,12 @@ onBeforeUnmount(() => {
   }
 }
 
+@media(max-width: 1700px) {
+  .hero-bg {
+    height: 100vh
+  }
+}
+
 @media(max-width: 1150px) {
   .info-line {
     width: 75% !important;
@@ -385,42 +372,44 @@ onBeforeUnmount(() => {
     margin: 10px auto 10px auto !important;
     max-width: 80% !important;
   }
-  .vid-wrap-bg {
+  .vid-wrap-bg, .vid-wrap-mobile {
     width: 90% !important;
     height: auto;
     border-radius: 25px;
     overflow: hidden;
+    bottom: unset;
     left: 50%;
-    transform: translateX(-50%) translateY(50%);
-    bottom: 50%;
+    transform: translateX(-50%);
   }
 }
 
-@media(max-width: 725px) {
-  .three-key-blocks {
-    background-size: 135% 145% !important;
+@media(max-width: 740px) {
+  .hero-bg-text {
+    margin-bottom: 40px;
   }
-  .info-container {
-    height: 65% !important;
+  .hero-bg {
+    background-size: cover, 150% auto;
   }
-  .vid-wrap {
-    width: 75vw !important;
-  }
+
 }
 
 @media(max-width: 540px) {
   .hero-bg-text > h1 {
     text-align: center !important;
   }
-  .vid-wrap {
-    top: 60% !important;
+  .vid-wrap-mobile {
+    top: 55%;
   }
-  .info-container {
-    height: 70% !important;
+  .hero-bg {
+    background-size: cover, 200% auto;
   }
-  .three-key-blocks {
-    height: 125vh !important;
-    background: linear-gradient(180deg, #131d8f 0%, #0043AA 70%, transparent 95%) !important;
+}
+@media(max-width: 460px) {
+  .vid-wrap-mobile {
+    top: 70%;
+  }
+  .hero-bg {
+    background-size: cover, 310% auto;
   }
 }
 </style>

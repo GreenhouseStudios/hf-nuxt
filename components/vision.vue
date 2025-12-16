@@ -31,7 +31,7 @@
 }
 
 .vision-vid-wrap {
-  margin: 7rem auto;
+  margin: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -127,7 +127,7 @@
 </style>
 
 <template>
-  <section class="overflow-x-clip">
+  <section class="overflow-x-clip bg-amber-200 px-7 py-15">
     <div class="vision-head">
       <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
         ABOUT THE<br>
@@ -156,72 +156,6 @@
 </template>
 
 <script setup lang="ts">
-import gsap from 'gsap'
-import ScrollTrigger from 'gsap/ScrollTrigger'
-import { onMounted } from 'vue';
-
-gsap.registerPlugin(ScrollTrigger);
-
-
-onMounted(() => {
-
-  const visionHead = document.querySelector('.vision-head');
-  if(!visionHead) return;
-  gsap.fromTo(visionHead,
-      {x: -200, opacity: 0},
-      {
-        x: 0,
-        opacity: 1,
-        ease: 'power1.out',
-        duration: .5,
-        scrollTrigger: {
-          trigger: visionHead,
-          start: 'top 85%',
-          once: true,
-        },
-        onStart: visionBoldAni
-      },
-  )
-  const listEls = Array.from(document.querySelectorAll('.list-item'))
-  if(listEls.length > 0) {
-    listEls.forEach(el => {
-      gsap.fromTo(el,
-        {x: 100 + (listEls.indexOf(el) * 15), opacity: 0},
-          {
-            x: 0,
-            opacity: 1,
-            ease: 'power3.inOut',
-            delay: listEls.indexOf(el) * .5 + .5,
-            duration: .5,
-            scrollTrigger: {
-              trigger: '.vision-list',
-              start: 'top 85%',
-              once: true
-            }
-          }
-      )
-    })
-  }
-
-  function visionBoldAni() {
-    const textLarge = document.querySelector('#vision-bold');
-    if(!textLarge) return;
-    const text: string[] = [];
-    for(let i = 0; i < textLarge.textContent.length; i++) {
-      text.push(textLarge.textContent[i]);
-    }
-    if(text.length < textLarge.textContent.length) return;
-    textLarge.innerHTML = '';
-    text.forEach((char, idx) => {
-      const charEl = document.createElement('span');
-      charEl.textContent = `${char}`;
-      if(char === ' ') charEl.style.display = 'inline';
-      charEl.style.animationDelay = `${(idx * .025) + .25}s`;
-      charEl.className = 'vision-char-ani';
-      textLarge.appendChild(charEl);
-    })
-  }
-
 
 
 })
