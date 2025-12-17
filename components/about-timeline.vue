@@ -45,6 +45,24 @@
   height: 300px;
   background: grey;
   border-radius: 25px;
+  position: relative;
+  overflow: hidden;
+}
+
+.slideshow-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  border-radius: 25px;
+}
+
+.slideshow-image.active {
+  opacity: 1;
 }
 
 .vision-text-wrap {
@@ -341,7 +359,15 @@
       </strong>
     </div>
     <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
-      <div class="vision-vid"></div>
+      <div class="vision-vid">
+        <img 
+          v-for="(image, index) in slideshowImages" 
+          :key="index"
+          :src="image"
+          :class="['slideshow-image', { active: currentSlide === index }]"
+          alt="Timeline image"
+        />
+      </div>
       <div class="vision-text-wrap">
         <h3>SINCE 1925</h3>
         <p>
@@ -385,12 +411,49 @@
 
 <script setup lang="ts">
 import anime from 'animejs';
-import { onMounted, nextTick } from 'vue';
+import { onMounted, nextTick, ref, onUnmounted, computed } from 'vue';
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
+import { usePosts } from '~/composables/usePosts';
 
+// Fetch timeline posts, vue y u so hard
+const { data: posts } = usePosts();
+
+// Get timeline images from posts, sorted by year (descending - newest first)
+const slideshowImages = computed(() => {
+  if (!posts.value || !Array.isArray(posts.value)) return [];
+  
+  // Filter posts with images and years, sort by year descending
+  const postsWithImages = posts.value
+    .filter((post: Post) => {
+      const hasImage = post.eventOptions?.thumbnail?.node?.sourceUrl || 
+                       post.eventOptions?.thumbnail?.node?.mediaItemUrl;
+      const hasYear = post.eventOptions?.eventYear;
+      return hasImage && hasYear;
+    })
+    .sort((a: Post, b: Post) => {
+      const yearA = parseInt(a.eventOptions.eventYear);
+      const yearB = parseInt(b.eventOptions.eventYear);
+      return yearB - yearA; // Sort descending (newest to oldest)
+    });
+  
+  // Take 7-8 images and extract URLs
+  return postsWithImages
+    .slice(0, 8)
+    .map((post: Post) => 
+      post.eventOptions.thumbnail.node.sourceUrl || 
+      post.eventOptions.thumbnail.node.mediaItemUrl
+    );
+});
+
+const currentSlide = ref(0);
+let slideshowInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(async ()  =>  {
+  // Start slideshow
+  slideshowInterval = setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % slideshowImages.value.length;
+  }, 3000); // Change image every 3 seconds
   anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
   await nextTick()
 
@@ -492,6 +555,12 @@ onMounted(async ()  =>  {
 
 });
 
+onUnmounted(() => {
+  // Clean up slideshow interval
+  if (slideshowInterval) {
+    clearInterval(slideshowInterval);
+  }
+});
 
 
 
