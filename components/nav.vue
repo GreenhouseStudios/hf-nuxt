@@ -21,9 +21,9 @@
       </template>
 
     </USlideover>
-    <div id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
+<!--    <div id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
 
-    </div>
+    </div>-->
   </div>
 
 </template>
@@ -67,11 +67,13 @@ const items = ref(<NavigationMenuItem[]>[
 const vidTeleport = ref<HTMLDivElement | null>(null);
 const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
 
+/*
 onMounted(() => {
   if(navTeleportEl && window.innerWidth > 1150) {
     navTeleportEl.value = vidTeleport.value;
   }
 })
+*/
 
 defineExpose({vidTeleport})
 </script>
