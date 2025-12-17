@@ -102,7 +102,6 @@ onMounted(() => {
     vidEl.value.play();
     vidEl.value.addEventListener('ended', () => {
       if(!vidEl.value) return;
-      console.log('wow');
 
 
       document.body.style.overflow = '';
@@ -122,7 +121,7 @@ onMounted(() => {
         })
         tl.play();
         setTimeout(() => {
-          logo.classList.remove('clipped');
+          logo.classList.replace('clipped', 'partial-clip');
         }, 1250)
       } else {
         logo.style.opacity = '0';

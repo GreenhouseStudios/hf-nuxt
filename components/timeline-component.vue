@@ -1,17 +1,20 @@
 <style scoped>
+/* === Core bento grid layout (CSS grid “masonry-ish”) === */
 .bento-grid {
   display: grid;
-  grid-auto-flow: row dense;
+  grid-auto-flow: row dense; /* lets items backfill gaps */
   grid-template-columns: repeat(var(--cols, 4), 1fr);
-  grid-auto-rows: var(--row-h, 75px);
+  grid-auto-rows: var(--row-h, 115px);
   gap: var(--gap, 25px);
   overflow-y: clip;
 }
 
+/* Used while recomputing layout to avoid flicker */
 .bento-grid.computing {
   opacity: 0;
 }
 
+/* Make inner wrappers always fill the <li> height */
 .bento-inner {
   height: 100%;
 }
@@ -19,61 +22,35 @@
   height: 100%;
 }
 
+/* Base “hidden” card state + transition for scroll-in animations */
 .bento-card {
   opacity: .01;
   transition: transform 1s, opacity .75s;
 }
 
+/* Most cards are interactive; special ones override */
 .bento-card:not(.covid-card) {
   cursor: pointer;
 }
 
+/* Initial offset used before IntersectionObserver reveals card */
 .transform {
   transform: translateY(150px);
 }
 
+/* When COVID expands, other cards get a temporary translate via CSS var */
 .adjustForCovid {
   --to-move: unset;
   transition: transform .75s ease !important;
   transform: var(--to-move) !important;
 }
-.major-event-card {
-  opacity: .01;
-  border-radius: calc(var(--ui-radius) * 4);
-  transition: transform 1.25s, opacity .75s;
-  transition-delay: .25s;
-  position: relative;
-}
-.major-event-inner {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
-  transition-delay: .25s;
-  transition: width .75s ease-out, transform .75s ease-out;
-  background: url("../public/major-event-bg.png") no-repeat center bottom;
-  border-radius: calc(var(--ui-radius) * 4);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
 
-.major-event-inner > div {
-  box-shadow: none;
-}
-
-.major-event-inner > * {
-  text-align: center;
-  color: white;
-  margin-bottom: 0;
-  max-width: 80%;
-}
-.major-event-transform {
+/* Separate initial offset for COVID wrapper */
+.covid-transform {
   transform: translateY(150px);
 }
 
+/* === COVID wrapper card styling === */
 .covid-card {
   opacity: .01;
   border-radius: calc(var(--ui-radius) * 4);
@@ -82,6 +59,7 @@
   position: relative;
 }
 
+/* Inner “banner” that expands (width on desktop / height on small cols) */
 .covid-inner {
   position: absolute;
   width: 100%;
@@ -89,7 +67,7 @@
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
   transition-delay: .25s;
   transition: width .75s ease-out, transform .75s ease-out;
-  background: url("../public/major-event-bg.png") no-repeat center bottom;
+  background: url("../public/covid-event-bg.png") no-repeat center bottom;
   border-radius: calc(var(--ui-radius) * 4);
   display: flex;
   flex-direction: row;
@@ -100,25 +78,29 @@
   gap: 15px;
 }
 
+/* Individual COVID posts that animate in/out */
 .covid-post {
   display: flex;
   width: 15%;
   min-height: 100% !important;
   max-height: 100% !important;
-  --delay: 0;
+  --delay: 0; /* stagger delay used by keyframes */
   cursor: pointer;
 }
 
+/* Ensure image fills the COVID post card */
 .covid-post img {
   width: 100% !important;
 }
 
+/* Default “hidden” animation state (posts animate OUT) */
 .covid-post.inactive {
   animation: covid-post-inactive-ani .5s var(--delay) ease forwards;
   opacity: 1;
   transform: translateY(0px);
 }
 
+/* Keyframes for hiding COVID posts */
 @keyframes covid-post-inactive-ani {
   from {
     opacity: 1;
@@ -130,12 +112,14 @@
   }
 }
 
+/* Active state (posts animate IN) */
 .covid-post.active {
   animation: covid-post-active-ani .5s var(--delay) ease forwards;
   opacity: 0;
   transform: translateY(200px);
 }
 
+/* Keyframes for showing COVID posts */
 @keyframes covid-post-active-ani {
   from {
     opacity: 0;
@@ -147,6 +131,7 @@
   }
 }
 
+/* Small screen layout: COVID inner becomes a 2x2-ish grid */
 @media(max-width: 1280px) {
   .covid-inner {
     display: grid;
@@ -161,7 +146,7 @@
   }
 }
 
-
+/* COVID title overlay shown when collapsed (hidden during expansion) */
 #covid-title {
   position: absolute;
   text-align: center;
@@ -175,35 +160,40 @@
   transform: translateX(-50%) translateY(-50%);
 }
 </style>
+
 <style>
-
-
-
+/* (empty global style block - left as-is) */
 </style>
+
 <template>
-
   <!-- NOTES
-  Set covid modal to disable until initial transition end + cards 2 rows under
-
+    Set covid modal to disable until initial transition end + cards 2 rows under
   -->
 
+  <!-- Page wrapper -->
   <div class="mb-36 px-2 py-12 md:px-12 overflow-x-hidden" style="width: 99vw">
+
+    <!-- Title -->
     <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
     xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300
     ps-3 md:ps-0
     "
-
     >CENTENNIAL TIMELINE</h1>
 
+    <!-- Filters UI -->
     <section>
       <Filters />
     </section>
-     
+
     <!-- Card Layout (CSS Grid) -->
     <section class="flex flex-col justify-around">
+
+      <!-- Empty state -->
       <div v-if="timelineItems.length === 0">
         No posts found.
-       </div>
+      </div>
+
+      <!-- Grid wrapper (opacity toggled during rebuilds) -->
       <div ref="gridWrapEl" v-else>
         <ul
             :key="`grid-${rebuildToken}-${numCols}`"
@@ -217,27 +207,25 @@
               opacity: 0
             }"
         >
+          <!-- Each item is either a normal post or the COVID wrapper -->
           <li
               v-for="item in timelineItems"
               :key="item.type === 'post' ? item.post.slug : 'covid-2020'"
               :class="[
                 'bento-card',
-                { 'major-event-card shadow-md': item.type === 'post' && item.post?.eventOptions?.postType === 'major_event' },
                 { 'quote-card': item.type === 'post' && item.post?.eventOptions?.postType === 'quote' },
                 { 'covid-card': item.type === 'covid' }
               ]"
               :data-card-size="item.type === 'post'
                 ? (item.post?.eventOptions?.cardSize ?? 'default')
                 : 'large'"
-
               :data-is-quote="item.type === 'post' && item.post?.eventOptions?.postType === 'quote' ? '1' : '0'"
-              :data-is-major-event="item.type === 'post' && item.post?.eventOptions?.postType === 'major_event' ? '1' : '0'"
               :data-is-covid="item.type === 'covid' ? '1' : '0'"
           >
-            <!-- normal posts -->
+            <!-- Normal posts: render one Card -->
             <div
                 v-if="item.type === 'post'"
-                :class="item.post?.eventOptions?.postType === 'major_event' ? 'major-event-inner' : 'bento-inner'"
+                class="bento-inner"
             >
               <Card
                   :post="item.post"
@@ -247,6 +235,7 @@
               />
             </div>
 
+            <!-- COVID wrapper: holds multiple posts, starts hidden -->
             <div
                 v-else
                 class="bento-inner covid-inner"
@@ -264,7 +253,6 @@
               <h2 id="covid-title" class="text-5xl md:text-6xl font-bold">COVID-19</h2>
 
               <!-- can be a single special card or a small list of covid cards -->
-
             </div>
           </li>
 
@@ -285,43 +273,56 @@ import { generateDocx } from '@/composables/useDocGenerate';
 import {fetchPosts, usePosts} from "~/composables/usePosts";
 
 /**
- * Get post data
+ * Get post data + filter store
  */
 const store = useStore();
 const { data: posts } = usePosts();
 
 /**
- * Set col/row/card values
+ * Grid sizing + layout state
+ * - numCols drives spans and special behavior
+ * - layoutInProgress prevents overlapping layout passes
+ * - covidCardGrow ensures covid init runs once per rebuild
  */
 const numCols = ref(5);
 let cols = numCols.value;
-let rowHeight = 75;
+let rowHeight = 115;
 const gap = 25;
 let layoutInProgress = false;
 let covidCardGrow = false;
+
+/**
+ * Column/row span ranges used when assigning card sizes
+ * (small/default/large influence later row/col span assignment)
+ */
 const smallCardRange = {
   col: 1,
   row: [3, 6]
 }
 const randCardRange = {
   col: [1, 2],
-  row: [3, 6]
+  row: [3, 7]
 }
 const lgCardRange = {
   col: 2,
-  row: [3, 5]
+  row: [3, 7]
 }
 
+/* DOM refs for grid wrapper + grid element */
 const gridWrapEl = ref<HTMLElement | null>(null);
-
 const gridEl = ref<HTMLElement | null>(null);
+
+/* Timeline list is posts plus a special “covid group” item */
 type TimelineItem =
-  | { type: 'post'; post: Post }
-  | { type: 'covid'; year: number; posts: Post[] }
+    | { type: 'post'; post: Post }
+    | { type: 'covid'; year: number; posts: Post[] }
 
 
 /**
  * Hard rebuild on numCol change / post watch
+ * - forces a clean layout pass
+ * - resets covid state
+ * - re-measures + re-packs the grid
  */
 const rebuildToken = ref(0);
 async function hardRebuild() {
@@ -337,42 +338,86 @@ async function hardRebuild() {
   if(gridWrapEl.value) gridWrapEl.value.style.opacity = '1'
 }
 
+/* === Image aspect ratio cache ===
+   We cache AR by URL so repeated passes don’t re-load images. */
+const imageARCache = new Map<string, number>();
 
+async function getImageAR(url: string): Promise<number> {
+  if (imageARCache.has(url)) return imageARCache.get(url)!;
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      const ar = img.naturalWidth && img.naturalHeight
+          ? img.naturalWidth / img.naturalHeight
+          : 1.5;
+      imageARCache.set(url, ar);
+      resolve(ar);
+    };
+    img.onerror = () => {
+      imageARCache.set(url, 1.5);
+      resolve(1.5);
+    };
+    img.src = url;
+  });
+}
 
 /**
  * Build bento grid / measure & update bento cards
+ * This is the main layout routine that:
+ * - caches image AR
+ * - assigns spans
+ * - fills gaps
+ * - handles COVID card setup
+ * - runs animations when stable
  */
 let imgChecked = false;
 let packCount = 0;
 async function measureAndPack(reset = false) {
-  if(packCount > 5) {
-    packCount = 0;
-    await hardRebuild();
-  } else packCount++;
 
+  // prevent overlapping layout passes
   if(layoutInProgress) return;
   layoutInProgress = true;
-
 
   try {
     await nextTick();
     if(!gridEl.value) return;
 
+    // pull all <li> cards (includes covid + quotes)
     const liElements = Array.from(gridEl.value.querySelectorAll('li'));
 
-    // Set covid card if 15+ cards in grid & covid card not made yet
+    // pre-cache image aspect ratios for normal cards (skip covid + quote)
+    await Promise.all(
+        liElements.map(async el => {
+          if (el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
+
+          const img = el.querySelector('img');
+          if (!img) return;
+
+          const src = img.getAttribute('src');
+          if (!src) return;
+
+          const ar = await getImageAR(src);
+          el.dataset.imgAr = String(ar);
+        })
+    );
+
+    // Initialize covid card behavior once per rebuild, but only when allowed
     if(!covidCardGrow && shouldMakeCovid) {
       const covidLi = liElements.find(el => el.dataset.isCovid === '1') ?? null;
       if(covidLi) {
         covidCardGrow = true;
 
+        // setup hover/tap open handler
         attachCovidOpen(covidLi)
 
+        // set base span for the wrapper based on columns
         setCovidSpan(covidLi, gridEl.value as HTMLElement);
       }
-
     }
 
+    // 1-column layout: keep it simple and uniform-ish
     if(numCols.value === 1) {
       liElements.forEach(el => {
         const rand = Math.random();
@@ -385,6 +430,8 @@ async function measureAndPack(reset = false) {
       cardAnimation();
       return;
     }
+
+    // Very small sets: force consistent sizing so layout doesn’t look broken
     if(liElements.length < 10) {
       const rem = liElements.length % numCols.value;
       liElements.forEach(el => {
@@ -397,9 +444,7 @@ async function measureAndPack(reset = false) {
       return;
     }
 
-
-
-    // Reset cards if reset=true
+    // Optional full reset: wipe spans back to defaults before recalculating
     if(reset) {
       liElements.forEach(el => {
         if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, gridEl.value as HTMLElement) }
@@ -414,7 +459,7 @@ async function measureAndPack(reset = false) {
     }
     await nextTick();
 
-    // Ensure colspans are valid/normalized
+    // Assign column spans based on cardSize (large/small/default)
     liElements.forEach(el => {
       if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
       let c;
@@ -427,46 +472,67 @@ async function measureAndPack(reset = false) {
       }
       el.style.gridColumn = `span ${c}`;
       el.dataset.colspan = `${c}`;
-
     })
 
     imgChecked = true;
 
+    // Quotes have fixed rules (override normal sizing)
     liElements.forEach(el => {
       if (el.dataset.isQuote === '1') {
         setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement);
       }
     });
 
-    // Assign rowspans with slight randomization based on column count
+    // Assign rowspans (aspect-aware + size intent)
     let totalCells = 0;
+
     liElements.forEach(el => {
-      if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
+      if (el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
 
       const inner = el.querySelector('.bento-inner');
-      if(!inner) return;
+      if (!inner) return;
 
       const c = parseInt(el.dataset.colspan || '1', 10);
-      let r:number;
-      if(el.dataset.cardSize === 'large') {
-        r = Math.floor(Math.random() * (lgCardRange.row[1] - lgCardRange.row[0] + 1)) + lgCardRange.row[0];
-      } else if(el.dataset.cardSize === 'small') {
-        r = Math.floor(Math.random() * (smallCardRange.row[1] - smallCardRange.row[0] + 1)) + smallCardRange.row[0];
+
+      // Aspect ratio pulled from cached dataset value
+      const ar = parseFloat(el.dataset.imgAr || '1.5');
+
+      let r: number;
+
+      // Pick base row span from aspect ratio buckets
+      if (ar < 0.85) {
+        // portrait
+        r = Math.floor(Math.random() * 2) + 5; // 5–6
+      } else if (ar < 1.2) {
+        // near-square
+        r = Math.floor(Math.random() * 2) + 4; // 4–5
+      } else if (ar < 1.9) {
+        // landscape
+        r = Math.floor(Math.random() * 2) + 3; // 3–4
       } else {
-        r = Math.floor(Math.random() * (randCardRange.row[1] - randCardRange.row[0] + 1)) + randCardRange.row[0];
+        // ultra-wide
+        r = 3;
       }
+
+      // Size intent tweaks
+      if (el.dataset.cardSize === 'large') r += 1;
+      if (el.dataset.cardSize === 'small') r -= 1;
+
+      // Clamp keeps the rest of the gap logic sane
+      r = Math.max(3, Math.min(6, r));
+
       el.style.gridRowEnd = `span ${r}`;
       el.dataset.rowspan = `${r}`;
 
       totalCells += r * c;
     });
 
-    // Fill all 'fill-able' gaps
+    // Try to fill gaps by growing certain cards down
     await growAcrossTwoEmptyRows(8);
     await growSinglesByOne(8);
     await nextTick();
 
-    // Recount total cells after filling
+    // Recount after growth pass
     totalCells = 0;
     for (const el of liElements) {
       const r = parseInt(el.dataset.rowspan || '1', 10);
@@ -474,30 +540,7 @@ async function measureAndPack(reset = false) {
       totalCells += r * c;
     }
 
-    // Determine bottom cards & normalize rowspans (incomplete)
-    let rows = Math.ceil(totalCells / numCols.value);
-    let remainder = rows * numCols.value - totalCells;
-
-    if (remainder > 0) {
-      const lastBottom = Math.max(...liElements.map(el => el.offsetTop + el.offsetHeight));
-      const lastRowEls = liElements
-          .filter(el => el.offsetTop + el.offsetHeight >= lastBottom - 1)
-          .sort((a, b) => (parseInt(a.dataset.colspan || '1') - parseInt(b.dataset.colspan || '1')));
-
-      for(const el of lastRowEls) {
-        if (remainder === 0) break;
-        const c = parseInt(el.dataset.colspan || '1', 10);
-        const addRows = Math.floor(remainder / c);
-        if (addRows > 0) {
-          const base = parseInt(el.dataset.rowspan || '0', 10);
-          el.style.gridRowEnd = `span ${Math.min(5, base + addRows)}`;
-          el.dataset.rowspan = String(Math.min(5, base + addRows));
-          remainder -= addRows * c;
-        }
-      }
-    }
-
-    // Lock card inner heights to <li> heights
+    // Lock inner heights so Card components match the computed <li> height
     Array.from(document.querySelectorAll<HTMLElement>('.bento-inner')).forEach(inner => {
       const div = <HTMLElement>inner.firstElementChild;
       if(div) {
@@ -506,7 +549,7 @@ async function measureAndPack(reset = false) {
       }
     })
 
-    // Measure placements without transforms
+    // Measure placements with transforms temporarily cleared (accuracy)
     await nextTick();
     const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement))
     for(let c = 1; c <= 5; c++) {
@@ -520,19 +563,19 @@ async function measureAndPack(reset = false) {
         }
       });
     }
+
+    // Helper to wait one paint frame before retry logic
     const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()));
 
-    // Check empty gaps & re-try filling / reset if unable to fill all gaps
+    // If gaps still exist, try a second pass; if still broken, force a reset pass
     try {
       let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
       let emptyGaps = gapsPerCol(newPlacements, numCols.value);
       if(emptyGaps) {
-
-
         await nextFrame();
 
-        await growSinglesByOne(7);
-        await growAcrossTwoEmptyRows(7);
+        await growSinglesByOne(8);
+        await growAcrossTwoEmptyRows(8);
         await nextTick();
 
         newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
@@ -546,18 +589,28 @@ async function measureAndPack(reset = false) {
 
       // Add animations after computed grid placements valid
     } finally {
+      // Reveal grid once layout is stable
       if(gridEl.value) gridEl.value.style.opacity = '1';
+
+      // Fine-tune image max heights (CSS var based) after layout settles
+      nudgeImageMaxHeights(gridEl.value as HTMLElement);
+
+      // Add initial transform class so IntersectionObserver can animate them in
       liElements.forEach(el => {
-        if (el.dataset.isCovid === '1') el.classList.add('major-event-transform');
+        if (el.dataset.isCovid === '1') el.classList.add('covid-transform');
         else if (!el.dataset.animated) el.classList.add('transform');
       });
+
+      // Start intersection-based reveal animations
       cardAnimation();
       layoutInProgress = false;
+
+      // Recompute placements and adjust quote popup direction based on edge
       const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
       quotePopupAdjust(placements, numCols.value);
 
+      // Quote hover z-index bump so it can overlay neighbors
       const quotes = liElements.filter(el => el.dataset.isQuote === '1')
-
       quotes.forEach(quote => {
         quote.addEventListener('mouseenter', () => {
           quote.style.zIndex = '11';
@@ -565,20 +618,111 @@ async function measureAndPack(reset = false) {
         quote.addEventListener('mouseleave', () => {
           quote.style.zIndex = '9';
         })
-
-
       })
     }
 
-
   } finally {
+    // Safety: ensure we never leave layoutInProgress stuck on
     if (gridEl.value) gridEl.value.style.opacity = '1';
     layoutInProgress = false;
   }
-
 }
 
+/* === Small helpers used across layout === */
+function clamp(n: number, a: number, b: number) { return Math.max(a, Math.min(b, n)); }
 
+function parsePct(pct: string, fallback = 50) {
+  const n = parseFloat(pct);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/* Placeholder detection used to skip fake images in AR/max height logic */
+function isPlaceholderImage(src: string | null): boolean {
+  if (!src) return true;
+
+  const s = src.toLowerCase();
+
+  return (
+      s.endsWith('/placeholder.png') ||
+      s.includes('placeholder')
+  );
+}
+
+/**
+ * Iteratively nudges --imgMaxPct for images that are “too short” or “too tall”
+ * This is a post-layout pass that helps fill card space visually.
+ */
+function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 6) {
+  let pass = 0;
+
+  const step = () => {
+    pass++;
+
+    // Only normal cards (skip covid + quotes)
+    const items = Array.from(grid.querySelectorAll<HTMLElement>('li.bento-card'))
+        .filter(el => el.dataset.isCovid !== '1' && el.dataset.isQuote !== '1');
+
+    let changed = 0;
+
+    for (const li of items) {
+      const img = li.querySelector<HTMLImageElement>('img');
+      if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) continue;
+
+      const src = img.getAttribute('src');
+      if (img.dataset.placeholder === '1' || isPlaceholderImage(src)) continue;
+
+      // cardRoot is where --imgMaxPct is applied (feature wrapper if present)
+      const cardRoot =
+          img.closest<HTMLElement>('.feature') ??
+          img.closest<HTMLElement>('.bento-inner') ??
+          li;
+
+      // rendered size in layout
+      const w = img.clientWidth;
+      const h = img.clientHeight;
+      if (w <= 0 || h <= 0) continue;
+
+      // compare natural AR vs rendered AR
+      const naturalAR  = img.naturalWidth / img.naturalHeight;
+      const renderedAR = w / h;
+      const ratio = renderedAR / naturalAR;
+
+      // current % value (defaults to 50)
+      const cur = parsePct(cardRoot.style.getPropertyValue('--imgMaxPct') || '50');
+
+      // adjust more aggressively if it’s very off
+      const stepAmt =
+          ratio > 1.25 ? 12 :
+              ratio > 1.12 ? 8  :
+                  ratio > 1.05 ? 6  :
+                      0;
+
+      // If rendered is “wider” than natural, bump max height
+      if (stepAmt) {
+        const next = clamp(cur + stepAmt, 30, 80);
+        if (next !== cur) {
+          cardRoot.style.setProperty('--imgMaxPct', `${next}%`);
+          changed++;
+        }
+      }
+      // If rendered is “taller” than natural, reduce max height slightly
+      else if (ratio < 0.92) {
+        const next = clamp(cur - 6, 30, 80);
+        if (next !== cur) {
+          cardRoot.style.setProperty('--imgMaxPct', `${next}%`);
+          changed++;
+        }
+      }
+    }
+
+    // repeat a few times while adjustments are still changing layout
+    if (changed > 0 && pass < maxPasses) requestAnimationFrame(step);
+  };
+
+  requestAnimationFrame(step);
+}
+
+/* Quote spans are fixed rules based on column count */
 function setQuoteSpan(card: HTMLElement, grid: HTMLElement) {
   if (!card || !grid) return;
 
@@ -611,14 +755,15 @@ function setQuoteSpan(card: HTMLElement, grid: HTMLElement) {
   }
 }
 
+/* Desktop opens on hover; touch opens on tap */
 function shouldOpenFromPointer(e: PointerEvent) {
   if (e.pointerType === 'mouse') return e.type === 'pointerenter';
   return e.type === 'pointerdown';
 }
 
-
 /**
  * Get bento grid placements
+ * Produces (row, col, rowspan, colspan) by reading DOM rects.
  */
 type Placement = {
   el: HTMLElement;
@@ -628,12 +773,12 @@ type Placement = {
   colspan: number;
 };
 function getPlacements(grid: HTMLElement): Placement[] {
-  // Get grid data / set epsilon to ensure accuracy / get all <li> elements
+  // Grid metrics tell us pitch sizes for converting pixels -> rows/cols
   const { cols, rect, pitchY, pitchX } = getGridMetrics(grid);
   const EPS = 0.1;
   const items = Array.from(grid.querySelectorAll<HTMLElement>('li'));
 
-  // Get & return bento items col/row/position data
+  // Convert each element’s pixel position into grid row/col
   return items.map(el => {
     const cs = getComputedStyle(el);
     const colspan = parseInt(cs.getPropertyValue('--c')) ||
@@ -651,21 +796,21 @@ function getPlacements(grid: HTMLElement): Placement[] {
   });
 }
 
-
 /**
  * Check for gaps in grid
+ * Returns true if any column has any unoccupied row ranges.
  */
 function gapsPerCol(placements: Placement[], cols:number) {
   const result: Record<number, Array<{start:number,end:number}>> = {};
 
-  // Get all cards of each column
+  // For each column, build occupied intervals from all cards spanning that column
   for (let c = 1; c <= cols; c++) {
     const intervals = placements
         .filter(p => c >= p.col && c <= p.col + p.colspan - 1)
         .map(p => ({ start: p.row, end: p.row + p.rowspan - 1 }))
         .sort((a, b) => a.start - b.start || a.end - b.end);
 
-    // Merge overlapping intervals to get occupied blocks
+    // Merge intervals so we can detect breaks cleanly
     const merged: Array<{start:number,end:number}> = [];
     for (const iv of intervals) {
       if (!merged.length || iv.start > merged[merged.length - 1].end + 1) {
@@ -675,14 +820,15 @@ function gapsPerCol(placements: Placement[], cols:number) {
       }
     }
 
-    // Check breaks in merged intervals (if interval start larger than previous interval end + 1)
+    // Any break between merged intervals is a gap
     const gaps: Array<{start:number,end:number}> = [];
     let prevEnd = 0;
     for (const iv of merged) {
       if (iv.start > prevEnd + 1) gaps.push({ start: prevEnd + 1, end: iv.start - 1 });
       prevEnd = iv.end;
     }
-    let res;
+
+    // Store gaps per column (used only to decide “do we still have gaps?”)
     let maxRow = 0;
     for (const p of placements) {
       if (c >= p.col && c <= p.col + p.colspan - 1) {
@@ -690,11 +836,10 @@ function gapsPerCol(placements: Placement[], cols:number) {
         if (endRow > maxRow) maxRow = endRow;
       }
     }
-    res =  maxRow;
     result[c] = gaps;
-
   }
-  // Return true if gaps
+
+  // If any column has gaps, return true
   for(let r = 1; r <= cols; r++) {
     const gaps = result[r]
     if(gaps && gaps.length > 0) return true;
@@ -702,9 +847,9 @@ function gapsPerCol(placements: Placement[], cols:number) {
   return false;
 }
 
-
 /**
  * Get grid data
+ * Used by placement math (pixel -> row/col conversion).
  */
 function getGridMetrics(grid: HTMLElement) {
   const cs   = getComputedStyle(grid);
@@ -718,9 +863,9 @@ function getGridMetrics(grid: HTMLElement) {
   return { cols, rect, pitchY, pitchX };
 }
 
-
 /**
  * Clear bento card transforms
+ * Needed because transforms affect getBoundingClientRect (placement accuracy).
  */
 function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
   const liElements = Array.from(document.querySelectorAll<HTMLElement>('.bento-card'));
@@ -731,9 +876,9 @@ function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
   return out;
 }
 
-
 /**
  * Check openings below/above cards
+ * Used by gap-fill passes to see if a card can grow downward.
  */
 function clearanceRowsBelow(me: Placement, placements: Placement[]): number {
   const bandL = me.col;
@@ -774,11 +919,11 @@ function firstBlockerBelowInBand(me: Placement, placements: Placement[]): Placem
   return best;
 }
 
-
 /**
  * Grow single column cards with max row count
+ * Pass 1: if there is exactly 1 empty row below, grow by 1.
  */
-async function growSinglesByOne(maxRowSpan = 7) {
+async function growSinglesByOne(maxRowSpan = 8) {
   await nextTick();
   if (!gridEl.value) return;
   const placements = clearTransforms(gridEl.value, () => getPlacements(gridEl.value as HTMLElement));
@@ -800,7 +945,11 @@ async function growSinglesByOne(maxRowSpan = 7) {
   }
 }
 
-async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
+/**
+ * Pass 2: if there are exactly 2 empty rows, grow qualifying cards by 1.
+ * (Only if a 1-col card is involved to avoid breaking bigger layouts.)
+ */
+async function growAcrossTwoEmptyRows(maxRowSpan = 8) {
   await nextTick();
   if (!gridEl.value) return;
   const placements = clearTransforms(gridEl.value, () => getPlacements(gridEl.value as HTMLElement));
@@ -839,6 +988,8 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
       below.rowspan = next;
     }
   }
+
+  // Special tweak: if any card grows too tall, reduce image height
   Array.from(gridEl.value.querySelectorAll('li')).forEach(el => {
     const rows = parseInt(el.dataset.rowspan || '1');
 
@@ -850,9 +1001,9 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 7) {
   })
 }
 
-
 /**
  * Set covid span/columns depending on column count
+ * (Base/collapsed size before expansion animation.)
  */
 function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   if(!card || !grid) return;
@@ -889,6 +1040,15 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
   }
 }
 
+// Track state of covid card
+const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
+
+
+/**
+ * Attach open handlers to covid card
+ * - mouse: open on hover
+ * - touch: open on tap
+ */
 function attachCovidOpen(covidLi: HTMLElement) {
   const open = (e: PointerEvent) => {
     if (!shouldOpenFromPointer(e)) return;
@@ -896,13 +1056,16 @@ function attachCovidOpen(covidLi: HTMLElement) {
 
     covidState.value = 'opening';
 
+    // prevent global handlers from firing on touch
     if (e.pointerType !== 'mouse') e.stopPropagation();
 
+    // remove open listeners until we close again
     covidLi.removeEventListener('pointerenter', open);
     covidLi.removeEventListener('pointerdown', open);
 
     requestAnimationFrame(() => {
       const isTouch = e.pointerType !== 'mouse';
+      // small column counts expand vertically, larger expands horizontally
       if (numCols.value <= 3)
         growCovidCard(covidLi, gridEl.value as HTMLElement, isTouch);
       else
@@ -914,9 +1077,10 @@ function attachCovidOpen(covidLi: HTMLElement) {
   covidLi.addEventListener('pointerdown', open);
 }
 
-
+/* === Mobile/low-cols covid expansion: grow height and push stacks up/down === */
 function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
 
+  // measure placements without transforms for accurate “above/below” sets
   const placements = clearTransforms(grid, () =>
       getPlacements(grid)
   );
@@ -927,6 +1091,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     return;
   }
 
+  // cards above and below the covid row band
   const above = placements.filter(p => p.row < covidPlacement.row);
   const below = placements.filter(p => p.row > covidPlacement.row);
 
@@ -947,21 +1112,24 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   const gridRect = grid.getBoundingClientRect();
   const innerRect = inner.getBoundingClientRect();
 
+  // now enable the animated properties for the “open” motion
   inner.style.transition = 'height .75s ease, transform .75s ease-out';
-
 
   const innerPosts: HTMLElement[] = Array.from(
       inner.querySelectorAll('.covid-post')
   );
 
-  // ------------ PHASE 1: banner growth ------------
+  // ------------ PHASE 1: banner growth (height) ------------
   function startInnerGrowth() {
     if(!inner || !covidTitle) return;
 
+    // hide title while expanded
     covidTitle.style.opacity = '0';
 
+    // grow to a fixed “open” height
     inner.style.height = `${rowHeight * 8 - gap}px`;
 
+    // once grown, reveal posts with staggered animations
     inner.addEventListener(
         'transitionend',
         function grown(e) {
@@ -974,7 +1142,6 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
             covidPost.style.setProperty('--delay', `${delay}s`);
             covidPost.classList.replace('inactive', 'active');
             delay += 0.15;
-
           });
 
           if (!innerPosts.length) {
@@ -982,6 +1149,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
             return;
           }
 
+          // allow closing after last post anim finishes
           innerPosts[innerPosts.length - 1].addEventListener(
               'animationend',
               function allowShrink() {
@@ -994,6 +1162,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     );
   }
 
+  // push all above cards up and below cards down while covid expands
   above.forEach(p => {
     p.el.style.setProperty('--to-move', `translateY(-${rowHeight * 2}px)`);
     p.el.classList.add('adjustForCovid');
@@ -1016,6 +1185,7 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
       covidCard.removeEventListener('pointerdown', onTapCardAgain);
       document.removeEventListener('pointerdown', onOutsideTap, true);
 
+      // reverse the stagger so cards disappear in order
       let delay = innerPosts.length * 0.1;
       innerPosts.forEach(covidPost => {
         covidPost.style.setProperty('--delay', `${delay}s`);
@@ -1028,17 +1198,16 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
 
     const onLeaveMouse = () => close();
 
-    // Tap again on the card to close (optional, but nice)
+    // Tap again on the card to close (touch)
     const onTapCardAgain = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') return;
       e.stopPropagation();
       close();
     };
 
-    // Tap anywhere else closes
+    // Tap anywhere else closes (touch)
     const onOutsideTap = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') return;
-      // if tap is inside the card, ignore (card handler handles it)
       if (covidCard.contains(e.target as Node)) return;
       close();
     };
@@ -1052,49 +1221,47 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     }
   }
 
-
   function shrink() {
     if(!inner || !covidTitle) return;
+
+    // wait for first post to finish animating out, then collapse
     innerPosts[0].addEventListener('animationend', () => {
       requestAnimationFrame(() => {
         inner.style.transitionDelay = '1.25s';
         inner.style.height = '100%';
-
         inner.style.transition = 'height 1s ease, transform .75s ease'
 
+        // hide posts once collapsed
         innerPosts.forEach(covidPost => {
           covidPost.style.display = 'none';
         });
 
+        // show title again
         covidTitle.style.opacity = '1';
 
+        // clear the neighbor transforms
         const liElements = Array.from(
             document.querySelectorAll<HTMLElement>('.bento-card')
         );
-
         liElements.forEach(el => {
           el.classList.remove('adjustForCovid');
         });
 
-
-        // Re-arm hover after cards have had time to transition back
+        // re-arm open listeners after a short delay
         setTimeout(() => {
           covidState.value = 'idle';
           attachCovidOpen(covidCard);
         }, 500);
       })
     }, {once:true})
-
   }
 }
-
 
 /**
  * Calculate cards in covid rows / move cards out of way / grow covid card
  */
 
-const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
-
+/* === Desktop/high-cols covid expansion: expand width to full grid and shift overlaps === */
 function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
   const { pitchY } = getGridMetrics(grid);
   const placements = clearTransforms(grid, () =>
@@ -1107,6 +1274,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     return;
   }
 
+  // covid row band in grid coordinates
   const covidTop = covidPlacement.row;
   const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
   const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
@@ -1114,14 +1282,14 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   const cTopPx = covidTop * pitchY;
   const cBotPx = (covidPlacement.row + covidPlacement.rowspan) * pitchY;
 
-  // maps for stack shifts
+  // maps for stack shifts (per-column)
   const upByCol = new Map<number, number>();
   const downByCol = new Map<number, number>();
 
   // per-card shift (only for cards overlapping COVID rows)
   const perCardShift = new Map<HTMLElement, number>();
 
-  // ---------- PASS 1: collect overlaps & per-card shifts ----------
+  // ---------- PASS 1: compute overlaps + decide shifts ----------
   for (const p of placements) {
     if (p.el === covidCard) continue;
 
@@ -1138,7 +1306,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     const colEnd = p.col + p.colspan - 1;
 
     if (overlapRows > 0) {
-      // inside COVID rows
+      // inside COVID rows: push away from covid center
       const center = pTop + (p.rowspan - 1) / 2;
       const delta = center < covidMid ? -overlapPx : overlapPx;
       perCardShift.set(p.el, delta);
@@ -1151,7 +1319,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
         }
       }
     } else {
-      // candidates for stacks above/below
+      // track which cols have stacks above / below (for later stack shifting)
       if (pBot < covidTop) {
         for (let c = colStart; c <= colEnd; c++) {
           upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
@@ -1164,7 +1332,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     }
   }
 
-  // ---------- PASS 2: apply shifts ----------
+  // ---------- PASS 2: apply computed shifts to cards ----------
   let anyShift = false;
 
   for (const p of placements) {
@@ -1173,6 +1341,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     let deltaY = perCardShift.get(p.el) ?? 0;
 
     if (deltaY === 0) {
+      // stack shifting for cards fully above/below the covid band
       const pTopPx = p.row * pitchY;
       const pBotPx = (p.row + p.rowspan) * pitchY;
 
@@ -1191,6 +1360,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
         }
       }
 
+      // choose direction (prefer the larger movement)
       if (upPx > 0 && downPx === 0) {
         deltaY = -upPx;
       } else if (downPx > 0 && upPx === 0) {
@@ -1202,6 +1372,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
 
     if (deltaY !== 0) anyShift = true;
 
+    // Store translateY into --to-move so CSS transition handles the movement
     p.el.style.setProperty(
         '--to-move',
         mergeTranslateY(p.el.style.transform || '', deltaY)
@@ -1224,29 +1395,32 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   // force reflow so browser applies these immediately
   void inner.offsetWidth;
 
+  // compute how far we need to translate to align to grid left edge
   const gridRect = grid.getBoundingClientRect();
   const innerRect = inner.getBoundingClientRect();
   const distFromLeft = innerRect.left - gridRect.left;
   const fullWidth = gridRect.width;
 
+  // restore transitions
   inner.style.transition =
       prevTransition || 'width .75s ease-out, transform .75s ease-out';
-
 
   const innerPosts: HTMLElement[] = Array.from(
       inner.querySelectorAll('.covid-post')
   );
 
-  // ------------ PHASE 2: banner expansion ------------
+  // ------------ PHASE 2: banner expansion (width) ------------
   function startInnerExpansion() {
     if(!inner || !covidTitle) return;
 
     covidTitle.style.opacity = '0';
     inner.style.transitionDelay = '0s';
 
+    // stretch banner to full width of grid
     inner.style.transform = `translateX(${-distFromLeft}px)`;
     inner.style.width = `${fullWidth}px`;
 
+    // once banner expanded, reveal posts w/ stagger
     inner.addEventListener(
         'transitionend',
         function grown(e) {
@@ -1259,7 +1433,6 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
             covidPost.style.setProperty('--delay', `${delay}s`);
             covidPost.classList.replace('inactive', 'active');
             delay += 0.15;
-
           });
 
           if (!innerPosts.length) {
@@ -1279,16 +1452,13 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
     );
   }
 
-
-
-  // Wait approximately for per-card shift
+  // Wait for the card shifts to finish before expanding the banner
   const SHIFT_DURATION_MS = 750;
   if (anyShift) {
     setTimeout(startInnerExpansion, SHIFT_DURATION_MS);
   } else {
     startInnerExpansion();
   }
-
 
   // ----------------- pointerleave + shrink -----------------
   function armPointerLeave() {
@@ -1301,6 +1471,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
       covidCard.removeEventListener('pointerdown', onTapCardAgain);
       document.removeEventListener('pointerdown', onOutsideTap, true);
 
+      // reverse stagger: hide posts
       let delay = innerPosts.length * 0.1;
       innerPosts.forEach(covidPost => {
         covidPost.style.setProperty('--delay', `${delay}s`);
@@ -1313,17 +1484,16 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
 
     const onLeaveMouse = () => close();
 
-    // Tap again on the card to close (optional, but nice)
+    // Tap again on the card to close (touch)
     const onTapCardAgain = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') return;
       e.stopPropagation();
       close();
     };
 
-    // Tap anywhere else closes
+    // Tap anywhere else closes (touch)
     const onOutsideTap = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') return;
-      // if tap is inside the card, ignore (card handler handles it)
       if (covidCard.contains(e.target as Node)) return;
       close();
     };
@@ -1332,7 +1502,6 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
 
     if (touch) {
       covidCard.addEventListener('pointerdown', onTapCardAgain);
-      // capture=true so it fires even if something stops bubbling later
       document.addEventListener('pointerdown', onOutsideTap, true);
     }
   }
@@ -1340,6 +1509,7 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   function shrink() {
     if(!inner || !covidTitle) return;
     requestAnimationFrame(() => {
+      // collapse banner back to card width
       inner.style.transitionDelay = '.5s';
       inner.style.width = '100%';
       inner.style.transform = 'none';
@@ -1351,22 +1521,24 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
             inner.removeEventListener('transitionend', shrunk);
             inner.style.transitionDelay = 'unset';
 
+            // hide posts once closed
             innerPosts.forEach(covidPost => {
               covidPost.style.display = 'none';
             });
 
             requestAnimationFrame(() => {
+              // bring title back
               covidTitle.style.opacity = '1';
 
+              // clear shifts for all cards
               const liElements = Array.from(
                   document.querySelectorAll<HTMLElement>('.bento-card')
               );
-
               liElements.forEach(el => {
                 el.classList.remove('adjustForCovid');
               });
 
-              // Re-arm hover after cards have had time to transition back
+              // re-arm open listeners after stacks settle
               setTimeout(() => {
                 covidState.value = 'idle';
                 attachCovidOpen(covidCard);
@@ -1378,9 +1550,9 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   }
 }
 
-
 /**
  * Calculate translate for cards in covid row
+ * Adds/updates translateY while keeping other transforms intact.
  */
 function mergeTranslateY(transformStr: string, y: number) {
   // Treat 'none' as empty
@@ -1393,9 +1565,9 @@ function mergeTranslateY(transformStr: string, y: number) {
   return (base ? `${base} ` : '') + `translateY(${y}px)`;
 }
 
-
 /**
  * Set by-card animations
+ * IntersectionObserver reveals cards by removing transform + setting opacity.
  */
 function cardAnimation() {
   const cards = document.querySelectorAll<HTMLElement>('.bento-card');
@@ -1412,6 +1584,7 @@ function cardAnimation() {
     })
   }, {threshold: .2});
 
+  // Initialize hidden state for cards that haven’t animated yet
   cards.forEach(card => {
     if(card.dataset.animated === 'true') return;
     card.style.opacity = '0';
@@ -1419,6 +1592,10 @@ function cardAnimation() {
   })
 }
 
+/**
+ * Quote popup positioning
+ * Flips quote bubble direction when the card is on the right edge.
+ */
 function quotePopupAdjust(placements: Placement[], numCols: number) {
   for(const p of placements) {
     if(p.el.dataset.isQuote === '1') {
@@ -1439,28 +1616,30 @@ function quotePopupAdjust(placements: Placement[], numCols: number) {
         icon.style.setProperty('--qi-border-radius', '15px 15px 15px 0');
       }
     }
-
   }
 }
 
-
 /**
  * Update column count on resize
+ * Also triggers rebuild when breakpoint changes.
  */
 function updateColumns() {
   const width = window.innerWidth;
 
-  if (width >= 1536) numCols.value = 5
-  else if (width >= 1280) numCols.value = 4
+  if (width >= 1700) numCols.value = 5
+  else if (width >= 1380) numCols.value = 4
   else if (width >= 1024) numCols.value = 3
   else if (width >= 640) numCols.value = 2
   else numCols.value = 1;
+
+  // Only rebuild if column count actually changed
   if(cols !== numCols.value) {
     cols = numCols.value;
     hardRebuild();
   }
 }
 
+/* === Post sorting and filtering === */
 const postsArray = computed(() => {
   if (Array.isArray(posts.value)) {
     return posts.value.slice().sort((a: Post, b: Post) => {
@@ -1471,8 +1650,6 @@ const postsArray = computed(() => {
   }
   return [] as Post[];
 });
-
-
 
 const postsFilteredByCategory = computed(() => {
   if (store.timelineFilterCategories.length > 0) {
@@ -1485,17 +1662,18 @@ const postsFilteredByCategory = computed(() => {
   return postsArray.value;
 });
 
+/* Search term filtering (title match) */
 const filteredPostsBase = computed<Post[]>(() => {
   const base = postsFilteredByCategory.value;
   const term = store.searchTerm.trim().toLowerCase();
   if(!term) return base;
 
   return base.filter((post: Post) =>
-    post.title.toLowerCase().includes(term)
+      post.title.toLowerCase().includes(term)
   );
 })
 
-
+/* Quote spacing “interval” (how often to insert a quote) */
 const quoteInterval = computed(() => {
   const total = filteredPostsBase.value.length;
   if (total === 0) return 6;
@@ -1504,17 +1682,13 @@ const quoteInterval = computed(() => {
       post => post.eventOptions?.postType === 'quote'
   ).length;
 
-
   if (quoteCount === 0) return Number.POSITIVE_INFINITY;
 
   const raw = total / (quoteCount + 2);
-
   return Math.max(1, Math.round(raw));
 });
 
-
-
-
+/* Interleave quotes into default posts so quotes don’t clump together */
 function spaceQuotes(base: Post[]): Post[] {
   if (!base.length) return [];
 
@@ -1546,11 +1720,12 @@ function spaceQuotes(base: Post[]): Post[] {
     }
   }
 
+  // append remaining quotes at the end
   while (q < quotePosts.length) result.push(quotePosts[q++]);
   return result;
 }
 
-
+/* Collect covid posts separately */
 const covidPosts = computed(() => {
   return filteredPostsBase.value.filter(
       post => post.eventOptions?.postType === 'covid_post'
@@ -1559,8 +1734,15 @@ const covidPosts = computed(() => {
 
 const COVID_YEAR = 2020;
 
+/* Used by layout code to decide if covid wrapper should exist */
 let shouldMakeCovid = true;
 
+/**
+ * Build the final list:
+ * - nonCovid posts
+ * - with quotes spaced in
+ * - with a COVID wrapper injected at the 2020 position (if allowed)
+ */
 const timelineItems = computed<TimelineItem[]>(() => {
   const nonCovid = filteredPostsBase.value.filter(
       p => p.eventOptions?.postType !== 'covid_post'
@@ -1571,6 +1753,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
   if (!nonCovid.length && !hasCovid) return [];
 
+  // only insert covid wrapper when viewing the full timeline (not filtered)
   shouldMakeCovid = filteredPostsBase.value.length >= postsArray.value.length;
 
   const result: TimelineItem[] = [];
@@ -1586,7 +1769,6 @@ const timelineItems = computed<TimelineItem[]>(() => {
     });
     if (insertAt === -1) insertAt = spaced.length;
 
-
     for (let i = 0; i < spaced.length; i++) {
       if (hasCovid && i === insertAt) {
         result.push({ type: 'covid', year: COVID_YEAR, posts: covid });
@@ -1594,11 +1776,13 @@ const timelineItems = computed<TimelineItem[]>(() => {
       result.push({ type: 'post', post: spaced[i] });
     }
 
+    // if covid should be last, append it
     if (hasCovid && insertAt === spaced.length) {
       result.push({ type: 'covid', year: COVID_YEAR, posts: covid });
     }
 
   } else {
+    // when filtered, keep list simple: just spaced posts
     const spaced = spaceQuotes(filteredPostsBase.value);
 
     for(let i = 0; i < spaced.length; i++) {
@@ -1609,18 +1793,21 @@ const timelineItems = computed<TimelineItem[]>(() => {
   return result;
 });
 
-
+/* Legacy/extra filteredPosts computed (still used in watcher below) */
 const filteredPosts = computed(() => {
   return postsFilteredByCategory.value.filter((post: Post) => {
     return store.searchTerm.length > 0 ? post.title.toLowerCase().includes(store.searchTerm.toLowerCase()) : postsFilteredByCategory.value;
   });
 });
 
-
-
 console.log(timelineItems)
 
-
+/**
+ * On mount:
+ * - set initial columns
+ * - listen for resize
+ * - animate title when it enters viewport
+ */
 onMounted( async () => {
   await nextTick();
   updateColumns();
@@ -1628,27 +1815,29 @@ onMounted( async () => {
 
   const timelineTitle = document.querySelector('.timeline-title');
   if(!timelineTitle) return;
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && timelineTitle)
       { anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 })}
       else observer.unobserve(timelineTitle);
     });
-
   });
+
   observer.observe(timelineTitle);
-
-
 });
 
-
-
-
+/**
+ * Watch posts/filters:
+ * - first run: just measure/pack
+ * - later runs: hard rebuild so spans + covid logic reset cleanly
+ */
 let first = false;
 let pdfGenerated = false;
 watch([filteredPosts], async () => {
   //if(!pdfGenerated && filteredPosts.value.length !== 0) await generateDocx(filteredPosts.value);
   await nextTick();
+
   if(!first) {
     requestAnimationFrame(() => measureAndPack());
     first = true;
@@ -1659,12 +1848,5 @@ watch([filteredPosts], async () => {
       await hardRebuild();
     });
   }
-
-
-
-  }, {immediate:true, flush: 'post'});
-
-
-
-
+}, {immediate:true, flush: 'post'});
 </script>

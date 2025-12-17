@@ -1,7 +1,6 @@
 <style scoped>
 .section-wrap {
-  transform: translateY(28rem);
-  margin-bottom: 28rem;
+  margin-top: 0 !important;
 }
 
 
@@ -216,8 +215,17 @@
   box-shadow: 0px 7px 9px 0px #70bdff36;
 }
 
+@media(max-width: 1400px) {
+  .section-wrap {
+    margin-top: -12rem;
+  }
+}
+
 
 @media(max-width: 1200px) {
+  .section-wrap {
+    margin-top: -22rem;
+  }
   .stat-wrap {
     padding: 3rem 1rem;
   }
@@ -232,7 +240,12 @@
     max-width: unset;
   }
 }
+
+
 @media(max-width: 800px) {
+  .section-wrap {
+    margin-top: -10rem;
+  }
   .stat-wrap {
     flex-wrap: wrap;
     padding: 2rem 6rem;
@@ -257,6 +270,13 @@
   }
 
 }
+
+@media(max-width: 740px) {
+  .section-wrap {
+    margin-top: -35px;
+  }
+}
+
 @media(max-width: 550px) {
   .stat-wrap {
     padding: 2rem 3rem;
@@ -313,7 +333,7 @@
 
 
 <template>
-  <section class="overflow-x-clip px-7 pt-36 section-wrap">
+  <section class="overflow-x-clip px-7 section-wrap">
     <div class="vision-head">
       <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
         ABOUT THE<br>

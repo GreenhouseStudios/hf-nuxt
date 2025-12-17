@@ -5,6 +5,10 @@
 <template>
   <div>
     <Hero />
+
+    <AboutTimeline id="about" />
+
+
     <TimelineComponent id="timeline" />
   </div>
 

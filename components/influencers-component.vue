@@ -1,3 +1,19 @@
+
+<style scoped>
+/* scoped or global */
+.cards-grid {
+  /* fixed row height so cards stay the same size by default */
+  grid-auto-rows: 550px; /* tweak value */
+  grid-auto-flow: dense;
+}
+
+
+.cards-move {
+  transition: transform 250ms ease;
+}
+</style>
+
+
 <template>
   <div class="px-12">
     <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
@@ -44,17 +60,3 @@ const toggleActive = (id: string) => {
   activeId.value = activeId.value === id ? null : id
 }
 </script>
-
-<style scoped>
-/* scoped or global */
-.cards-grid {
-  /* fixed row height so cards stay the same size by default */
-  grid-auto-rows: 550px; /* tweak value */
-  grid-auto-flow: dense;
-}
-
-
-.cards-move {
-  transition: transform 250ms ease;
-}
-</style>
