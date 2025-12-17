@@ -20,7 +20,7 @@
 }
 
 /* Fixed video wrapper used during pin (desktop and some mid widths) */
-.vid-wrap-bg {
+/*.vid-wrap-bg {
   position: fixed;
   width: 100%;
   height: calc(100% - 80px);
@@ -28,6 +28,17 @@
   bottom: 0;
   z-index: 97;
   pointer-events: none;
+}*/
+
+.vid-wrap-bg {
+  position: absolute;
+  width: 60%;
+  height: auto;
+  border-radius: 25px;
+  overflow: hidden;
+  bottom: unset;
+  left: 50%;
+  translate: -50% 0;
 }
 
 /* Mobile video container (not fixed) */
@@ -206,6 +217,7 @@ const isMobile = computed(() => width.value < 768)
 function onResize() {
   width.value = window.innerWidth
   yPercent.value =
+    width.value > 1400 ? 20 :
     width.value > 1000 ? 20 :
     width.value > 800  ? 40 :
     width.value > 600  ? 60 :
@@ -318,7 +330,7 @@ onMounted(async () => {
 
         // End distance is responsive (changes with width)
         end:
-            width.value > 1150 ? '+=120%' :
+            width.value > 1150 ? '+=140%' :
             width.value > 800 ? '+=130%' :
             width.value > 600 ? '+=100%' :
             '+=50%',
@@ -334,7 +346,7 @@ onMounted(async () => {
          * - Smaller: when video tween hits ~90%, play the actual video
          */
         onUpdate: () => {
-          if(window.innerWidth > 1150) {
+     /*     if(window.innerWidth > 1150) {
             if(overlayTween) {
               const p = overlayTween.progress();
               if(!overlayLeft && p >= 0.999 && !vidAniDone) {
@@ -343,7 +355,7 @@ onMounted(async () => {
                 lockScroll(tl)
               }
             }
-          } else {
+          } else {*/
             if(videoTween) {
               const p = videoTween.progress();
               if(!vidAniDone && p >= .9) {
@@ -351,7 +363,7 @@ onMounted(async () => {
                 video?.play();
               }
             }
-          }
+          //}
         }
       }
     })
@@ -363,7 +375,8 @@ onMounted(async () => {
      * For widths <= 1150: also animate the video wrapper.
      * (Desktop >1150 relies more on overlay leaving + lockScroll behavior.)
      */
-    if(window.innerWidth <= 1150) {
+    let temp = true
+    if(window.innerWidth <= 1150 || temp) {
       // Set initial yPercent to match computed target
       gsap.set(vidWrapEl.value, { yPercent: yPercent.value })
 
