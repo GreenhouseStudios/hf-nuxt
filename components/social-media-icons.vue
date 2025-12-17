@@ -1,9 +1,9 @@
 <template>
-  <div class="md:p-12">
+  <div>
     <div>
       Connect
     </div>
-    <span class="flex gap-4">
+    <span class="flex flex-col md:flex-row mt-4 md:mt-0 gap-4">
       <div>Instagram</div>
       <div>Facebook</div>
       <div>Twitter</div>
