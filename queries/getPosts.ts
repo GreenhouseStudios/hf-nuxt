@@ -15,8 +15,17 @@ query GetPosts {
         cardSize
         thumbnail {
             node {
+                altText
                 mediaItemUrl
                 sourceUrl
+                mediaDetails {
+                  sizes {
+                    name
+                    sourceUrl
+                    width
+                    height
+                  }
+                }
             }
         }
         eventYear
