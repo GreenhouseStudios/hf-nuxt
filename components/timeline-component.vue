@@ -1685,7 +1685,7 @@ const quoteInterval = computed(() => {
 function spaceQuotes(base: Post[]): Post[] {
   if (!base.length) return [];
 
-  const quotePosts = base.filter(p => p.eventOptions?.postType === 'quote');
+  const quotePosts = base.filter(p => p.eventOptions?.postType === 'quote' && !p.eventOptions?.quoteYear);
   const defaultPosts = base.filter(p => p.eventOptions?.postType !== 'quote');
 
   if (!quotePosts.length) return defaultPosts; // keep original order without quotes
@@ -1740,6 +1740,9 @@ const timelineItems = computed<TimelineItem[]>(() => {
   const nonCovid = filteredPostsBase.value.filter(
       p => p.eventOptions?.postType !== 'covid_post'
   );
+  const quotesWithYears = filteredPostsBase.value.filter(
+      p => p.eventOptions?.postType === 'quote' && p.eventOptions?.quoteYear
+  );
 
   const covid = covidPosts.value;
   const hasCovid = covid.length > 0;
@@ -1763,7 +1766,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
     if (insertAt === -1) insertAt = spaced.length;
 
     for (let i = 0; i < spaced.length; i++) {
-      if (hasCovid && i === insertAt) {
+      if(hasCovid && i === insertAt) {
         result.push({ type: 'covid', year: COVID_YEAR, posts: covid });
       }
       result.push({ type: 'post', post: spaced[i] });
@@ -1781,6 +1784,24 @@ const timelineItems = computed<TimelineItem[]>(() => {
     for(let i = 0; i < spaced.length; i++) {
       result.push({ type: 'post', post: spaced[i]})
     }
+  }
+
+  if(quotesWithYears.length > 0) {
+    quotesWithYears.forEach(quote => {
+      const qYear = parseInt(quote.eventOptions?.quoteYear || '0', 10)
+
+      let insertAt = result.findIndex(p =>
+          p.type !== 'covid' &&
+          parseInt(p.post.eventOptions?.eventYear || '0', 10) <= qYear
+      );
+
+      if (insertAt === -1) insertAt = result.length;
+      else insertAt++;
+      if(insertAt) {
+        const quoteItem: TimelineItem = { type: 'post', post: quote }
+        result.splice(insertAt, 0, quoteItem)
+      }
+    })
   }
 
   return result;

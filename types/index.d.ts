@@ -28,6 +28,7 @@ declare global {
             contentQuote: string;
             quoteSpeaker: string;
             content:string;
+            quoteYear: string;
             tagline: string;
             quote: string;
             speaker: string;
