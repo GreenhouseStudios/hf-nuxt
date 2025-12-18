@@ -18,6 +18,15 @@ export const GET_INFLUENCERS = gql`
             node {
               mediaItemUrl
               sourceUrl
+              altText
+              mediaDetails {
+                sizes {
+                  name
+                  sourceUrl
+                  width
+                  height
+                }
+              }
             }
           }
         }
