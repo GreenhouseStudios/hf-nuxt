@@ -204,7 +204,6 @@
               '--cols': numCols,
               '--row-h': rowHeight + 'px',
               '--gap': gap + 'px',
-              opacity: 0
             }"
         >
           <!-- Each item is either a normal post or the COVID wrapper -->
@@ -231,7 +230,9 @@
                   :post="item.post"
                   :x-multiplier="1"
                   :y-multiplier="1"
+                  :quote-can-start="canPlayQuotes"
                   mode="fixedHeight"
+
               />
             </div>
 
@@ -284,6 +285,10 @@ const { data: posts } = usePosts();
  * - layoutInProgress prevents overlapping layout passes
  * - covidCardGrow ensures covid init runs once per rebuild
  */
+
+const canPlayQuotes = ref(false);
+
+
 const numCols = ref(5);
 let cols = numCols.value;
 let rowHeight = 115;
@@ -463,7 +468,10 @@ async function measureAndPack(reset = false) {
     liElements.forEach(el => {
       if(el.dataset.isCovid === '1' || el.dataset.isQuote === '1') return;
       let c;
-      if(el.dataset.cardSize === 'large') {
+      const ar = parseFloat(el.dataset.imgAr || '1.5');
+      if(ar < 0.85) {
+        c = 1;
+      } else if(el.dataset.cardSize === 'large') {
         c = lgCardRange.col;
       } else if(el.dataset.cardSize === 'small') {
         c = smallCardRange.col;
@@ -604,21 +612,6 @@ async function measureAndPack(reset = false) {
       // Start intersection-based reveal animations
       cardAnimation();
       layoutInProgress = false;
-
-      // Recompute placements and adjust quote popup direction based on edge
-      const placements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
-      quotePopupAdjust(placements, numCols.value);
-
-      // Quote hover z-index bump so it can overlay neighbors
-      const quotes = liElements.filter(el => el.dataset.isQuote === '1')
-      quotes.forEach(quote => {
-        quote.addEventListener('mouseenter', () => {
-          quote.style.zIndex = '11';
-        });
-        quote.addEventListener('mouseleave', () => {
-          quote.style.zIndex = '9';
-        })
-      })
     }
 
   } finally {
@@ -1811,6 +1804,8 @@ console.log(timelineItems)
 onMounted( async () => {
   await nextTick();
   updateColumns();
+  document.addEventListener('pointerdown', () => {canPlayQuotes.value = true; console.log(canPlayQuotes.value)}, {once: true})
+
   window.addEventListener('resize', () => requestAnimationFrame(updateColumns));
 
   const timelineTitle = document.querySelector('.timeline-title');
