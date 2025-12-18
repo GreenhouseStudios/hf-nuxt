@@ -27,6 +27,7 @@ query GetPosts {
         content
         tagline
         quote
+        quoteYear
         speaker
         speakerTitle
         videoLink

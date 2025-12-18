@@ -19,7 +19,7 @@
     <CardContent v-if="isDefault" :post="props.post"
       :class="isCovid ? 'flex-1' : ''"
     />
-    <QuoteContent v-if="isQuote" :post="props.post" />
+    <QuoteContent v-if="isQuote" :post="props.post" :can-play="props.quoteCanStart"/>
   </div>
 
 
@@ -27,7 +27,7 @@
 
 <script lang="ts" setup>
 
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useStore } from '~/stores/store';
 import QuoteContent from "~/components/quote-content.vue";
 import CardContent from "~/components/card-content.vue";
@@ -39,18 +39,21 @@ const props = withDefaults(defineProps<{
   xMultiplier?: number;
   yMultiplier?: number;
   covidShown?: boolean;
+  quoteCanStart?: boolean;
 }>(), {
   xMultiplier: 1,
-  yMultiplier: 1
+  yMultiplier: 1,
+  quoteCanStart: false
 });
 
 const variations = ['default', 'quote', 'covid'];
+
+
 // const actualVariation = computed(() => props.random ? variations[Math.floor(Math.random() * variations.length)] : props.variation);
 const actualVariation = computed(() => props.post?.eventOptions?.postType ? props.post?.eventOptions.postType : 'default');
 const isDefault = computed(() => actualVariation.value === 'default' || actualVariation.value === 'covid_post')
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isCovid = computed(() => actualVariation.value === 'covid_post');
-console.log(props.covidShown)
 const hasMainImage = computed(() => !!props.post?.eventOptions?.thumbnail)
 const containerClass = computed(() => {
   let result = '';
