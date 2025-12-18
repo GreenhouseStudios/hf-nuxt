@@ -9,7 +9,7 @@
         and business leaders.</div>
  
 
-        <div>&reg; {{ new Date().getFullYear() }} Hartford Foundation for Public Giving</div>
+        <div class="mt-4">&reg; {{ new Date().getFullYear() }} Hartford Foundation for Public Giving</div>
     </div>
 </template>
 
