@@ -1,14 +1,27 @@
 <template>
   <Transition name="fade" mode="out-in">
-    <div class="modal-overlay overflow-scroll fixed top-20 w-11/12 h-full bg-black bg-opacity-10 z-50 flex"
-      v-show="store.showModal">
-      <PostContent v-if="store.showModal" :post="store.modalPost" />
+    <div 
+      class="modal-overlay fixed top-20 w-11/12 h-full bg-black bg-opacity-10 z-50 flex"
+      v-show="store.showModal"
+      @click.self="store.toggleModal()"
+    >
+      <!-- Show influencer content if modalPost has influencerDetails -->
+      <InfluencerModalContent 
+        v-if="store.showModal && store.modalPost?.influencerDetails" 
+        :influencer="store.modalPost" 
+      />
+      <!-- Otherwise show post content -->
+      <PostContent 
+        v-else-if="store.showModal" 
+        :post="store.modalPost" 
+      />
     </div>
   </Transition>
 </template>
 
 <script lang="ts" setup>
 import PostContent from "~/components/post-content.vue";
+import InfluencerModalContent from "~/components/influencer-modal-content.vue";
 
 const { data: posts, isSuccess } = usePosts();
 import { ref, onMounted, watch } from 'vue';
