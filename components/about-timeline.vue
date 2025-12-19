@@ -1,9 +1,4 @@
 <style scoped>
-.section-wrap {
-  margin-top: 0 !important;
-}
-
-
 .vision-head {
   width: 70%;
   margin: auto;
@@ -103,7 +98,28 @@
   color: #007AFD;
 }
 
+.section-wrap { margin-top: 5rem }
+@media(max-width: 1700px) { .section-wrap { margin-top: 0 }}
+@media(max-width: 1500px) { .section-wrap { margin-top: -5rem }}
+@media(max-width: 1200px) {
+  .stat-wrap {
+    padding: 3rem 1rem;
+  }
+  .stat {
+    font-size: xxx-large;
+  }
+  .cta-text-wrap {
+    top: 15%;
+    width: 70%;
+  }
+  .cta-text-wrap > span {
+    max-width: unset;
+  }
+  .section-wrap { margin-top: -2rem }
+}
+
 @media(max-width: 1000px) {
+  .section-wrap { margin-top: -5rem }
   .vision-vid-wrap {
     flex-direction: column;
     gap: 20px;
@@ -120,6 +136,30 @@
     left: -20px;
   }
 }
+@media(max-width: 800px) {
+  .stat-wrap {
+    flex-wrap: wrap;
+    padding: 2rem 6rem;
+  }
+  .stat-text {
+    flex-basis: 50%;
+    margin-top: 2rem;
+  }
+  .stat-line {
+    display: none;
+  }
+  .cta-text-wrap {
+    width: 80%;
+    top: 10%;
+  }
+  .cta-text-wrap > span {
+    margin-bottom: 1rem;
+    font-size: xx-large;
+  }
+  .cta-btn {
+    padding: 5px 15px;
+  }
+}
 @media(max-width: 600px) {
   .vision-text-wrap {
     width: 90%;
@@ -127,6 +167,43 @@
   .vision-vid {
     width: 80vw;
     height: 300px;
+  }
+}
+@media(max-width: 550px) {
+  .stat-wrap {
+    padding: 2rem 3rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 20px;
+  }
+  .stat-text {
+    flex-basis: auto;
+    margin: auto;
+  }
+  .stat {
+    margin-bottom: auto;
+  }
+  .stat-line {
+    width: 75%;
+    height: 2px;
+    display: block;
+  }
+  .cta-text-wrap {
+    top: 5px;
+  }
+  .cta-text-wrap > span{
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .call-to-action > img {
+    width: 100%
+  }
+  .call-to-action {
+    margin-bottom: -20%;
+  }
+  .cta-btn {
+    font-size: 12px
   }
 }
 @media(max-width: 400px) {
@@ -233,105 +310,12 @@
   box-shadow: 0px 7px 9px 0px #70bdff36;
 }
 
-@media(max-width: 1400px) {
-  .section-wrap {
-    margin-top: -12rem;
-  }
-}
 
 
-@media(max-width: 1200px) {
-  .section-wrap {
-    margin-top: -22rem;
-  }
-  .stat-wrap {
-    padding: 3rem 1rem;
-  }
-  .stat {
-    font-size: xxx-large;
-  }
-  .cta-text-wrap {
-    top: 15%;
-    width: 70%;
-  }
-  .cta-text-wrap > span {
-    max-width: unset;
-  }
-}
 
 
-@media(max-width: 800px) {
-  .section-wrap {
-    margin-top: -10rem;
-  }
-  .stat-wrap {
-    flex-wrap: wrap;
-    padding: 2rem 6rem;
-  }
-  .stat-text {
-    flex-basis: 50%;
-    margin-top: 2rem;
-  }
-  .stat-line {
-    display: none;
-  }
-  .cta-text-wrap {
-    width: 80%;
-    top: 10%;
-  }
-  .cta-text-wrap > span {
-    margin-bottom: 1rem;
-    font-size: xx-large;
-  }
-  .cta-btn {
-    padding: 5px 15px;
-  }
 
-}
 
-@media(max-width: 740px) {
-  .section-wrap {
-    margin-top: -35px;
-  }
-}
-
-@media(max-width: 550px) {
-  .stat-wrap {
-    padding: 2rem 3rem;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 20px;
-  }
-  .stat-text {
-    flex-basis: auto;
-    margin: auto;
-  }
-  .stat {
-    margin-bottom: auto;
-  }
-  .stat-line {
-    width: 75%;
-    height: 2px;
-    display: block;
-  }
-  .cta-text-wrap {
-    top: 5px;
-  }
-  .cta-text-wrap > span{
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .call-to-action > img {
-    width: 100%
-  }
-  .call-to-action {
-    margin-bottom: -20%;
-  }
-  .cta-btn {
-    font-size: 12px
-  }
-}
 
 </style>
 <style>
