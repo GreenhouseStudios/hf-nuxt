@@ -55,8 +55,9 @@ html {
 import { ref, onMounted, inject } from 'vue';
 import type { Ref } from 'vue';
 import anime from 'animejs';
+import {useFirstVisit} from "~/composables/useFirstVisit";
 
-
+const { markSeen } = useFirstVisit();
 
 const vidEl = ref<HTMLVideoElement | null>(null);
 const shouldTeleport = ref(false);
@@ -108,7 +109,7 @@ onMounted(() => {
       vidEl.value.classList.add('animate');
       if(move) {
         const scale = calcCropScale();
-        const tl = anime.timeline({ autoplay: false });
+        const tl = anime.timeline({ autoplay: false, });
         tl.add({
           delay: 500,
           targets: cropped,
@@ -117,7 +118,9 @@ onMounted(() => {
           scale: scale,
           duration: 1250,
           easing: "easeInOutCubic",
-
+          complete: () => {
+            markSeen()
+          }
         })
         tl.play();
         setTimeout(() => {

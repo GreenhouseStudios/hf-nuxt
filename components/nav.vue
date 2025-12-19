@@ -21,18 +21,26 @@
       </template>
 
     </USlideover>
-<!--    <div id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
+    <div v-if="showTeleport" id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
 
-    </div>-->
+    </div>
   </div>
 
 </template>
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui/dist/module';
-import { ref, inject, onMounted, type Ref } from 'vue';
+import { ref, inject, onMounted, type Ref, computed, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
+import {useFirstVisit} from "~/composables/useFirstVisit";
 const router = useRouter()
+
+
+const { ready, hasSeen } = useFirstVisit();
+
+const showTeleport = computed(() => ready.value && !hasSeen.value);
+
+
 
 const handleClick = async (to: string) => {
   isOpen.value = false;
@@ -67,13 +75,20 @@ const items = ref(<NavigationMenuItem[]>[
 const vidTeleport = ref<HTMLDivElement | null>(null);
 const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
 
-/*
 onMounted(() => {
   if(navTeleportEl && window.innerWidth > 1150) {
     navTeleportEl.value = vidTeleport.value;
   }
 })
-*/
+
+watchEffect(() => {
+  if (!navTeleportEl) return;
+  if (window.innerWidth <= 1150) return;
+
+  if (showTeleport.value && vidTeleport.value) {
+    navTeleportEl.value = vidTeleport.value;
+  }
+});
 
 defineExpose({vidTeleport})
 </script>

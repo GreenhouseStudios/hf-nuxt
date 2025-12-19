@@ -502,25 +502,44 @@ async function measureAndPack(reset = false) {
 
       const c = parseInt(el.dataset.colspan || '1', 10);
 
+      let isPlaceholder = false;
+
+      const img = el.querySelector('img');
+      let src: string;
+      if(img) {
+        src = img.getAttribute('src') ?? '';
+        if (img.dataset.placeholder === '1' || isPlaceholderImage(src)) isPlaceholder = true;
+      }
+
+
       // Aspect ratio pulled from cached dataset value
       const ar = parseFloat(el.dataset.imgAr || '1.5');
 
       let r: number;
 
       // Pick base row span from aspect ratio buckets
-      if (ar < 0.85) {
-        // portrait
-        r = Math.floor(Math.random() * 2) + 5; // 5–6
-      } else if (ar < 1.2) {
-        // near-square
-        r = Math.floor(Math.random() * 2) + 4; // 4–5
-      } else if (ar < 1.9) {
-        // landscape
-        r = Math.floor(Math.random() * 2) + 3; // 3–4
+      if(!isPlaceholder) {
+        if (ar < 0.85) {
+          // portrait
+          r = Math.floor(Math.random() * 2) + 5; // 5–6
+        } else if (ar < 1.2) {
+          // near-square
+          r = Math.floor(Math.random() * 2) + 4; // 4–5
+        } else if (ar < 1.9) {
+          // landscape
+          if(c === 2) {
+            r = Math.floor(Math.random() * 2) + 4; // 4–5
+          } else {
+            r = Math.floor(Math.random() * 2) + 3; // 3-4
+          }
+        } else {
+          // ultra-wide
+          r = 3;
+        }
       } else {
-        // ultra-wide
-        r = 3;
+        r = Math.floor(Math.random() * 2) + 2;
       }
+
 
       // Size intent tweaks
       if (el.dataset.cardSize === 'large') r += 1;
@@ -641,11 +660,25 @@ function isPlaceholderImage(src: string | null): boolean {
   );
 }
 
+function getMaxHeight(el: HTMLElement) {
+  if(!el) return null;
+  const text = el.querySelector('.text-content');
+  if(!text) return null;
+
+  const textHeight = text.getBoundingClientRect().height;
+
+  const percentOfCard = textHeight / el.getBoundingClientRect().height;
+
+  const maxImgPercent = parseFloat((1 - percentOfCard).toFixed(2));
+
+  return (maxImgPercent * 100);
+}
+
 /**
  * Iteratively nudges --imgMaxPct for images that are “too short” or “too tall”
  * This is a post-layout pass that helps fill card space visually.
  */
-function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 6) {
+function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 10) {
   let pass = 0;
 
   const step = () => {
@@ -680,19 +713,20 @@ function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 6) {
       const renderedAR = w / h;
       const ratio = renderedAR / naturalAR;
 
+      const maxImgHeight = getMaxHeight(li) ?? 75;
       // current % value (defaults to 50)
       const cur = parsePct(cardRoot.style.getPropertyValue('--imgMaxPct') || '50');
 
       // adjust more aggressively if it’s very off
       const stepAmt =
-          ratio > 1.25 ? 12 :
-              ratio > 1.12 ? 8  :
-                  ratio > 1.05 ? 6  :
-                      0;
+        ratio > 1.25 ? 10 :
+        ratio > 1.12 ? 6  :
+        ratio > 1.05 ? 4  :
+        0;
 
       // If rendered is “wider” than natural, bump max height
       if (stepAmt) {
-        const next = clamp(cur + stepAmt, 30, 80);
+        const next = clamp(cur + stepAmt, 30, maxImgHeight);
         if (next !== cur) {
           cardRoot.style.setProperty('--imgMaxPct', `${next}%`);
           changed++;
@@ -700,7 +734,7 @@ function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 6) {
       }
       // If rendered is “taller” than natural, reduce max height slightly
       else if (ratio < 0.92) {
-        const next = clamp(cur - 6, 30, 80);
+        const next = clamp(cur - 6, 30, maxImgHeight);
         if (next !== cur) {
           cardRoot.style.setProperty('--imgMaxPct', `${next}%`);
           changed++;
@@ -1814,7 +1848,6 @@ const filteredPosts = computed(() => {
   });
 });
 
-console.log(timelineItems)
 
 /**
  * On mount:
@@ -1825,7 +1858,7 @@ console.log(timelineItems)
 onMounted( async () => {
   await nextTick();
   updateColumns();
-  document.addEventListener('pointerdown', () => {canPlayQuotes.value = true; console.log(canPlayQuotes.value)}, {once: true})
+  document.addEventListener('pointerdown', () => {canPlayQuotes.value = true }, {once: true})
 
   window.addEventListener('resize', () => requestAnimationFrame(updateColumns));
 
