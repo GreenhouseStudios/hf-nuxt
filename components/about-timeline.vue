@@ -1,4 +1,9 @@
 <style scoped>
+.section-wrap {
+  margin-top: 0 !important;
+}
+
+
 .vision-head {
   width: 70%;
   margin: auto;
@@ -7,16 +12,18 @@
   font-weight: bold;
   position: relative;
   color: #000A5D;
-  line-height: 1;
+  /* line-height: 1; */
 }
-.head-text::after {
+.vision-head::after {
   content: '';
-  top: 50%;
-  transform: translateY(-45%);
+  /* top: 50%; */
+  /* transform: translateY(-45%); */
   left: -35px;
+  top: 0;
+  bottom: 0;
   position: absolute;
   background: #007AFD;
-  height: 75%;
+  /* height: 75%; */
   width: 15px;
 }
 .head-text > span {
@@ -76,7 +83,7 @@
 .vision-text-wrap > p {
   color: #000A5D;
   font-size: large;
-  margin-bottom: 3rem;
+  /* margin-bottom: 3rem; */
 }
 
 .vision-list {
@@ -98,28 +105,7 @@
   color: #007AFD;
 }
 
-.section-wrap { margin-top: 5rem }
-@media(max-width: 1700px) { .section-wrap { margin-top: 0 }}
-@media(max-width: 1500px) { .section-wrap { margin-top: -5rem }}
-@media(max-width: 1200px) {
-  .stat-wrap {
-    padding: 3rem 1rem;
-  }
-  .stat {
-    font-size: xxx-large;
-  }
-  .cta-text-wrap {
-    top: 15%;
-    width: 70%;
-  }
-  .cta-text-wrap > span {
-    max-width: unset;
-  }
-  .section-wrap { margin-top: -2rem }
-}
-
 @media(max-width: 1000px) {
-  .section-wrap { margin-top: -5rem }
   .vision-vid-wrap {
     flex-direction: column;
     gap: 20px;
@@ -136,30 +122,6 @@
     left: -20px;
   }
 }
-@media(max-width: 800px) {
-  .stat-wrap {
-    flex-wrap: wrap;
-    padding: 2rem 6rem;
-  }
-  .stat-text {
-    flex-basis: 50%;
-    margin-top: 2rem;
-  }
-  .stat-line {
-    display: none;
-  }
-  .cta-text-wrap {
-    width: 80%;
-    top: 10%;
-  }
-  .cta-text-wrap > span {
-    margin-bottom: 1rem;
-    font-size: xx-large;
-  }
-  .cta-btn {
-    padding: 5px 15px;
-  }
-}
 @media(max-width: 600px) {
   .vision-text-wrap {
     width: 90%;
@@ -167,43 +129,6 @@
   .vision-vid {
     width: 80vw;
     height: 300px;
-  }
-}
-@media(max-width: 550px) {
-  .stat-wrap {
-    padding: 2rem 3rem;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 20px;
-  }
-  .stat-text {
-    flex-basis: auto;
-    margin: auto;
-  }
-  .stat {
-    margin-bottom: auto;
-  }
-  .stat-line {
-    width: 75%;
-    height: 2px;
-    display: block;
-  }
-  .cta-text-wrap {
-    top: 5px;
-  }
-  .cta-text-wrap > span{
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .call-to-action > img {
-    width: 100%
-  }
-  .call-to-action {
-    margin-bottom: -20%;
-  }
-  .cta-btn {
-    font-size: 12px
   }
 }
 @media(max-width: 400px) {
@@ -245,10 +170,14 @@
   font-weight: bolder;
   font-size: large;
 }
-.stat {
+.stat-text > h2 {
   font-size: 4.5rem;
   font-weight: bolder;
   margin-bottom: 1.25rem;
+}
+.stat {
+  font-size: inherit;
+  font-weight: inherit;
 }
 .call-to-action {
   position: relative;
@@ -310,12 +239,105 @@
   box-shadow: 0px 7px 9px 0px #70bdff36;
 }
 
+@media(max-width: 1400px) {
+  .section-wrap {
+    margin-top: -12rem;
+  }
+}
 
 
+@media(max-width: 1200px) {
+  .section-wrap {
+    margin-top: -22rem;
+  }
+  .stat-wrap {
+    padding: 3rem 1rem;
+  }
+  /* .stat {
+    font-size: xxx-large;
+  } */
+  .cta-text-wrap {
+    top: 15%;
+    width: 70%;
+  }
+  .cta-text-wrap > span {
+    max-width: unset;
+  }
+}
 
 
+@media(max-width: 800px) {
+  .section-wrap {
+    margin-top: -10rem;
+  }
+  .stat-wrap {
+    flex-wrap: wrap;
+    padding: 2rem 6rem;
+  }
+  .stat-text {
+    flex-basis: 50%;
+    margin-top: 2rem;
+  }
+  .stat-line {
+    display: none;
+  }
+  .cta-text-wrap {
+    width: 80%;
+    top: 10%;
+  }
+  .cta-text-wrap > span {
+    margin-bottom: 1rem;
+    font-size: xx-large;
+  }
+  .cta-btn {
+    padding: 5px 15px;
+  }
 
+}
 
+@media(max-width: 740px) {
+  .section-wrap {
+    margin-top: -35px;
+  }
+}
+
+@media(max-width: 550px) {
+  .stat-wrap {
+    padding: 2rem 3rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 20px;
+  }
+  .stat-text {
+    flex-basis: auto;
+    margin: auto;
+  }
+  /* .stat {
+    margin-bottom: auto;
+  } */
+  .stat-line {
+    width: 75%;
+    height: 2px;
+    display: block;
+  }
+  .cta-text-wrap {
+    top: 5px;
+  }
+  .cta-text-wrap > span{
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .call-to-action > img {
+    width: 100%
+  }
+  .call-to-action {
+    margin-bottom: -20%;
+  }
+  .cta-btn {
+    font-size: 12px
+  }
+}
 
 </style>
 <style>
@@ -335,13 +357,10 @@
 
 
 <template>
-  <section class="overflow-x-clip px-7 section-wrap">
-    <div class="vision-head">
-      <strong class="head-text text-3xl lg:text-3xl xl:text-4xl">
-        ABOUT THE<br>
-        <span id="vision-bold" class="text-5xl lg:text-5xl xl:text-6xl">TIMELINE</span>
-      </strong>
-    </div>
+  <section class="overflow-x-clip py-7 px-2 md:px-12 section-wrap">
+    <h2 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+    xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300
+    ps-3 md:ps-0 uppercase">About Us</h2>
     <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
       <div class="vision-vid">
         <img 
@@ -354,37 +373,39 @@
       </div>
       <div class="vision-text-wrap">
         <h3>SINCE 1925</h3>
-        <p>
-          We are committed to providing our customers with the best service,
-          to serve, to create, and lorem ipsum. We are proud of everyone's achievement.
+        <p class="mb-5">
+          Over our 100-year history, we have transformed the way residents and local organizations come together to drive lasting change across the region.
         </p>
-        <ul class="vision-list">
+        <p>
+          We have been proud to serve as a charitable resource for the community. To make an even greater impact, we have worked to build a powerful network of changemakers—donors, nonprofits, residents, businesses, policymakers, and all people who are committed to the success and wellbeing of Greater Hartford.
+        </p>
+        <!-- <ul class="vision-list">
           <li class="list-item">bullet point</li>
           <li class="list-item">bullet point</li>
           <li class="list-item">bullet point</li>
-        </ul>
+        </ul> -->
       </div>
     </div>
 
     <div class="stat-wrap">
       <div class="stat-text">
-        <h2 class="stat">840</h2>
-        <span>PROJECTS COMPLETED</span>
+        <h2>$<span class="stat">1.1</span>B</h2>
+        <span class="uppercase">Granted</span>
       </div>
       <div class="stat-line"></div>
       <div class="stat-text" style="transition-delay: .25s">
-        <h2 class="stat">260</h2>
-        <span>ACTIVE CLIENTS</span>
+        <h2 class="stat">1500</h2>
+        <span class="uppercase">Donor Funds</span>
       </div>
       <div class="stat-line"></div>
       <div class="stat-text" style="transition-delay: .5s">
-        <h2 class="stat">391</h2>
-        <span>CUPS OF COFFEE</span>
+        <h2>$<span class="stat">30</span>M</h2>
+        <span class="uppercase">In Scholarships</span>
       </div>
       <div class="stat-line"></div>
       <div class="stat-text" style="transition-delay: .75s">
-        <h2 class="stat">573</h2>
-        <span>NEW INVESTORS</span>
+        <h2 class="stat">29</h2>
+        <span class="uppercase">Community Funds</span>
       </div>
     </div>
 
@@ -444,13 +465,14 @@ onMounted(async ()  =>  {
   const stats = Array.from(document.querySelectorAll('.stat'));
   if(stats.length < 1) return;
 
-  const targetNums: number[] = [];
+  const statData: Array<{element: HTMLElement, target: number}> = [];
 
   stats.forEach(stat => {
-    targetNums.push(parseInt(stat.textContent));
-    stat.textContent = `${parseInt(stat.textContent) - 75}`
+    const target = parseFloat(stat.textContent?.trim() || '0');
+    statData.push({ element: stat as HTMLElement, target });
+    stat.textContent = `${Math.floor(target * 0.25)}`
   })
-  console.log(targetNums)
+  console.log(statData)
 
 
   const statWrap = document.querySelector('.stat-wrap') || null;
@@ -473,7 +495,10 @@ onMounted(async ()  =>  {
   statTextWraps.forEach((stat, idx) => {
     stat.addEventListener('transitionend', function triggerCount() {
       stat.removeEventListener('transitionend', triggerCount);
-      statCount(stat.querySelector('h2') as HTMLElement, targetNums[idx]);
+      const data = statData[idx];
+      if(data) {
+        statCount(data.element, data.target);
+      }
     })
   })
 
@@ -549,14 +574,17 @@ onUnmounted(() => {
 
 
 function statCount(el: HTMLElement, target: number) {
-  let curr = target - 75;
+  let curr = Math.floor(target * 0.25);
+  const increment = Math.ceil((target - curr) / 30); // Animate over ~30 steps
   const interval = setInterval(() => {
-    el.textContent = `${curr}`;
-    if(curr === target) {
+    curr += increment;
+    if(curr >= target) {
+      curr = target;
+      el.textContent = `${target}`;
       clearInterval(interval);
+    } else {
+      el.textContent = `${curr}`;
     }
-    curr++;
-
   }, 25);
 }
 

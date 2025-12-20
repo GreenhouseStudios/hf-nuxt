@@ -235,7 +235,7 @@
         <!-- Influencer image
              Size is manually synced to grid cell size for animation -->
         <img
-            :src="influencer.influencerDetails.image?.node?.sourceUrl || '/placeholder.png'"
+            :src="imageSource"
             class="bg-cover rounded-2xl headshot"
             :alt="influencer.influencerDetails.name"
             ref="cardImgEl"
@@ -260,7 +260,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue'
+import { ref, nextTick, onMounted, watch, computed } from 'vue'
 
 /**
  * Props:
@@ -282,12 +282,40 @@ const props = defineProps<{
       image?: {
         node?: {
           sourceUrl: string;
+          altText: string;
+          mediaDetails: {
+            sizes: {
+              name: string;
+              sourceUrl: string;
+              width: number;
+              height: number;
+            }[];
+          };
         };
       };
     };
   };
   isActive: boolean;
 }>()
+
+
+/**
+ * Retrieve the correct image URL for the influencer headshot
+ */
+const imageSource = computed(() => {
+  const image = props.influencer.influencerDetails.image?.node;
+  if (image) {
+    const imageSizes = image.mediaDetails.sizes;
+    // find the medium size image, if it exists, fallback to sourceUrl
+    const mediumImage = imageSizes?.find(size => size.name === 'medium_large');
+    if (mediumImage) {
+      return mediumImage.sourceUrl;
+    }
+    return image.sourceUrl;
+  } else {
+    return '/placeholder.png';
+  }
+});
 
 /**
  * Click event emitted upward so parent controls active state

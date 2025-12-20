@@ -19,6 +19,15 @@ declare global {
                 node: {
                     mediaItemUrl: string;
                     sourceUrl: string;
+                    altText: string;
+                    mediaDetails: {
+                        sizes: {
+                            name: string;
+                            sourceUrl: string;
+                            width: number;
+                            height: number;
+                        }[];
+                    };
                 }
             }
             eventYear: string;
@@ -55,6 +64,15 @@ declare global {
             node: {
               mediaItemUrl: string;
               sourceUrl: string;
+              altText: string;
+              mediaDetails: {
+                sizes: {
+                  name: string;
+                  sourceUrl: string;
+                  width: number;
+                  height: number;
+                }[];
+              };
             };
           };
         };

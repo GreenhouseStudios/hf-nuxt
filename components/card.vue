@@ -8,8 +8,8 @@
         'feature'
         ]"
     @click="handleCardClick">
-    <img v-if="(isDefault) && hasMainImage" :src="props.post?.eventOptions.thumbnail.node.mediaItemUrl"
-      class="card-img grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="">
+    <img v-if="(isDefault) && hasMainImage" :src="imageSource"
+      class="card-img grow object-cover" :class="isDefault || isQuote ? 'shrink' : 'grow'" :alt="props.post?.eventOptions.thumbnail.node.altText">
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault"
       src="/placeholder.png"
@@ -55,6 +55,19 @@ const isDefault = computed(() => actualVariation.value === 'default' || actualVa
 const isQuote = computed(() => actualVariation.value === 'quote');
 const isCovid = computed(() => actualVariation.value === 'covid_post');
 const hasMainImage = computed(() => !!props.post?.eventOptions?.thumbnail)
+const imageSource = computed(() => {
+  if (hasMainImage.value) {
+    const imageSizes = props.post?.eventOptions?.thumbnail.node.mediaDetails.sizes;
+    // find the medium size image, if it exists, fallback to mediaItemUrl
+    const largeImage = imageSizes?.find(size => size.name === 'medium_large');
+    if (largeImage) {
+      return largeImage.sourceUrl;
+    }
+    return props.post?.eventOptions?.thumbnail.node.mediaItemUrl;
+  } else {
+    return '/placeholder.png';
+  }
+});
 const containerClass = computed(() => {
   let result = '';
   if (props.mode === 'fixedHeight') {

@@ -1,5 +1,5 @@
 <template>
-    <footer class="max-w-screen border-t-2 border-gray-300 mt-56 bg-blue-950 text-white">
+    <footer class="max-w-screen border-t-2 border-gray-300 mt-56 text-white" style="background-color: #000A5D;">
         <section class="container mx-auto px-14 lg:px-0 py-30 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <about class="col-span-2 mb-10 lg:mb-0"></about>
             <!-- <address></address> -->
