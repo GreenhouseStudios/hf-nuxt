@@ -11,16 +11,23 @@ export const useStore = defineStore('store', {
         quotesMuted: false
     }),
     actions: {
-      toggleModal() {
-        this.showModal = !this.showModal;
-        const page = document.body.querySelector('.hf-page');
-        console.log(page)
-        if(page) page.classList.toggle('modal-open');
-      },
-      setModalPost(post: Post) {
+      openModal(post: Post) {
+        console.trace('openModal called')
         this.modalPost = post
-        this.toggleModal()
+        if (this.showModal) return
+        this.showModal = true
+        document.body.querySelector('.hf-page')?.classList.add('modal-open')
       },
+
+      closeModal() {
+        if (!this.showModal) return
+        this.showModal = false
+        this.modalPost = null
+        document.body.querySelector('.hf-page')?.classList.remove('modal-open')
+      },
+
+
+
       setFilterCategories(categories: Category[]) {
         this.timelineFilterCategories = categories;
       },
@@ -36,4 +43,6 @@ export const useStore = defineStore('store', {
             return this.showModal;
         }
     },
+
 });
+console.log('🟡 store initialized', performance.now())

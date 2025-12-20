@@ -52,10 +52,6 @@ const isOpen = ref(false);
 
 const items = ref(<NavigationMenuItem[]>[
   {
-    label: 'HFPG Primary Site',
-    to: 'https://www.hfpg.org/'
-  },
-  {
     label: 'OVERVIEW',
     to: '#',
   },

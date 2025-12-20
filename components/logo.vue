@@ -1,13 +1,13 @@
 <template>
-    <NuxtLink to="/" style="z-index: 1;">
+    <NuxtLink to="https://greaterhartfordgives.org/" target="_blank" style="z-index: 1;" class="fade-in img-transition" id="nav-img">
         <img
-          id="nav-img"
           src="~/public/image.png"
           alt="Logo"
           ref="logoEl"
-          class="object-contain max-h-8 md:h-8 fade-in img-transition"
+          class="object-contain max-h-8 md:h-8 "
 
         />
+      <h2 class="site-link text-cetacean font-black text-center" >GreaterHartfordGives.org</h2>
     </NuxtLink>
 </template>
 

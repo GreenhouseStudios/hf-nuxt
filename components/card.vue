@@ -74,7 +74,7 @@ const randomMultiplier = 4;
 
 
   const showModal = () => {
-    store.setModalPost(props.post);
+    store.openModal(props.post);
 
   }
 

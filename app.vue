@@ -2,33 +2,17 @@
 import { watch } from "vue";
 import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
 import { onMounted, ref } from "vue";
-import { useStore } from "~/stores/store";
+import { useStore } from '~/stores/store';
 
 const store = useStore();
 
 // Watch the modal state in the Pinia store
-watch(() => store.showModal, (newValue) => {
-  if (newValue) {
-    document.body.style.overflow = "hidden"; // Disable scrolling
-  } else {
-    document.body.style.overflow = ""; // Restore scrolling
-  }
+watch(() => store.showModal, (open) => {
+  document.body.style.overflow = open ? "hidden" : "";
 });
 
-// composable or inside `setup()`
-const hasSeenModalAnimation = ref(false)
 
-onMounted(() => {
-  store.showModal = true // show modal on first visit
-  if (localStorage.getItem('hasSeenModalAnimation')) {
-    store.showModal = false // hide modal on subsequent visits
-    hasSeenModalAnimation.value = true
-  } else {
-    
-    localStorage.setItem('hasSeenModalAnimation', 'true')
-    hasSeenModalAnimation.value = false // show animation
-  }
-})
+
 </script>
 
 <template>
@@ -38,12 +22,7 @@ onMounted(() => {
         <NuxtPage />
       </NuxtLayout>
     </UApp>
-    <Modal>
-      <div class=" bg-gray-200 grid p-56" v-if="!hasSeenModalAnimation">
-        <h1 class="text-5xl font-bold p-36 text-center text-black">Logo Transformation Animation</h1>
-      </div>
-      <wp-content v-else-if="store.modalPost" class="flex flex-col justify-center gap-5 text-left modal-content" :content="store.modalPost?.content"/>
-    </Modal>
+    <Modal />
     <VueQueryDevtools/>
   </div>
 </template>

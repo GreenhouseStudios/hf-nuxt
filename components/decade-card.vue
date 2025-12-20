@@ -12,7 +12,6 @@ const handleCardClick = () => {
     showModal();
 }
 const showModal = () => {
-    store.toggleModal();
 }
 </script>
 

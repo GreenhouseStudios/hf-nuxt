@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick, watch } from 'vue';
+import { computed, onMounted, ref, nextTick, watch, onBeforeUnmount } from 'vue';
 import { useStore } from "~/stores/store";
 
 const contentWrap = ref<HTMLElement | null>(null);
@@ -9,8 +9,15 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+const stablePost = ref<Post | null>(null)
 
-const html = computed(() => props.post?.eventOptions?.content ?? '');
+watch(
+    () => props.post,
+    (p) => { if (p) stablePost.value = p },
+    { immediate: true }
+)
+
+const html = computed(() => stablePost.value?.eventOptions?.content ?? '')
 
 async function waitForWrap() {
   while(!contentWrap.value) await nextTick()
@@ -28,12 +35,19 @@ function decimalToRatio(decimal:number) {
 }
 
 onMounted(async () => {
+
+
+  document.addEventListener('pointerdown', onDocPointerDown, true);
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', onDocPointerDown, true);
+  })
   await waitForWrap();
   await nextTick();
 
   if(!contentWrap.value) return;
 
-  let quoteExists = props.post?.eventOptions?.contentQuote !== null
+  let quoteExists = stablePost?.value?.eventOptions?.contentQuote !== null
   let quoteFound = false;
 
 
@@ -70,11 +84,11 @@ onMounted(async () => {
 
     const quoteText = document.createElement('span');
     quoteText.classList.add('content-quote-text', 'text-2xl', 'font-bold');
-    quoteText.textContent =  props.post?.eventOptions?.contentQuote ?? '"The two most important days in your life are the day you are born and the day you find out why"';
+    quoteText.textContent =  stablePost?.value?.eventOptions?.contentQuote ?? '"The two most important days in your life are the day you are born and the day you find out why"';
 
     const quoteSpeaker = document.createElement('span');
     quoteSpeaker.classList.add('content-quote-speaker', 'text-1xl', 'font-semibold')
-    quoteSpeaker.textContent = `— ${props.post?.eventOptions?.quoteSpeaker ?? 'Anonymous'}`;
+    quoteSpeaker.textContent = `— ${stablePost?.value?.eventOptions?.quoteSpeaker ?? 'Anonymous'}`;
 
     const quoteFill = document.createElement('span');
     quoteFill.className = 'content-quote-fill';
@@ -86,6 +100,8 @@ onMounted(async () => {
 
 
   }
+
+
 
   const vidLinkEls: HTMLIFrameElement[] = [];
 
@@ -160,7 +176,7 @@ onMounted(async () => {
 
   h3Els.forEach(el => el.classList.add('text-2xl', 'font-medium', 'my-4', 'subtitle'));
 
-  const gallery = contentWrap.value.querySelector('.gallery');
+  const gallery = contentWrap.value.querySelector<HTMLElement>('.gallery');
 
   if(gallery) gallery.classList.add('content-gallery', 'my-10');
 
@@ -177,20 +193,24 @@ onMounted(async () => {
 
   const categories: Category[] = [];
 
+  const tagCatWrap = document.createElement('div');
+  tagCatWrap.className = 'tag-cat-wrap';
 
-
-  props.post?.categories.nodes.forEach(category => {
+  stablePost?.value?.categories.nodes.forEach(category => {
     const catEl = document.createElement('span');
     catEl.classList.add('tag-item', 'py-3', 'px-5', 'footer-icon')
     catEl.textContent = category.name;
-    tagWrap.appendChild(catEl);
-  })
-
-  postFooterWrap.appendChild(tagWrap)
+    tagCatWrap.appendChild(catEl);
+  });
+  tagWrap.appendChild(tagCatWrap)
+  postFooterWrap.appendChild(tagWrap);
 
   const socialWrap = document.createElement('div');
   socialWrap.className = 'social-wrap';
   socialWrap.setAttribute('data-interactive', '');
+
+  const socialIconWrap = document.createElement('div');
+  socialIconWrap.className = 'social-icon-wrap';
 
   const socialLabel = document.createElement('span');
   socialLabel.textContent = 'Share:';
@@ -201,26 +221,28 @@ onMounted(async () => {
   socialLinked.classList.add('social-icon', 'social-linked', 'footer-icon');
   socialLinked.setAttribute('href', 'https://www.linkedin.com/');
   socialLinked.setAttribute('target', '_blank')
-  socialWrap.appendChild(socialLinked)
+  socialIconWrap.appendChild(socialLinked)
 
   const socialFB = document.createElement('a');
   socialFB.classList.add('social-icon', 'social-fb', 'footer-icon');
   socialFB.setAttribute('href', 'https://www.facebook.com/');
   socialFB.setAttribute('target', '_blank')
-  socialWrap.appendChild(socialFB)
+  socialIconWrap.appendChild(socialFB)
 
 
   const socialYT = document.createElement('a');
   socialYT.classList.add('social-icon', 'social-yt', 'footer-icon');
   socialYT.setAttribute('href', 'https://www.youtube.com/');
   socialYT.setAttribute('target', '_blank')
-  socialWrap.appendChild(socialYT)
+  socialIconWrap.appendChild(socialYT)
 
   const socialInst = document.createElement('a');
   socialInst.classList.add('social-icon', 'social-inst', 'footer-icon');
   socialInst.setAttribute('href', 'https://www.instagram.com/');
   socialInst.setAttribute('target', '_blank')
-  socialWrap.appendChild(socialInst)
+  socialIconWrap.appendChild(socialInst)
+
+  socialWrap.appendChild(socialIconWrap);
 
   postFooterWrap.appendChild(socialWrap)
 
@@ -233,22 +255,21 @@ onMounted(async () => {
 
     if (target.closest('[data-interactive]')) return;
 
-
-    store.toggleModal();
+    if(e.type !== 'pointerdown') return;
+    store.closeModal();
   }
 
-  watch(
-      () => store.showModal,
-      (open) => {
-        if (open) {
-          document.addEventListener('pointerdown', onDocPointerDown, true);
-        } else {
-          document.removeEventListener('pointerdown', onDocPointerDown, true);
-        }
-      },
-      { immediate: true }
-  );
-
+function setGallery() {
+  if(window.innerWidth < 600) {
+    if(gallery) gallery.style.gridTemplateColumns = 'repeat(1, 1fr)';
+  } else {
+    if(gallery) gallery.style.gridTemplateColumns = '';
+  }
+}
+window.addEventListener('resize', () => {
+  setGallery();
+})
+setGallery()
 
 })
 
@@ -259,13 +280,13 @@ onMounted(async () => {
     <div
         class="hero-wrap"
         ref="heroWrap"
-        v-if="post"
-        :style="{ backgroundImage: `url(${post?.eventOptions?.thumbnail?.node?.mediaItemUrl ?? '/placeholder.png'})`}"
+        v-show="stablePost"
+        :style="{ backgroundImage: `url(${stablePost?.eventOptions?.thumbnail?.node?.mediaItemUrl ?? '/placeholder.png'})`}"
     >
-      <h2 class="text-3xl font-bold p">{{ post.title || '' }}</h2>
+      <h2 class="text-3xl font-bold p">{{ stablePost?.title || '' }}</h2>
       <p class="pt-3">{{
-        props.post?.eventOptions?.heroText ??
-        props.post?.eventOptions.tagline ??
+        stablePost?.eventOptions?.heroText ??
+        stablePost?.eventOptions.tagline ??
         ''
 
         }}</p>
@@ -274,7 +295,7 @@ onMounted(async () => {
     <div
         class="content-wrap"
         ref="contentWrap"
-        v-if="post"
+        v-show="stablePost"
         v-html="html"
     ></div>
   </div>
@@ -299,7 +320,8 @@ onMounted(async () => {
 
 .hero-wrap {
   position: relative;
-  padding: 12rem 10rem 6rem 8rem;
+  padding: 12rem 12% 8rem;
+  padding-right: unset;
   background-size: cover;
   background-position: center;
   color: white;
@@ -308,7 +330,7 @@ onMounted(async () => {
 .hero-wrap > h2, .hero-wrap > p {
   position: relative;
   z-index: 1;
-  max-width: 70%;
+  max-width: 90%
 }
 
 .hero-wrap:after {
@@ -358,6 +380,15 @@ onMounted(async () => {
   border-radius: calc(var(--ui-radius) * 4);
 }
 
+@media(max-width: 740px) {
+  .img-single-reg {
+    width: 80%;
+  }
+  .img-single-tall {
+    width: 60%;
+  }
+}
+
 .content-vid-link-wrap {
   display: flex;
   flex-direction: row;
@@ -387,6 +418,7 @@ onMounted(async () => {
   height: 100%;
   width: 10px;
   left: 0;
+  top: 0;
   background-color: rgba(0, 122, 253, 0.5);
 }
 
@@ -400,18 +432,17 @@ onMounted(async () => {
   position: relative;
 }
 
+
+
+
+
 .content-quote-fill {
   position: absolute;
-  left: 4%;
-  top: 5%;
+  left: 50px;
+  top: 35px;
   height: fit-content;
   color: white;
-
   font-size: 200px;
-
-
-
-
 }
 
 .content-quote-text, .content-quote-speaker {
@@ -422,7 +453,6 @@ onMounted(async () => {
 
 .content-gallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 0;
   border-radius: calc(var(--ui-radius) * 4);
   overflow: hidden;
@@ -444,20 +474,112 @@ onMounted(async () => {
   justify-content: space-between;
 }
 
+@media(max-width: 1500px) {
+  .content-quote-wrap {
+    padding: 2rem 2rem 2rem 10rem;
+  }
+  .content-quote-fill {
+    top: 5px;
+    left: 30px;
+  }
+}
+
+@media(max-width: 1200px) {
+  .content-quote-wrap {
+    padding: 2rem 2rem 2rem 9rem;
+  }
+  .content-quote-fill {
+    top: 10px;
+    left: 20px;
+  }
+  .content-quote-text {
+    font-size: 20px;
+  }
+}
+
+@media(max-width: 900px) {
+  .post-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .content-quote-wrap {
+    padding: 1rem 1rem 1rem 8rem;
+  }
+  .content-quote-fill {
+    left: 10px;
+    top: -10px;
+  }
+}
+
+@media(max-width: 740px) {
+  .content-wrap {
+    padding-right: 7% !important;
+    padding-left: 7% !important;
+  }
+  .hero-wrap {
+    padding-left: 7% !important;
+  }
+  .social-icon-wrap {
+    grid-template-columns: repeat(2, auto) !important;
+  }
+  .tag-cat-wrap {
+    grid-template-columns: repeat(2, auto);
+  }
+  .content-quote-wrap {
+    padding: .75rem .75rem .75rem 6rem;
+  }
+  .content-quote-fill {
+    left: 3px;
+  }
+}
+
+@media(max-width: 640px) {
+  .content-quote-fill {
+    visibility: hidden;
+  }
+  .content-quote-wrap {
+    background: rgba(217, 217, 217, .5);
+    padding: .75rem;
+  }
+}
+
+@media(max-width: 500px) {
+  .tag-cat-wrap {
+    grid-template-columns: repeat(1, auto);
+  }
+}
+
 .tag-wrap {
   display: flex;
   justify-content: flex-start;
   gap: 1.25rem;
   align-items: center;
 }
+
+.tag-cat-wrap {
+  display: grid;
+  flex-direction: row;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+
+
 .tag-item {
   border-radius: 25px
 }
 
 .social-wrap {
   display: flex;
-  justify-content: flex-end;
   gap: 1.25rem;
+}
+
+.social-icon-wrap {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 1.25rem;
+  justify-content: end;
   align-items: center;
 }
 
@@ -501,10 +623,10 @@ onMounted(async () => {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-instagram' viewBox='0 0 16 16'%3E%3Cpath d='M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334'/%3E%3C/svg%3E");
 }
 
-.gallery-columns-1 { grid-template-columns: repeat(1, 1fr) !important; }
-.gallery-columns-2 { grid-template-columns: repeat(2, 1fr) !important; }
-.gallery-columns-3 { grid-template-columns: repeat(3, 1fr) !important; }
-.gallery-columns-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.gallery-columns-1 { grid-template-columns: repeat(1, 1fr); }
+.gallery-columns-2 { grid-template-columns: repeat(2, 1fr); }
+.gallery-columns-3 { grid-template-columns: repeat(3, 1fr); }
+.gallery-columns-4 { grid-template-columns: repeat(4, 1fr); }
 
 
 </style>
