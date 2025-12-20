@@ -3,7 +3,7 @@
     <!-- Close button -->
     <button 
       class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl leading-none z-10"
-      @click="store.toggleModal()"
+      @click="store.closeModal()"
     >
       &times;
     </button>
@@ -34,9 +34,9 @@
           {{ influencer?.influencerDetails?.town || 'Hartford' }}
         </p>
 
-        <div class="text-lg leading-relaxed text-gray-700">
+        <p class="text-lg leading-relaxed text-gray-700 whitespace-pre-wrap">
           {{ influencer?.influencerDetails?.description }}
-        </div>
+        </p>
       </div>
     </div>
   </div>
@@ -45,6 +45,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useStore } from '~/stores/store'
+
 
 const store = useStore()
 
@@ -77,6 +78,8 @@ const props = defineProps<{
     };
   } | null;
 }>()
+
+console.log(props?.influencer?.influencerDetails?.description)
 
 const imageSource = computed(() => {
   const image = props.influencer?.influencerDetails?.image?.node;

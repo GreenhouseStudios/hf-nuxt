@@ -187,7 +187,7 @@ onMounted(async () => {
   tagWrap.classList.add('tag-wrap');
 
   const tagLabel = document.createElement('span');
-  tagLabel.classList.add('tag-label', 'p-3', 'text-1xl', 'font-bold')
+  tagLabel.classList.add('tag-label', 'text-1xl', 'font-bold')
   tagLabel.textContent = 'Tags:'
   tagWrap.appendChild(tagLabel)
 
@@ -214,14 +214,14 @@ onMounted(async () => {
 
   const socialLabel = document.createElement('span');
   socialLabel.textContent = 'Share:';
-  socialLabel.classList.add('p-3', 'text-1xl', 'font-bold')
-  socialWrap.appendChild(socialLabel)
+  socialLabel.classList.add('text-1xl', 'font-bold');
+  socialWrap.appendChild(socialLabel);
 
   const socialLinked = document.createElement('a');
   socialLinked.classList.add('social-icon', 'social-linked', 'footer-icon');
   socialLinked.setAttribute('href', 'https://www.linkedin.com/');
   socialLinked.setAttribute('target', '_blank')
-  socialIconWrap.appendChild(socialLinked)
+  socialIconWrap.appendChild(socialLinked);
 
   const socialFB = document.createElement('a');
   socialFB.classList.add('social-icon', 'social-fb', 'footer-icon');
@@ -307,6 +307,7 @@ setGallery()
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 100%;
+  overflow: auto;
 }
 
 
@@ -552,13 +553,15 @@ setGallery()
 
 .tag-wrap {
   display: flex;
+  flex-direction: column;
   justify-content: flex-start;
-  gap: 1.25rem;
-  align-items: center;
+  gap: .5rem;
+  align-items: flex-start;
 }
 
 .tag-cat-wrap {
   display: grid;
+  grid-template-columns: auto auto auto;
   flex-direction: row;
   gap: 1.25rem;
   flex-wrap: wrap;
@@ -567,12 +570,15 @@ setGallery()
 
 
 .tag-item {
-  border-radius: 25px
+  border-radius: 25px;
+  width: fit-content;
 }
 
 .social-wrap {
   display: flex;
-  gap: 1.25rem;
+  flex-direction: column;
+  gap: .5rem;
+  align-items: flex-start;
 }
 
 .social-icon-wrap {

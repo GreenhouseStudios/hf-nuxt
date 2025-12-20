@@ -2,17 +2,21 @@
   <Transition name="fade" mode="out-in">
     <div 
       class="modal-overlay fixed top-20 w-11/12 h-full bg-black bg-opacity-10 z-50 flex"
+      :class="{
+        'w-screen items-center pb-17': !isPost(store.modalPost)
+      }"
+
       v-show="store.showModal"
-      @click.self="store.toggleModal()"
+      @click.self="isInfluencer(store.modalPost) && store.closeModal()"
     >
       <!-- Show influencer content if modalPost has influencerDetails -->
       <InfluencerModalContent 
-        v-if="store.showModal && store.modalPost?.influencerDetails" 
-        :influencer="store.modalPost" 
+        v-if="store.showModal && isInfluencer(store.modalPost)"
+        :influencer="store.modalPost"
       />
       <!-- Otherwise show post content -->
       <PostContent 
-        v-else-if="store.showModal" 
+        v-else-if="store.showModal && isPost(store.modalPost)"
         :post="store.modalPost" 
       />
     </div>
@@ -22,24 +26,23 @@
 <script lang="ts" setup>
 import PostContent from "~/components/post-content.vue";
 import InfluencerModalContent from "~/components/influencer-modal-content.vue";
-
-const { data: posts, isSuccess } = usePosts();
-import { ref, onMounted, watch } from 'vue';
-
 import { useStore } from '~/stores/store';
+import { ref, onMounted, onUpdated } from 'vue'
 const store = useStore();
 
-onMounted(() => {
-  setTimeout(() => {
-    store.showModal = false; // Show modal after a delay
-  }, 10000); // Adjust the delay as needed
-});
+function isInfluencer(x: unknown): x is Influencer {
+  return !!x && typeof x === 'object' && 'influencerDetails' in x;
+}
+
+function isPost(x: unknown): x is Post {
+  return !!x && typeof x === 'object' && 'eventOptions' in x;
+}
 </script>
 
 <style>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 0.25s ease;
 }
 .fade-enter-from,
 .fade-leave-to {

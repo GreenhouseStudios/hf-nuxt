@@ -155,7 +155,7 @@
       ref="heroBgEl"
   >
     <div class="hero-curve-wrap">
-      <img class="hero-curve" src="/hf-hero-bg-curve.svg" alt="" aria-hidden="true">
+      <img class="hero-curve" :src="heroCurveSrc" alt="" aria-hidden="true">
     </div>
     <!-- Video layer -->
     <div class="vid-wrap-bg" ref="vidWrapEl">
@@ -208,6 +208,8 @@ import HeroVid from '~/components/hero-vid.vue'
 import { useFirstVisit } from '~/composables/useFirstVisit'
 
 gsap.registerPlugin(ScrollTrigger)
+
+const heroCurveSrc = new globalThis.URL('/hf-hero-bg-curve.svg', import.meta.url).href
 
 /** viewport */
 const width = ref(typeof window !== 'undefined' ? window.innerWidth : 9999)

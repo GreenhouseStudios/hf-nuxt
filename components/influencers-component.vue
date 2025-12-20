@@ -32,6 +32,6 @@ const sortedInfluencers = computed(() => {
 })
 
 const openModal = (influencer: any) => {
-  store.setModalPost(influencer)
+  store.openModal(influencer)
 }
 </script>

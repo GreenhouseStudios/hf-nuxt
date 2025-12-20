@@ -1,9 +1,10 @@
 // stores/default.js
 import { defineStore } from 'pinia';
+type ModalItem = Post | Influencer;
 export const useStore = defineStore('store', {
     state: () => ({
         showModal: false as boolean,
-        modalPost: null as Post | null,
+        modalPost: null as ModalItem | null,
         modalType: '',
         isModalOpen: false as boolean,
         timelineFilterCategories: [] as Category[],
@@ -11,8 +12,7 @@ export const useStore = defineStore('store', {
         quotesMuted: false
     }),
     actions: {
-      openModal(post: Post) {
-        console.trace('openModal called')
+      openModal(post: Post | Influencer) {
         this.modalPost = post
         if (this.showModal) return
         this.showModal = true
