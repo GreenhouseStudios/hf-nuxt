@@ -453,20 +453,29 @@ setGallery()
 
 
 .content-gallery {
-  display: grid;
+  display: flex;
   gap: 0;
+  flex-wrap: wrap;
+  justify-content: center;
   border-radius: calc(var(--ui-radius) * 4);
   overflow: hidden;
+  justify-content: center !important;
+
 }
 
 .content-gallery figure {
   margin-bottom: 0;
+  flex: 0 0 calc((100% - 32px) / 3);
+  max-width: calc((100% - 32px) / 3);
+  margin: .25rem;
 }
 
 .content-gallery figure > div, .content-gallery img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: calc(var(--ui-radius) * 4);
+
 }
 
 .post-footer {

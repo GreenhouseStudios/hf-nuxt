@@ -45,7 +45,7 @@
 .vision-vid {
   width: 500px;
   height: 300px;
-  background: grey;
+  background: #000A5D;
   border-radius: 25px;
   position: relative;
   overflow: hidden;
@@ -179,64 +179,28 @@
   font-size: inherit;
   font-weight: inherit;
 }
-.call-to-action {
-  position: relative;
-  margin-bottom: -15%;
+
+.spinner-wrap {
+  height: 50px;
+  width: 50px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  z-index: 3;
+
+}
+
+.spinner {
+  height: 50px;
+  width: 50px;
+  transform-origin:center;
+  animation:spinner .75s infinite linear;
   pointer-events: none;
 }
-.call-to-action img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.cta-text-wrap {
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%);
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  text-align: center;
-  color: white;
-  align-items: center;
-}
-.cta-head {
-  font-size: large;
-  font-weight: bold;
-  margin-bottom: 1.75rem;
-  position: relative;
-  display: inline-block;
-  z-index: 0;
-}
-.cta-head::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 130%;
-  height: 50%;
-  background: #3d98ff;
-  z-index: -1;
-}
-.cta-text-wrap > span {
-  font-size: 2.5rem;
-  max-width: 70%;
-  font-weight: bold;
-  margin-bottom: 3.5rem;
-}
-.cta-btn {
-  padding: 15px 25px;
-  background: #007AFD;
-  border-radius: 25px;
-  cursor: pointer;
-  box-shadow: 0px 0px #70bdff36;
-  transition: transform .25s, box-shadow .2s ease-in-out;
-}
-.cta-btn:hover {
-  transform: translateY(-5px);
-  box-shadow: 0px 7px 9px 0px #70bdff36;
+
+@keyframes spinner {
+  100%{transform: rotate(360deg)}
 }
 
 @media(max-width: 1400px) {
@@ -363,12 +327,24 @@
     ps-3 md:ps-0 uppercase">About Us</h2>
     <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
       <div class="vision-vid">
-        <img 
+        <div class="spinner-wrap" v-if="!slideshowLoaded">
+          <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              class="spinner"
+          >
+            <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="#FFFFFF"/></svg>
+
+        </div>
+        <img
           v-for="(image, index) in slideshowImages" 
           :key="index"
           :src="image"
           :class="['slideshow-image', { active: currentSlide === index }]"
           alt="Timeline image"
+          @load="slideshowLoaded = true"
         />
       </div>
       <div class="vision-text-wrap">
@@ -417,9 +393,12 @@
 <script setup lang="ts">
 import anime from 'animejs';
 import { onMounted, nextTick, ref, onUnmounted, computed } from 'vue';
-import gsap from 'gsap'
-import ScrollTrigger from 'gsap/ScrollTrigger'
 import { usePosts } from '~/composables/usePosts';
+import {useNuxtApp} from "#imports";
+
+const { $gsap } = useNuxtApp()
+
+const slideshowLoaded = ref(false);
 
 // Fetch timeline posts, vue y u so hard
 const { data: posts } = usePosts();
@@ -506,7 +485,7 @@ onMounted(async ()  =>  {
 
   const visionHead = document.querySelector('.vision-head');
   if(!visionHead) return;
-  gsap.fromTo(visionHead,
+  $gsap.fromTo(visionHead,
       {x: -200, opacity: 0},
       {
         x: 0,
@@ -524,7 +503,7 @@ onMounted(async ()  =>  {
   const listEls = Array.from(document.querySelectorAll('.list-item'))
   if(listEls.length > 0) {
     listEls.forEach(el => {
-      gsap.fromTo(el,
+      $gsap.fromTo(el,
           {x: 100 + (listEls.indexOf(el) * 15), opacity: 0},
           {
             x: 0,

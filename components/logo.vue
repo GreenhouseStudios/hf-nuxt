@@ -7,7 +7,7 @@
           class="object-contain max-h-8 md:h-8 "
 
         />
-      <h2 class="site-link text-cetacean font-black text-center" >GreaterHartfordGives.org</h2>
+      <h3 class="site-link text-sm mt-0.5 text-cetacean font-black text-center" >GreaterHartfordGives.org</h3>
     </NuxtLink>
 </template>
 

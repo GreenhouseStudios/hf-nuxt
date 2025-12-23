@@ -4,15 +4,34 @@
   display: grid;
   grid-auto-flow: row dense; /* lets items backfill gaps */
   grid-template-columns: repeat(var(--cols, 4), 1fr);
-  grid-auto-rows: var(--row-h, 115px);
+  grid-auto-rows: var(--row-h, 95px);
   gap: var(--gap, 25px);
   overflow-y: clip;
+  --grid-shift-y: 0px;
+  transform: translateY(var(--grid-shift-y));
+  --buffer-rows: 5;
+  --pitch: calc(var(--row-h, 95px) + var(--gap, 25px));
 }
 
 /* Used while recomputing layout to avoid flicker */
 .bento-grid.computing {
   opacity: 0;
 }
+
+.bento-grid.no-grid-shift {
+  --grid-shift-y: 0px !important;
+}
+
+.bento-grid * {
+  overflow-anchor: none;
+}
+
+
+.grid-wrap {
+  overflow: hidden;
+}
+
+
 
 /* Make inner wrappers always fill the <li> height */
 .bento-inner {
@@ -25,12 +44,17 @@
 /* Base “hidden” card state + transition for scroll-in animations */
 .bento-card {
   opacity: .01;
-  transition: transform 1s, opacity .75s;
+  transition: transform .75s, opacity .75s;
+  z-index: 7;
 }
 
 /* Most cards are interactive; special ones override */
 .bento-card:not(.covid-card) {
   cursor: pointer;
+}
+
+.bento-inner:not(.covid-inner) {
+  transition: transform 1s;
 }
 
 /* Initial offset used before IntersectionObserver reveals card */
@@ -54,9 +78,14 @@
 .covid-card {
   opacity: .01;
   border-radius: calc(var(--ui-radius) * 4);
-  transition: transform 1.25s, opacity .75s;
+  transition: transform 1s, opacity .75s;
   transition-delay: .25s;
   position: relative;
+  z-index: 8;
+}
+
+.covid-card.covid-open {
+  grid-column: 1 / -1 !important;
 }
 
 /* Inner “banner” that expands (width on desktop / height on small cols) */
@@ -67,7 +96,7 @@
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
   transition-delay: .25s;
   transition: width .75s ease-out, transform .75s ease-out;
-  background: url("../public/covid-event-bg.png") no-repeat center bottom;
+  background: url("../public/covid-event-bg.png") no-repeat center bottom / cover;
   border-radius: calc(var(--ui-radius) * 4);
   display: flex;
   flex-direction: row;
@@ -132,13 +161,13 @@
 }
 
 /* Small screen layout: COVID inner becomes a 2x2-ish grid */
-@media(max-width: 1280px) {
+@media(max-width: 1380px) {
   .covid-inner {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
-    transform: translateY(-50%);
-    top: 50%
+    transform: translateY(-50%) !important;
+    top: 50% !important;
   }
   .covid-post {
     width: auto;
@@ -162,7 +191,13 @@
 </style>
 
 <style>
-/* (empty global style block - left as-is) */
+.grid-buffer-col {
+  grid-column: var(--buf-col) / span 1;
+  grid-row: 1 / span var(--buf-span);
+  pointer-events: none;
+  visibility: hidden;
+  height: 0;
+}
 </style>
 
 <template>
@@ -171,7 +206,7 @@
   -->
 
   <!-- Page wrapper -->
-  <div class="mb-36 px-2 py-12 md:px-12 overflow-x-hidden" style="width: 99vw">
+  <div class="mb-36 overflow-hidden">
 
     <!-- Title -->
     <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
@@ -194,18 +229,21 @@
       </div>
 
       <!-- Grid wrapper (opacity toggled during rebuilds) -->
-      <div ref="gridWrapEl" v-else>
+      <div class="grid-wrap px-2 py-12 md:px-12" ref="gridWrapEl" v-else>
         <ul
             :key="`grid-${rebuildToken}-${numCols}`"
             ref="gridEl"
             id="card-grid"
             class="bento-grid py-10"
+            :class="{ 'no-grid-shift': timelineFiltered }"
             :style="{
               '--cols': numCols,
               '--row-h': rowHeight + 'px',
               '--gap': gap + 'px',
             }"
         >
+
+
           <!-- Each item is either a normal post or the COVID wrapper -->
           <li
               v-for="item in timelineItems"
@@ -272,13 +310,14 @@ import Card from "~/components/card.vue";
 import Filters from "~/components/filters.vue";
 import { generateDocx } from '@/composables/useDocGenerate';
 import {fetchPosts, usePosts} from "~/composables/usePosts";
+import {useNuxtApp} from "#imports";
 
 /**
  * Get post data + filter store
  */
 const store = useStore();
 const { data: posts } = usePosts();
-
+const { $gsap } = useNuxtApp();
 /**
  * Grid sizing + layout state
  * - numCols drives spans and special behavior
@@ -291,7 +330,7 @@ const canPlayQuotes = ref(false);
 
 const numCols = ref(5);
 let cols = numCols.value;
-let rowHeight = 115;
+let rowHeight = 95;
 const gap = 25;
 let layoutInProgress = false;
 let covidCardGrow = false;
@@ -317,11 +356,13 @@ const lgCardRange = {
 const gridWrapEl = ref<HTMLElement | null>(null);
 const gridEl = ref<HTMLElement | null>(null);
 
+
 /* Timeline list is posts plus a special “covid group” item */
 type TimelineItem =
     | { type: 'post'; post: Post }
     | { type: 'covid'; year: number; posts: Post[] }
 
+const timelineFiltered = computed(() => { return store.timelineFilterCategory !== null })
 
 /**
  * Hard rebuild on numCol change / post watch
@@ -333,8 +374,14 @@ const rebuildToken = ref(0);
 async function hardRebuild() {
   layoutInProgress = false;
   covidCardGrow = false;
-  covidState.value = 'idle';
-  if(gridWrapEl.value) gridWrapEl.value.style.opacity = '0';
+  covid.state = 'idle';
+  if(gridWrapEl.value && gridEl.value) {
+
+    gridWrapEl.value.style.opacity = '0';
+    if(numCols.value > 3) {
+      ensureColumnBuffers(gridEl.value, numCols.value);
+    }
+  }
 
   rebuildToken.value++;
   await nextTick();
@@ -415,15 +462,17 @@ async function measureAndPack(reset = false) {
         covidCardGrow = true;
 
         // setup hover/tap open handler
-        attachCovidOpen(covidLi)
+        attachCovidOpen(covidLi as HTMLElement, gridEl.value as HTMLElement)
 
         // set base span for the wrapper based on columns
         setCovidSpan(covidLi, gridEl.value as HTMLElement);
       }
     }
 
+
     // 1-column layout: keep it simple and uniform-ish
     if(numCols.value === 1) {
+      gridEl.value.classList.add('buffer-gone')
       liElements.forEach(el => {
         const rand = Math.random();
         const rowspan = rand < .75 ? 3 : 4;
@@ -438,6 +487,7 @@ async function measureAndPack(reset = false) {
 
     // Very small sets: force consistent sizing so layout doesn’t look broken
     if(liElements.length < 10) {
+      gridEl.value.classList.add('buffer-gone')
       const rem = liElements.length % numCols.value;
       liElements.forEach(el => {
         el.style.gridRowEnd = 'span 5';
@@ -451,6 +501,7 @@ async function measureAndPack(reset = false) {
 
     // Optional full reset: wipe spans back to defaults before recalculating
     if(reset) {
+      gridEl.value.classList.remove('buffer-gone');
       liElements.forEach(el => {
         if(el.dataset.isCovid === '1') { setCovidSpan(el as HTMLElement, gridEl.value as HTMLElement) }
         else if(el.dataset.isQuote === '1') { setQuoteSpan(el as HTMLElement, gridEl.value as HTMLElement) }
@@ -597,7 +648,8 @@ async function measureAndPack(reset = false) {
     // If gaps still exist, try a second pass; if still broken, force a reset pass
     try {
       let newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
-      let emptyGaps = gapsPerCol(newPlacements, numCols.value);
+      const buffRows = getBufferRows(gridEl.value);
+      let emptyGaps = gapsPerCol(newPlacements, numCols.value, buffRows);
       if(emptyGaps) {
         await nextFrame();
 
@@ -607,7 +659,7 @@ async function measureAndPack(reset = false) {
 
         newPlacements = clearTransforms(gridEl.value as HTMLElement, () => getPlacements(gridEl.value as HTMLElement));
         await nextTick();
-        const newEmpty = gapsPerCol(newPlacements, numCols.value);
+        const newEmpty = gapsPerCol(newPlacements, numCols.value, buffRows);
         if(newEmpty) {
           layoutInProgress = false;
           return await measureAndPack(true)
@@ -617,7 +669,18 @@ async function measureAndPack(reset = false) {
       // Add animations after computed grid placements valid
     } finally {
       // Reveal grid once layout is stable
-      if(gridEl.value) gridEl.value.style.opacity = '1';
+      if(gridEl.value) {
+        if(numCols.value > 3) {
+          ensureColumnBuffers(gridEl.value, numCols.value)
+          const initArr: number[] = [];
+          for(let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
+          setBufferSpans(gridEl.value, initArr)
+          gridEl.value.style.setProperty('--grid-shift-y', `-${(BUFFER_ROWS + 1) * rowHeight}px`);
+          if(gridWrapEl.value) gridWrapEl.value.style.marginBottom = `-${BUFFER_ROWS * rowHeight}px`;
+        }
+        gridEl.value.style.opacity = '1';
+      }
+
 
       // Fine-tune image max heights (CSS var based) after layout settles
       nudgeImageMaxHeights(gridEl.value as HTMLElement);
@@ -625,7 +688,7 @@ async function measureAndPack(reset = false) {
       // Add initial transform class so IntersectionObserver can animate them in
       liElements.forEach(el => {
         if (el.dataset.isCovid === '1') el.classList.add('covid-transform');
-        else if (!el.dataset.animated) el.classList.add('transform');
+        else if (!el.dataset.animated && !el.classList.contains('grid-buffer-col')) el.firstElementChild?.classList.add('transform');
       });
 
       // Start intersection-based reveal animations
@@ -719,10 +782,10 @@ function nudgeImageMaxHeights(grid: HTMLElement, maxPasses = 10) {
 
       // adjust more aggressively if it’s very off
       const stepAmt =
-        ratio > 1.25 ? 10 :
-        ratio > 1.12 ? 6  :
-        ratio > 1.05 ? 4  :
-        0;
+          ratio > 1.25 ? 10 :
+              ratio > 1.12 ? 6  :
+                  ratio > 1.05 ? 4  :
+                      0;
 
       // If rendered is “wider” than natural, bump max height
       if (stepAmt) {
@@ -803,7 +866,7 @@ function getPlacements(grid: HTMLElement): Placement[] {
   // Grid metrics tell us pitch sizes for converting pixels -> rows/cols
   const { cols, rect, pitchY, pitchX } = getGridMetrics(grid);
   const EPS = 0.1;
-  const items = Array.from(grid.querySelectorAll<HTMLElement>('li'));
+  const items = Array.from(grid.querySelectorAll<HTMLElement>('li')).filter(el => !el.classList.contains('grid-buffer-col'))
 
   // Convert each element’s pixel position into grid row/col
   return items.map(el => {
@@ -823,56 +886,50 @@ function getPlacements(grid: HTMLElement): Placement[] {
   });
 }
 
+
 /**
  * Check for gaps in grid
  * Returns true if any column has any unoccupied row ranges.
  */
-function gapsPerCol(placements: Placement[], cols:number) {
-  const result: Record<number, Array<{start:number,end:number}>> = {};
+function getBufferRows(grid: HTMLElement) {
+  const cs = getComputedStyle(grid)
+  const v = parseInt(cs.getPropertyValue('--buffer-rows') || '0', 10)
+  return Number.isFinite(v) ? v : 0
+}
 
-  // For each column, build occupied intervals from all cards spanning that column
+function gapsPerCol(
+    placements: Placement[],
+    cols: number,
+    ignoreTopRows = 0
+) {
   for (let c = 1; c <= cols; c++) {
     const intervals = placements
         .filter(p => c >= p.col && c <= p.col + p.colspan - 1)
         .map(p => ({ start: p.row, end: p.row + p.rowspan - 1 }))
-        .sort((a, b) => a.start - b.start || a.end - b.end);
+        .sort((a, b) => a.start - b.start || a.end - b.end)
 
-    // Merge intervals so we can detect breaks cleanly
-    const merged: Array<{start:number,end:number}> = [];
+    const merged: Array<{ start: number; end: number }> = []
     for (const iv of intervals) {
       if (!merged.length || iv.start > merged[merged.length - 1].end + 1) {
-        merged.push({ ...iv });
+        merged.push({ ...iv })
       } else {
-        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, iv.end);
+        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, iv.end)
       }
     }
 
-    // Any break between merged intervals is a gap
-    const gaps: Array<{start:number,end:number}> = [];
-    let prevEnd = 0;
+    // ✅ ignore the top “buffer” region
+    let prevEnd = ignoreTopRows
+
     for (const iv of merged) {
-      if (iv.start > prevEnd + 1) gaps.push({ start: prevEnd + 1, end: iv.start - 1 });
-      prevEnd = iv.end;
+      if (iv.start > prevEnd + 1) return true
+      prevEnd = Math.max(prevEnd, iv.end)
     }
-
-    // Store gaps per column (used only to decide “do we still have gaps?”)
-    let maxRow = 0;
-    for (const p of placements) {
-      if (c >= p.col && c <= p.col + p.colspan - 1) {
-        const endRow = p.row + p.rowspan - 1;
-        if (endRow > maxRow) maxRow = endRow;
-      }
-    }
-    result[c] = gaps;
   }
 
-  // If any column has gaps, return true
-  for(let r = 1; r <= cols; r++) {
-    const gaps = result[r]
-    if(gaps && gaps.length > 0) return true;
-  }
-  return false;
+  return false
 }
+
+
 
 /**
  * Get grid data
@@ -895,13 +952,16 @@ function getGridMetrics(grid: HTMLElement) {
  * Needed because transforms affect getBoundingClientRect (placement accuracy).
  */
 function clearTransforms<T>(grid: HTMLElement, fn: () => T): T {
-  const liElements = Array.from(document.querySelectorAll<HTMLElement>('.bento-card'));
-  const saved = liElements.map(el => el.style.transform);
-  liElements.forEach(el => el.style.transform = '');
-  const out = fn();
-  liElements.forEach((el, i) => { el.style.transform = saved[i] });
-  return out;
+  const liElements = Array.from(
+      grid.querySelectorAll<HTMLElement>('li.bento-card')
+  )
+  const saved = liElements.map(el => el.style.transform)
+  liElements.forEach(el => (el.style.transform = ''))
+  const out = fn()
+  liElements.forEach((el, i) => (el.style.transform = saved[i]))
+  return out
 }
+
 
 /**
  * Check openings below/above cards
@@ -1028,6 +1088,7 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 8) {
   })
 }
 
+
 /**
  * Set covid span/columns depending on column count
  * (Base/collapsed size before expansion animation.)
@@ -1062,61 +1123,282 @@ function setCovidSpan(card: HTMLElement, grid: HTMLElement) {
       card.style.gridColumn = 'span 2';
       card.dataset.colspan = '2';
       card.style.gridRowEnd = 'span 4';
-      card.dataset.rowspan = '3';
+      card.dataset.rowspan = '4';
       break;
   }
 }
 
-// Track state of covid card
-const covidState = ref<'idle' | 'opening' | 'open' | 'closing'>('idle');
+// ------------------------
+// COVID state + helpers
+// ------------------------
 
+type CovidMode = 'grow' | 'span'
+type CovidState = 'idle' | 'opening' | 'open' | 'closing'
 
-/**
- * Attach open handlers to covid card
- * - mouse: open on hover
- * - touch: open on tap
- */
-function attachCovidOpen(covidLi: HTMLElement) {
-  const open = (e: PointerEvent) => {
-    if (!shouldOpenFromPointer(e)) return;
-    if (covidState.value !== 'idle') return;
-
-    covidState.value = 'opening';
-
-    // prevent global handlers from firing on touch
-    if (e.pointerType !== 'mouse') e.stopPropagation();
-
-    // remove open listeners until we close again
-    covidLi.removeEventListener('pointerenter', open);
-    covidLi.removeEventListener('pointerdown', open);
-
-    requestAnimationFrame(() => {
-      const isTouch = e.pointerType !== 'mouse';
-      // small column counts expand vertically, larger expands horizontally
-      if (numCols.value <= 3)
-        growCovidCard(covidLi, gridEl.value as HTMLElement, isTouch);
-      else
-        spanCovidCard(covidLi, gridEl.value as HTMLElement, isTouch);
-    });
-  };
-
-  covidLi.addEventListener('pointerenter', open);
-  covidLi.addEventListener('pointerdown', open);
+const covid = {
+  state: 'idle' as CovidState,
+  mode: null as CovidMode | null,
+  active: null as HTMLElement | null,
 }
 
-/* === Mobile/low-cols covid expansion: grow height and push stacks up/down === */
-function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
+function getCovidMode(): CovidMode {
+  // Example breakpoint rule: desktop = span, smaller = grow
+  return numCols.value > 3 ? 'span' : 'grow'
+}
 
-  // measure placements without transforms for accurate “above/below” sets
-  const placements = clearTransforms(grid, () =>
-      getPlacements(grid)
-  );
+function getCovidParts(covidCard: HTMLElement) {
+  const inner = covidCard.querySelector<HTMLElement>('.covid-inner')
+  const title = covidCard.querySelector<HTMLElement>('#covid-title')
+  const posts = Array.from(
+      covidCard.querySelectorAll<HTMLElement>('.covid-inner .covid-post')
+  )
+  return { inner, title, posts }
+}
+
+function hidePostsStagger(posts: HTMLElement[]) {
+  let delay = .6;
+  posts.forEach(p => {
+    p.style.setProperty('--delay', `${delay}s`);
+    p.classList.remove('active');
+    p.classList.add('inactive');
+    delay -= .15;
+    p.addEventListener('transitionend', () => p.style.display = 'none', {once:true});
+  });
+}
+
+function showPostsStagger(posts: HTMLElement[]) {
+  let delay = 0
+  posts.forEach(p => {
+    p.style.display = 'flex'
+    p.style.setProperty('--delay', `${delay}s`)
+    p.classList.remove('inactive')
+    p.classList.add('active')
+    delay += 0.15
+  })
+}
+
+function armCovidCloseHandlers(
+    covidCard: HTMLElement,
+    touch: boolean,
+    closeFn: () => void
+) {
+  const onLeaveMouse = () => closeFn()
+
+  const onTapCardAgain = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') return
+    e.stopPropagation()
+    closeFn()
+  }
+
+  const onOutsideTap = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') return
+    if (covidCard.contains(e.target as Node)) return
+    closeFn()
+  }
+
+  // remove any previous listeners (safe)
+  covidCard.removeEventListener('pointerleave', onLeaveMouse)
+  covidCard.removeEventListener('pointerdown', onTapCardAgain)
+  document.removeEventListener('pointerdown', onOutsideTap, true)
+
+  covidCard.addEventListener('pointerleave', onLeaveMouse)
+
+  if (touch) {
+    covidCard.addEventListener('pointerdown', onTapCardAgain)
+    document.addEventListener('pointerdown', onOutsideTap, true)
+  }
+}
+
+// ------------------------
+// FLIP helper for grid reflow animation
+// ------------------------
+
+const COVID_FLIP_MS = 750;
+
+// This is the key: animate CSS Grid reflow by inverting transforms.
+// (You already had this shape.) :contentReference[oaicite:2]{index=2}
+function flipGrid(
+    grid: HTMLElement,
+    mutate: () => void,
+    durationMs = COVID_FLIP_MS,
+    covidCard: HTMLElement,
+    closing = false
+): Promise<void> {
+  return new Promise((resolve) => {
+    const items = Array.from(grid.querySelectorAll<HTMLElement>('li.bento-card'))
+
+    const first = new Map(items.map(el => [el, el.getBoundingClientRect()]))
+
+    mutate()
+    grid.getBoundingClientRect();
+
+    const last = new Map(items.map(el => [el, el.getBoundingClientRect()]))
+
+    // Invert
+    for (const el of items) {
+      const a = first.get(el)!
+      const b = last.get(el)!
+      const dx = a.left - b.left
+      const dy = a.top - b.top
+      el.style.transition = 'none'
+      el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`
+    }
+
+    grid.getBoundingClientRect() // paint
+
+    // Play
+    if (items.length === 0) return resolve()
+
+    window.setTimeout(() => {
+      for (const el of items) {
+        el.style.transition = ''
+        el.style.transform = ''
+      }
+      resolve()
+    }, durationMs)
+    if(!closing) {
+      $gsap.to(window, {
+        duration: .75,
+        scrollTo: {
+          y: covidCard,
+          offsetY: window.innerHeight / 2 - covidCard.offsetHeight / 1.5
+        },
+      })
+    }
+    for (const el of items) {
+      el.style.transition = `transform ${durationMs}ms ease`
+      el.style.transform = 'translate3d(0,0,0)'
+    }
+
+
+  })
+}
+
+/**
+ * Span-open FLIP that keeps covid card in its original visual position
+ * by shifting the entire grid via --grid-shift-y.
+ */
+
+
+
+function pinElementToOldRect(el: HTMLElement, oldRect: DOMRect) {
+  const newRect = el.getBoundingClientRect()
+  const dx = oldRect.left - newRect.left
+  const dy = oldRect.top - newRect.top
+
+  el.style.transition = 'none'
+  el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`
+}
+
+
+
+const BUFFER_ROWS = 5;
+
+function getPitchY(grid: HTMLElement) {
+  // Best: use your getGridMetrics(grid).pitchY if you already have it.
+  const styles = getComputedStyle(grid);
+  const rowH = parseFloat(styles.getPropertyValue('--row-h')) || 95;
+  const gap = parseFloat(styles.getPropertyValue('--gap')) || 25;
+  return rowH + gap;
+}
+
+
+
+// ------------------------
+// Public attach / open / close
+// ------------------------
+
+function attachCovidOpen(covidCard: HTMLElement, grid: HTMLElement) {
+  // Avoid stacking listeners if you re-run attach after rerenders
+  if ((covidCard as any).__covidBound) return
+      ;(covidCard as any).__covidBound = true
+
+
+
+  const openFromMouseHover = (e: PointerEvent) => {
+    // Only hover-open for mouse
+    if (e.pointerType !== 'mouse') return
+    if (covid.state !== 'idle') return
+
+    // If you have links/buttons inside the card and don't want accidental open,
+    // you can require the hover to be on the card background, but usually not needed.
+    openCovid(covidCard, grid, false)
+  }
+
+  const openFromTouchTap = (e: PointerEvent) => {
+    // Only tap-open for touch/pen
+    if (e.pointerType === 'mouse') return
+    if (covid.state !== 'idle') return
+    e.stopPropagation()
+    openCovid(covidCard, grid, true)
+  }
+
+  covidCard.addEventListener('pointerenter', openFromMouseHover)
+  covidCard.addEventListener('pointerdown', openFromTouchTap, { passive: false })
+
+  // Optional: open on keyboard focus for accessibility
+  covidCard.addEventListener('focusin', () => {
+    if (covid.state !== 'idle') return
+    openCovid(covidCard, grid, false)
+  })
+}
+
+
+// Call this to programmatically close (or from outside click)
+function closeCovid(covidCard: HTMLElement, grid: HTMLElement) {
+  if (covid.state !== 'open') return
+  covid.state = 'closing'
+
+  // Let mode-specific listeners handle the close path:
+  covidCard.dispatchEvent(new Event('covid:close'))
+}
+
+// Open chooses grow vs span, then calls the specific function.
+// (Same concept you had.) :contentReference[oaicite:3]{index=3}
+function openCovid(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
+  if (covid.state !== 'idle') return
+
+  covid.state = 'opening'
+  covid.active = covidCard
+  covid.mode = getCovidMode()
+
+  const onOpened = () => {
+    covid.state = 'open'
+    armCovidCloseHandlers(covidCard, touch, () => closeCovid(covidCard, grid))
+  }
+
+  const onClosed = () => {
+    covid.state = 'idle'
+    covid.active = null
+    covid.mode = null
+  }
+
+  if (covid.mode === 'grow') {
+    growCovidCard(covidCard, grid, touch, { onOpened, onClosed })
+  } else {
+    spanCovidCard(covidCard, grid, touch, { onOpened, onClosed }, numCols.value)
+  }
+}
+
+// ------------------------
+// GROW MODE (your working one)
+// ------------------------
+// Keep your existing logic — just accept hooks.
+function growCovidCard(
+    covidCard: HTMLElement,
+    grid: HTMLElement,
+    touch = false, // kept for signature parity; grow itself doesn't need it now
+    hooks: { onOpened: () => void; onClosed: () => void }
+) {
+  const placements = clearTransforms(grid, () => getPlacements(grid));
 
   const covidPlacement = placements.find(p => p.el === covidCard);
-  if(!covidPlacement) {
-    covidState.value = 'idle';
+  if (!covidPlacement) {
+    hooks.onClosed();
     return;
   }
+
+  const initialHeight = covidCard.getBoundingClientRect().height;
 
   // cards above and below the covid row band
   const above = placements.filter(p => p.row < covidPlacement.row);
@@ -1125,198 +1407,202 @@ function growCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
   const inner = covidCard.querySelector<HTMLElement>('.covid-inner');
   const covidTitle = covidCard.querySelector<HTMLElement>('#covid-title');
   if (!inner || !covidTitle) {
-    covidState.value = 'idle';
+    hooks.onClosed();
     return;
   }
 
+  const innerPosts: HTMLElement[] = Array.from(
+      inner.querySelectorAll<HTMLElement>('.covid-post')
+  );
+
   // reset inner to a known base state
   const prevTransition = inner.style.transition;
+  const prevTransitionDelay = inner.style.transitionDelay;
+
   inner.style.transition = 'none';
+  inner.style.transitionDelay = '0s';
   inner.style.height = '100%';
+  inner.style.transform = 'none';
+
+  // Ensure posts are in a consistent "closed" state
+  innerPosts.forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('active');
+    p.classList.add('inactive');
+  });
+
   // force reflow so browser applies these immediately
   void inner.offsetHeight;
 
-  const gridRect = grid.getBoundingClientRect();
-  const innerRect = inner.getBoundingClientRect();
-
-  // now enable the animated properties for the “open” motion
+  // enable the animated properties for the “open” motion
   inner.style.transition = 'height .75s ease, transform .75s ease-out';
 
-  const innerPosts: HTMLElement[] = Array.from(
-      inner.querySelectorAll('.covid-post')
-  );
+  let closing = false;
 
-  // ------------ PHASE 1: banner growth (height) ------------
-  function startInnerGrowth() {
-    if(!inner || !covidTitle) return;
+  // push all above cards up and below cards down while covid expands
+  above.forEach(p => {
+    p.el.style.transform = `translateY(-${rowHeight * 2}px`;
+  });
+  below.forEach(p => {
+    p.el.style.transform = `translateY(${rowHeight * 2}px`;
+  });
 
+  // ------------ OPEN: banner growth (height) ------------
+  const finishOpen = () => {
+    // Tell openCovid we're officially "open" (it arms the same close handlers as span)
+    hooks.onOpened();
+
+    // Grow must respond to programmatic closeCovid() (dispatches 'covid:close')
+    covidCard.addEventListener(
+        'covid:close',
+        () => {
+          if (closing) return;
+          closing = true;
+          startClose();
+        },
+        { once: true }
+    );
+  };
+
+  const startInnerGrowth = () => {
     // hide title while expanded
     covidTitle.style.opacity = '0';
 
     // grow to a fixed “open” height
-    inner.style.height = `${rowHeight * 8 - gap}px`;
+    inner.style.height = `${rowHeight * 8 - (gap * 2)}px`;
 
-    // once grown, reveal posts with staggered animations
     inner.addEventListener(
         'transitionend',
         function grown(e) {
           if (e.propertyName !== 'height') return;
           inner.removeEventListener('transitionend', grown);
 
+          // reveal posts with staggered animations
           let delay = 0;
-          innerPosts.forEach(covidPost => {
-            covidPost.style.display = 'flex';
-            covidPost.style.setProperty('--delay', `${delay}s`);
-            covidPost.classList.replace('inactive', 'active');
+          innerPosts.forEach(post => {
+            post.style.display = 'flex';
+            post.style.setProperty('--delay', `${delay}s`);
+            post.classList.remove('inactive');
+            post.classList.add('active');
             delay += 0.15;
           });
 
           if (!innerPosts.length) {
-            armPointerLeave();
+            finishOpen();
             return;
           }
 
           // allow closing after last post anim finishes
           innerPosts[innerPosts.length - 1].addEventListener(
               'animationend',
-              function allowShrink() {
-                covidState.value = 'open';
-                armPointerLeave();
-              },
+              () => finishOpen(),
               { once: true }
           );
         }
     );
-  }
-
-  // push all above cards up and below cards down while covid expands
-  above.forEach(p => {
-    p.el.style.setProperty('--to-move', `translateY(-${rowHeight * 2}px)`);
-    p.el.classList.add('adjustForCovid');
-  });
-  below.forEach(p => {
-    p.el.style.setProperty('--to-move', `translateY(${rowHeight * 2}px)`);
-    p.el.classList.add('adjustForCovid');
-  })
+  };
 
   startInnerGrowth();
 
-  // ----------------- pointerleave + shrink -----------------
-  function armPointerLeave() {
-    const close = () => {
-      if (covidState.value !== 'open') return;
-      covidState.value = 'closing';
+  // ------------ CLOSE: reverse stagger + collapse ------------
+  function startClose() {
+    // reverse stagger so posts disappear in order
+    let delay = innerPosts.length * 0.1;
+    innerPosts.forEach(post => {
+      post.style.setProperty('--delay', `${delay}s`);
+      delay -= 0.1;
+      post.classList.remove('active');
+      post.classList.add('inactive');
+    });
 
-      // cleanup listeners
-      covidCard.removeEventListener('pointerleave', onLeaveMouse);
-      covidCard.removeEventListener('pointerdown', onTapCardAgain);
-      document.removeEventListener('pointerdown', onOutsideTap, true);
-
-      // reverse the stagger so cards disappear in order
-      let delay = innerPosts.length * 0.1;
-      innerPosts.forEach(covidPost => {
-        covidPost.style.setProperty('--delay', `${delay}s`);
-        delay -= 0.1;
-        covidPost.classList.replace('active', 'inactive');
-      });
-
-      shrink();
-    };
-
-    const onLeaveMouse = () => close();
-
-    // Tap again on the card to close (touch)
-    const onTapCardAgain = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      e.stopPropagation();
-      close();
-    };
-
-    // Tap anywhere else closes (touch)
-    const onOutsideTap = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      if (covidCard.contains(e.target as Node)) return;
-      close();
-    };
-
-    covidCard.addEventListener('pointerleave', onLeaveMouse);
-
-    if (touch) {
-      covidCard.addEventListener('pointerdown', onTapCardAgain);
-      // capture=true so it fires even if something stops bubbling later
-      document.addEventListener('pointerdown', onOutsideTap, true);
+    // if there are no posts, collapse immediately
+    if (!innerPosts.length) {
+      collapse();
+      return;
     }
-  }
-
-  function shrink() {
-    if(!inner || !covidTitle) return;
 
     // wait for first post to finish animating out, then collapse
-    innerPosts[0].addEventListener('animationend', () => {
-      requestAnimationFrame(() => {
-        inner.style.transitionDelay = '1.25s';
-        inner.style.height = '100%';
-        inner.style.transition = 'height 1s ease, transform .75s ease'
+    innerPosts[0].addEventListener('animationend', () => collapse(), { once: true });
+  }
 
-        // hide posts once collapsed
-        innerPosts.forEach(covidPost => {
-          covidPost.style.display = 'none';
-        });
+  function collapse() {
+    requestAnimationFrame(() => {
+      if(!inner || !covidTitle) return;
+      inner.style.transitionDelay = '1.25s';
+      inner.style.height = `${initialHeight}px`;
+      inner.style.transition = 'height 1s ease, transform .75s ease';
 
-        // show title again
-        covidTitle.style.opacity = '1';
+      // hide posts once collapsed (or while collapsing—your old behavior)
+      innerPosts.forEach(post => {
+        post.style.display = 'none';
+      });
 
-        // clear the neighbor transforms
-        const liElements = Array.from(
-            document.querySelectorAll<HTMLElement>('.bento-card')
-        );
-        liElements.forEach(el => {
-          el.classList.remove('adjustForCovid');
-        });
+      // show title again
+      covidTitle.style.opacity = '1';
 
-        // re-arm open listeners after a short delay
+      // clear neighbor transforms
+      Array.from(
+          document
+          .querySelectorAll<HTMLElement>('.bento-card'))
+          .forEach(el => el.style.transform = '')
+
+      // cleanup + return to idle via shared hook
+      inner.addEventListener('transitionend', () => {
         setTimeout(() => {
-          covidState.value = 'idle';
-          attachCovidOpen(covidCard);
-        }, 500);
-      })
-    }, {once:true})
+          inner.style.transition = prevTransition;
+          inner.style.transitionDelay = prevTransitionDelay;
+
+          hooks.onClosed();
+        }, 750)
+
+      }, {once:true})
+    });
   }
 }
 
-/**
- * Calculate cards in covid rows / move cards out of way / grow covid card
- */
 
-/* === Desktop/high-cols covid expansion: expand width to full grid and shift overlaps === */
-function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
-  const { pitchY } = getGridMetrics(grid);
-  const placements = clearTransforms(grid, () =>
-      getPlacements(grid)
-  );
+function placementsByEl(placements: Placement[]) {
+  const m = new Map<HTMLElement, Placement>()
+  placements.forEach(p => m.set(p.el, p))
+  return m
+}
 
-  const covidPlacement = placements.find(p => p.el === covidCard);
-  if (!covidPlacement) {
-    covidState.value = 'idle';
-    return;
+function computeBufferSpansForCovidSpan(
+    grid: HTMLElement,
+    covidCard: HTMLElement,
+    cols: number,
+    bufferRows: number,
+    upBias = 1.35 // >1 means "favor moving up"
+) {
+  setBufferSpans(grid, Array(cols).fill(bufferRows));
+
+  const placements = clearTransforms(grid, () => getPlacements(grid));
+  const covid = placements.find(p => p.el === covidCard);
+  if (!covid) return Array(cols).fill(bufferRows);
+
+  const covidTop = covid.row;
+  const covidBot = covid.row + covid.rowspan - 1;
+  const covidMid = covidTop + (covid.rowspan - 1) / 2;
+
+  // Separate needs: rows to free that help "up" vs "down"
+  const needUp = Array(cols).fill(0);
+  const needDown = Array(cols).fill(0);
+
+  // Track top-2 overlaps per col (rows)
+  const max1 = Array(cols).fill(0);
+  const max2 = Array(cols).fill(0);
+
+// when you process overlapRows for a col index i:
+  function pushOverlap(i: number, overlapRows: number) {
+    if (overlapRows > max1[i]) {
+      max2[i] = max1[i];
+      max1[i] = overlapRows;
+    } else if (overlapRows > max2[i]) {
+      max2[i] = overlapRows;
+    }
   }
 
-  // covid row band in grid coordinates
-  const covidTop = covidPlacement.row;
-  const covidBot = covidPlacement.row + covidPlacement.rowspan - 1;
-  const covidMid = covidTop + Math.floor(covidPlacement.rowspan / 2);
 
-  const cTopPx = covidTop * pitchY;
-  const cBotPx = (covidPlacement.row + covidPlacement.rowspan) * pitchY;
-
-  // maps for stack shifts (per-column)
-  const upByCol = new Map<number, number>();
-  const downByCol = new Map<number, number>();
-
-  // per-card shift (only for cards overlapping COVID rows)
-  const perCardShift = new Map<HTMLElement, number>();
-
-  // ---------- PASS 1: compute overlaps + decide shifts ----------
   for (const p of placements) {
     if (p.el === covidCard) continue;
 
@@ -1327,255 +1613,255 @@ function spanCovidCard(covidCard: HTMLElement, grid: HTMLElement, touch = false)
         0,
         Math.min(pBot, covidBot) - Math.max(pTop, covidTop) + 1
     );
-    const overlapPx = overlapRows * pitchY;
+    if (overlapRows <= 0) continue;
+
+    const center = pTop + (p.rowspan - 1) / 2;
+
+    // If card center is below mid, we'd prefer it moves UP (so it doesn't push covid down).
+    // If card center is above mid, moving it DOWN is less preferred.
+    const wantsUp = center >= covidMid;
 
     const colStart = p.col;
     const colEnd = p.col + p.colspan - 1;
 
-    if (overlapRows > 0) {
-      // inside COVID rows: push away from covid center
-      const center = pTop + (p.rowspan - 1) / 2;
-      const delta = center < covidMid ? -overlapPx : overlapPx;
-      perCardShift.set(p.el, delta);
+    for (let c = colStart; c <= colEnd; c++) {
+      if (c < 1 || c > cols) continue;
+      const i = c - 1;
+      if (wantsUp) needUp[i] = Math.max(needUp[i], overlapRows);
+      else needDown[i] = Math.max(needDown[i], overlapRows);
+    }
+  }
+
+  // Combine with bias:
+  // - Up needs count MORE (free more space -> more upward movement)
+  // - Down needs count LESS
+  const needFreeByCol = Array(cols).fill(0);
+  for (let i = 0; i < cols; i++) {
+    const up = needUp[i] * upBias;
+    const down = needDown[i] * 1.0; // keep down as baseline
+    needFreeByCol[i] = Math.ceil(Math.max(up, down));
+  }
+
+  // Propagate across multi-column cards (same as your version)
+  let changed = true;
+  let guard = 0;
+
+  while (changed && guard++ < 10) {
+    changed = false;
+
+    for (const p of placements) {
+      if (p.el === covidCard || p.colspan <= 1) continue;
+
+      const colStart = p.col;
+      const colEnd = p.col + p.colspan - 1;
+
+      let maxNeed = 0;
+      for (let c = colStart; c <= colEnd; c++) {
+        if (c >= 1 && c <= cols) maxNeed = Math.max(maxNeed, needFreeByCol[c - 1]);
+      }
 
       for (let c = colStart; c <= colEnd; c++) {
-        if (delta < 0) {
-          upByCol.set(c, Math.max(upByCol.get(c) ?? 0, overlapPx));
-        } else {
-          downByCol.set(c, Math.max(downByCol.get(c) ?? 0, overlapPx));
-        }
-      }
-    } else {
-      // track which cols have stacks above / below (for later stack shifting)
-      if (pBot < covidTop) {
-        for (let c = colStart; c <= colEnd; c++) {
-          upByCol.set(c, Math.max(upByCol.get(c) ?? 0, 0));
-        }
-      } else if (pTop > covidBot) {
-        for (let c = colStart; c <= colEnd; c++) {
-          downByCol.set(c, Math.max(downByCol.get(c) ?? 0, 0));
+        if (c < 1 || c > cols) continue;
+        if (needFreeByCol[c - 1] !== maxNeed) {
+          needFreeByCol[c - 1] = maxNeed;
+          changed = true;
         }
       }
     }
   }
 
-  // ---------- PASS 2: apply computed shifts to cards ----------
-  let anyShift = false;
+  const SHAVE_PASSES = 5;
 
-  for (const p of placements) {
-    if (p.el === covidCard) continue;
-
-    let deltaY = perCardShift.get(p.el) ?? 0;
-
-    if (deltaY === 0) {
-      // stack shifting for cards fully above/below the covid band
-      const pTopPx = p.row * pitchY;
-      const pBotPx = (p.row + p.rowspan) * pitchY;
-
-      let upPx = 0;
-      let downPx = 0;
-
-      for (let c = p.col; c <= p.col + p.colspan - 1; c++) {
-        const upShift = upByCol.get(c) ?? 0;
-        const downShift = downByCol.get(c) ?? 0;
-
-        if (upShift > 0 && pBotPx <= cTopPx) {
-          upPx = Math.max(upPx, upShift);
-        }
-        if (downShift > 0 && pTopPx >= cBotPx) {
-          downPx = Math.max(downPx, downShift);
-        }
-      }
-
-      // choose direction (prefer the larger movement)
-      if (upPx > 0 && downPx === 0) {
-        deltaY = -upPx;
-      } else if (downPx > 0 && upPx === 0) {
-        deltaY = downPx;
-      } else if (upPx > 0 && downPx > 0) {
-        deltaY = downPx >= upPx ? downPx : -upPx;
+  for (let pass = 0; pass < SHAVE_PASSES; pass++) {
+    for (let i = 0; i < cols; i++) {
+      if (needFreeByCol[i] > 0 && (needFreeByCol[i] - 1) > max2[i]) {
+        needFreeByCol[i] -= 1;
       }
     }
-
-    if (deltaY !== 0) anyShift = true;
-
-    // Store translateY into --to-move so CSS transition handles the movement
-    p.el.style.setProperty(
-        '--to-move',
-        mergeTranslateY(p.el.style.transform || '', deltaY)
-    );
-    p.el.classList.add('adjustForCovid'); // CSS has transform transition
   }
 
-  const inner = covidCard.querySelector<HTMLElement>('.covid-inner');
-  const covidTitle = covidCard.querySelector<HTMLElement>('#covid-title');
-  if (!inner || !covidTitle) {
-    covidState.value = 'idle';
-    return;
-  }
 
-  // reset inner to a known base state
-  const prevTransition = inner.style.transition;
-  inner.style.transition = 'none';
-  inner.style.transform = 'none';
-  inner.style.width = '100%';
-  // force reflow so browser applies these immediately
-  void inner.offsetWidth;
 
-  // compute how far we need to translate to align to grid left edge
-  const gridRect = grid.getBoundingClientRect();
-  const innerRect = inner.getBoundingClientRect();
-  const distFromLeft = innerRect.left - gridRect.left;
-  const fullWidth = gridRect.width;
-
-  // restore transitions
-  inner.style.transition =
-      prevTransition || 'width .75s ease-out, transform .75s ease-out';
-
-  const innerPosts: HTMLElement[] = Array.from(
-      inner.querySelectorAll('.covid-post')
-  );
-
-  // ------------ PHASE 2: banner expansion (width) ------------
-  function startInnerExpansion() {
-    if(!inner || !covidTitle) return;
-
-    covidTitle.style.opacity = '0';
-    inner.style.transitionDelay = '0s';
-
-    // stretch banner to full width of grid
-    inner.style.transform = `translateX(${-distFromLeft}px)`;
-    inner.style.width = `${fullWidth}px`;
-
-    // once banner expanded, reveal posts w/ stagger
-    inner.addEventListener(
-        'transitionend',
-        function grown(e) {
-          if (e.propertyName !== 'width') return;
-          inner.removeEventListener('transitionend', grown);
-
-          let delay = 0;
-          innerPosts.forEach(covidPost => {
-            covidPost.style.display = 'flex';
-            covidPost.style.setProperty('--delay', `${delay}s`);
-            covidPost.classList.replace('inactive', 'active');
-            delay += 0.15;
-          });
-
-          if (!innerPosts.length) {
-            armPointerLeave();
-            return;
-          }
-
-          innerPosts[innerPosts.length - 1].addEventListener(
-              'animationend',
-              function allowShrink() {
-                covidState.value = 'open';
-                armPointerLeave();
-              },
-              { once: true }
-          );
-        }
-    );
-  }
-
-  // Wait for the card shifts to finish before expanding the banner
-  const SHIFT_DURATION_MS = 750;
-  if (anyShift) {
-    setTimeout(startInnerExpansion, SHIFT_DURATION_MS);
-  } else {
-    startInnerExpansion();
-  }
-
-  // ----------------- pointerleave + shrink -----------------
-  function armPointerLeave() {
-    const close = () => {
-      if (covidState.value !== 'open') return;
-      covidState.value = 'closing';
-
-      // cleanup listeners
-      covidCard.removeEventListener('pointerleave', onLeaveMouse);
-      covidCard.removeEventListener('pointerdown', onTapCardAgain);
-      document.removeEventListener('pointerdown', onOutsideTap, true);
-
-      // reverse stagger: hide posts
-      let delay = innerPosts.length * 0.1;
-      innerPosts.forEach(covidPost => {
-        covidPost.style.setProperty('--delay', `${delay}s`);
-        delay -= 0.1;
-        covidPost.classList.replace('active', 'inactive');
-      });
-
-      shrink();
-    };
-
-    const onLeaveMouse = () => close();
-
-    // Tap again on the card to close (touch)
-    const onTapCardAgain = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      e.stopPropagation();
-      close();
-    };
-
-    // Tap anywhere else closes (touch)
-    const onOutsideTap = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      if (covidCard.contains(e.target as Node)) return;
-      close();
-    };
-
-    covidCard.addEventListener('pointerleave', onLeaveMouse);
-
-    if (touch) {
-      covidCard.addEventListener('pointerdown', onTapCardAgain);
-      document.addEventListener('pointerdown', onOutsideTap, true);
-    }
-  }
-
-  function shrink() {
-    if(!inner || !covidTitle) return;
-    requestAnimationFrame(() => {
-      // collapse banner back to card width
-      inner.style.transitionDelay = '.5s';
-      inner.style.width = '100%';
-      inner.style.transform = 'none';
-
-      inner.addEventListener(
-          'transitionend',
-          function shrunk(e) {
-            if (e.propertyName !== 'width') return;
-            inner.removeEventListener('transitionend', shrunk);
-            inner.style.transitionDelay = 'unset';
-
-            // hide posts once closed
-            innerPosts.forEach(covidPost => {
-              covidPost.style.display = 'none';
-            });
-
-            requestAnimationFrame(() => {
-              // bring title back
-              covidTitle.style.opacity = '1';
-
-              // clear shifts for all cards
-              const liElements = Array.from(
-                  document.querySelectorAll<HTMLElement>('.bento-card')
-              );
-              liElements.forEach(el => {
-                el.classList.remove('adjustForCovid');
-              });
-
-              // re-arm open listeners after stacks settle
-              setTimeout(() => {
-                covidState.value = 'idle';
-                attachCovidOpen(covidCard);
-              }, SHIFT_DURATION_MS);
-            });
-          }
-      );
-    });
-  }
+  // Clamp + convert to spans
+  return needFreeByCol.map(rowsToFree => {
+    const span = bufferRows - rowsToFree;
+    return Math.max(0, Math.min(bufferRows, span));
+  });
 }
+
+// ------------------------
+// SPAN MODE (the one you’re fighting)
+// ------------------------
+// This does:
+// 1) FLIP toggle .covid-open (grid-column: 1/-1) so OTHER CARDS ANIMATE into place
+// 2) Expand inner banner width to full grid (your existing inner expansion idea)
+// 3) Close reverses: stagger hide posts -> shrink inner -> FLIP remove .covid-open
+async function spanCovidCard(
+    covidCard: HTMLElement,
+    grid: HTMLElement,
+    touch = false,
+    hooks: { onOpened: () => void; onClosed: () => void },
+    cols: number
+) {
+  const { inner, title, posts } = getCovidParts(covidCard)
+  if (!inner || !title) {
+    hooks.onClosed()
+    return
+  }
+
+  console.log('inline', grid.style.transform)
+
+  let cardRect = covidCard.getBoundingClientRect();
+  const gridRect = grid.getBoundingClientRect();
+  const initialWidth = cardRect.width
+  let closing = false
+  inner.style.transition = 'none'
+  inner.style.width = `${initialWidth}px`;
+  inner.style.transform = 'none'
+  inner.style.transitionDelay = '0s'
+  void inner.offsetWidth
+
+  await nextTick();
+
+  ensureColumnBuffers(grid, cols)
+
+  const spansByCol = computeBufferSpansForCovidSpan(
+      grid,
+      covidCard,
+      cols,
+      BUFFER_ROWS,
+      -1.5
+  )
+
+
+
+  // ---------- OPEN: FLIP re-pack + span covid ----------
+  await flipGrid(grid, () => {
+    //setBufferSpans(grid, spansByCol)
+    covidCard.classList.add('covid-open');
+    },
+    undefined,
+    covidCard
+  )
+
+
+
+  // expand banner + reveal posts
+  requestAnimationFrame(() => {
+
+    const gridRect = grid.getBoundingClientRect()
+    const innerRect = inner.getBoundingClientRect()
+
+    const distFromLeft = innerRect.left - gridRect.left
+    const fullWidth = gridRect.width
+
+    const willAnimate =
+        Math.abs(distFromLeft) > 0.5 ||
+        Math.abs(innerRect.width - fullWidth) > 0.5
+
+    inner.style.transition = 'width 750ms ease-out, transform 750ms ease-out'
+    title.style.opacity = '0'
+
+    const reveal = () => {
+      showPostsStagger(posts)
+
+      if (!posts.length) {
+        hooks.onOpened()
+        return
+      }
+
+      posts[posts.length - 1].addEventListener('animationend', () => {
+        setTimeout(() => {
+          armCovidCloseHandlers(covidCard, touch, () => { void doClose() })
+          covidCard.addEventListener('covid:close', (() => { void doClose() }) as EventListener, { once: true })
+        }, 250);
+        hooks.onOpened();
+      }, {once:true})
+    }
+
+    inner.style.transform = `translateX(${-distFromLeft}px)`
+    inner.style.width = `${fullWidth}px`
+
+
+    if (!willAnimate) requestAnimationFrame(reveal)
+    else {
+      const onExpanded = (e: TransitionEvent) => {
+        if (e.propertyName !== 'width') return
+        inner.style.left = '0';
+        inner.style.top = '0'
+        inner.removeEventListener('transitionend', onExpanded)
+        setTimeout(reveal, 250)
+      }
+      inner.addEventListener('transitionend', onExpanded)
+    }
+  })
+
+  const doClose = async () => {
+    if (closing) return
+    closing = true
+
+    let delay = posts.length * 0.1
+    posts.forEach(p => {
+      p.style.setProperty('--delay', `${delay}s`)
+      delay -= 0.1
+      p.classList.remove('active')
+      p.classList.add('inactive')
+    })
+
+    requestAnimationFrame(() => {
+      hidePostsStagger(posts);
+
+
+
+
+      const onPostsOut = async () => {
+        console.log('hey', initialWidth)
+        inner.style.transitionDelay = '0.25s'
+        inner.style.width = `${initialWidth}px`;
+        inner.style.transform = 'none'
+
+        title.style.opacity = '1'
+
+
+        const full = Array(cols).fill(BUFFER_ROWS)
+
+        setTimeout(async () => {
+          await flipGrid(grid, () => {
+            setBufferSpans(grid, full)
+
+            covidCard.classList.remove('covid-open')
+            covidCard.style.gridColumn = ''
+            setCovidSpan(covidCard, grid)
+
+            grid.classList.remove('covid-open');
+            },
+            undefined,
+            covidCard,
+            true
+          )
+        }, 250)
+
+
+
+        inner.addEventListener('transitionend', onCollapse, {once:true})
+
+      }
+      posts[0].addEventListener('animationend', onPostsOut, {once:true});
+
+      const onCollapse = () => {
+        setTimeout(() => {
+          hooks.onClosed();
+        }, 1000)
+      }
+
+    })
+  }
+
+
+}
+
+
+
 
 /**
  * Calculate translate for cards in covid row
@@ -1599,11 +1885,12 @@ function mergeTranslateY(transformStr: string, y: number) {
 function cardAnimation() {
   const cards = document.querySelectorAll<HTMLElement>('.bento-card');
 
+
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting) {
         const card = <HTMLElement> entry.target;
-        card.style.transform = 'none';
+        card.dataset.isCovid === '1' ? card.classList.remove('covid-transform') : card.firstElementChild?.classList.remove('transform');
         card.style.opacity = '1';
         card.dataset.animated = 'true';
         observer.unobserve(entry.target);
@@ -1619,32 +1906,37 @@ function cardAnimation() {
   })
 }
 
-/**
- * Quote popup positioning
- * Flips quote bubble direction when the card is on the right edge.
- */
-function quotePopupAdjust(placements: Placement[], numCols: number) {
-  for(const p of placements) {
-    if(p.el.dataset.isQuote === '1') {
-      const icon = p.el.querySelector<HTMLElement>('.quote-icon');
-      if(!icon) return;
-      const onRight = (p.col + p.colspan - 1) === numCols;
-      if(onRight) {
-        icon.style.setProperty('--qi-origin', 'bottom right');
-        icon.style.setProperty('--qi-tail-angle', '225deg');
-        icon.style.setProperty('--qi-left', 'auto');
-        icon.style.setProperty('--qi-right', '0');
-        icon.style.setProperty('--qi-border-radius', '15px 15px 0 15px');
-      } else {
-        icon.style.setProperty('--qi-origin', 'bottom left');
-        icon.style.setProperty('--qi-tail-angle', '135deg');
-        icon.style.setProperty('--qi-left', '0');
-        icon.style.setProperty('--qi-right', '0');
-        icon.style.setProperty('--qi-border-radius', '15px 15px 15px 0');
-      }
-    }
+function ensureColumnBuffers(grid: HTMLElement, cols: number) {
+  // remove extras
+  const existing = Array.from(grid.querySelectorAll<HTMLElement>('.grid-buffer-col'))
+  existing.forEach((el, i) => {
+    if (i >= cols) el.remove()
+  })
+
+  // create missing
+  const current = Array.from(grid.querySelectorAll<HTMLElement>('.grid-buffer-col'))
+  for (let c = current.length + 1; c <= cols; c++) {
+    const li = document.createElement('li')
+    li.className = 'grid-buffer-col'
+    li.setAttribute('aria-hidden', 'true')
+    // insert at very top so auto-placement sees them first
+    grid.insertBefore(li, grid.firstChild)
   }
+
+  // set each buffer's column index
+  const buffers = Array.from(grid.querySelectorAll<HTMLElement>('.grid-buffer-col'))
+  buffers.forEach((buf, idx) => {
+    buf.style.setProperty('--buf-col', String(idx + 1))
+  })
 }
+
+function setBufferSpans(grid: HTMLElement, spansByCol: number[]) {
+  const buffers = Array.from(grid.querySelectorAll<HTMLElement>('.grid-buffer-col'))
+  buffers.forEach((buf, i) => {
+    buf.style.setProperty('--buf-span', String(BUFFER_ROWS))
+  })
+}
+
 
 /**
  * Update column count on resize
@@ -1679,10 +1971,11 @@ const postsArray = computed(() => {
 });
 
 const postsFilteredByCategory = computed(() => {
-  if (store.timelineFilterCategories.length > 0) {
+  if (store.timelineFilterCategory) {
+
     return postsArray.value.filter((post: Post) => {
       return post.categories.nodes.some((cat: Category) =>
-          store.timelineFilterCategories.some(c => c.slug === cat.slug)
+          cat.slug === store.timelineFilterCategory?.slug
       );
     });
   }
@@ -1858,9 +2151,18 @@ const filteredPosts = computed(() => {
 onMounted( async () => {
   await nextTick();
   updateColumns();
+  if(numCols.value > 3 && gridEl.value) {
+    ensureColumnBuffers(gridEl.value, numCols.value);
+    const initArr: number[] = [];
+    for(let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
+    setBufferSpans(gridEl.value, initArr);
+  }
+
   document.addEventListener('pointerdown', () => {canPlayQuotes.value = true }, {once: true})
 
-  window.addEventListener('resize', () => requestAnimationFrame(updateColumns));
+  window.addEventListener('resize', () => {
+    updateColumns();
+  });
 
   const timelineTitle = document.querySelector('.timeline-title');
   if(!timelineTitle) return;

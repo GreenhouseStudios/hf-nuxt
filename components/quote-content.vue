@@ -241,7 +241,6 @@ p[aria-hidden="false"] {
   box-shadow: -2px 0px 1px 1px rgba(0,0,0,.25);
 }
 
-
 .preview-overlay:after {
   content: '';
   position: absolute;
@@ -253,6 +252,40 @@ p[aria-hidden="false"] {
   z-index: 9;
   background-color: rgba(0,0,0,.5);
 }
+
+.starting-text {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  text-wrap: nowrap;
+  text-align: left;
+  color: white;
+  font-size: x-large;
+  opacity: 0;
+  transition: opacity .25s;
+  z-index: 9;
+}
+
+.starting-text.shown {
+  opacity: 1;
+}
+
+.details-text {
+  position: absolute;
+  left: 20px;
+  text-align: left;
+  color: white;
+  font-size: x-large;
+  opacity: 0;
+  transition: transform 1s ease, opacity 1s;
+  z-index: 9;
+  bottom: -20px;
+}
+.details-text.shown {
+  opacity: 1;
+  transform: translateY(-40px);
+}
+
 
 </style>
 
@@ -295,6 +328,13 @@ p[aria-hidden="false"] {
             v-if="!canPlay"
             @click="previewClick"
         >Preview Videos</button>
+
+      <span ref="startingTextEl" class="starting-text">Video starting in 3...</span>
+      <span ref="detailsTextEl" class="details-text">
+        {{ props.post?.eventOptions?.speaker }},
+        <br />
+        {{ props.post?.eventOptions?.speakerTitle}}
+      </span>
       <div class="icons-list" data-interactive>
         <svg class="icon restart" width="27" height="29" viewBox="0 0 27 29" fill="none" xmlns="http://www.w3.org/2000/svg" ref="restartEl">
           <path d="M8.02678 10.1855C10.0909 7.65576 12.754 6.4576 16.6078 7.18979C18.7668 7.81066 20.6356 9.17724 21.8817 11.0464C23.1279 12.9157 23.6706 15.1663 23.4133 17.398C23.1559 19.6298 22.1153 21.6979 20.4766 23.2345C18.8378 24.7711 16.707 25.6765 14.4634 25.7898C12.2197 25.9031 10.0086 25.2168 8.22341 23.853C6.4382 22.4893 5.60011 20.4746 5.11936 18.2802C4.85827 17.0884 4.93896 16.117 5.23564 15.1602" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
@@ -365,6 +405,7 @@ p[aria-hidden="false"] {
 import { ref, onMounted, watch } from 'vue';
 import { useStore } from '@/stores/store';
 import anime from 'animejs'
+import {nextTick} from "#imports";
 const temp = true
 type Post = any
 const props = defineProps<{ post: Post, canPlay: boolean }>()
@@ -373,15 +414,23 @@ const vidEl = ref<HTMLVideoElement | null>(null);
 const backEl = ref<HTMLElement | null>(null);
 const frontEl = ref<HTMLElement | null>(null);
 
+let playInterval: ReturnType<typeof setInterval>
+
+
 const store = useStore();
 const loading = ref(true)
 const shouldPlay = ref(false);
 
 const isBackVisible = ref(false);
 
+const firstPlay = ref(true);
+
 const wrapEl = ref<HTMLElement | null>(null);
 const transcriptWrapEl = ref<HTMLElement | null>(null);
 const loremFragment = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
+
+const startingTextEl = ref<HTMLSpanElement | null>(null);
+const detailsTextEl = ref<HTMLSpanElement | null>(null);
 
 const restartEl = ref<HTMLElement | null>(null);
 const playEl = ref<HTMLElement | null>(null);
@@ -554,6 +603,7 @@ function showFront() {
 async function onEnter() {
   if (!taglineEl.value || !backEl.value || !wrapEl.value || !vidEl.value || !frontEl.value) return;
 
+
   if(props.canPlay) {
     shouldPlay.value = true;
   }
@@ -636,6 +686,13 @@ const toggleTranscript = () => {
 
 }
 
+function showDetails() {
+  if(detailsTextEl.value) {
+    detailsTextEl.value.classList.add('shown');
+    setTimeout(() => detailsTextEl.value?.classList.remove('shown'), 5000)
+  }
+}
+
 onMounted(() => {
   if(taglineEl.value) wrapCharsByWord(taglineEl.value)
 
@@ -691,20 +748,61 @@ onMounted(() => {
 
 watch(
   () => store.quotesMuted,
-  (muted) => {
-    if(vidEl.value && muteEl.value && unMuteEl.value) {
-      muteEl.value.classList.toggle('toggled')
-      unMuteEl.value.classList.toggle('toggled');
-      vidEl.value.muted = muted;
+  async (muted) => {
+    await nextTick();
+
+    if(!vidEl.value || !muteEl.value || !unMuteEl.value) return;
+
+    console.log(muted)
+    vidEl.value.muted = muted;
+
+    if(muted) {
+      muteEl.value.classList.add('toggled');
+      unMuteEl.value.classList.remove('toggled');
+    } else {
+      unMuteEl.value.classList.add('toggled');
+      muteEl.value.classList.remove('toggled');
     }
-  }
+
+
+  },
+    { immediate: true }
 )
+
+const firstPlayText: string[] = [
+  'Video starting in 3...',
+  'Video starting in 2...',
+  'Video starting in 1...'
+]
 
 watch([loading, shouldPlay], ([isLoading, wants]) => {
   if(!vidEl.value) return;
 
   if(!isLoading && wants) {
-    vidEl.value.play();
+    if(firstPlay.value) {
+      if(startingTextEl.value) {
+        startingTextEl.value.classList.add('shown');
+        let currText = 1;
+        const playInterval = setInterval(() => {
+          if(!startingTextEl.value) startVid(playInterval);
+          if(startingTextEl.value) startingTextEl.value.textContent = firstPlayText[currText];
+          if(currText > 2) startVid(playInterval);
+          currText++;
+        }, 1500);
+      }
+
+      const startVid = (interval: ReturnType<typeof setTimeout>) => {
+        clearInterval(interval);
+        firstPlay.value = false;
+        if(vidEl.value) vidEl.value.play();
+        if(startingTextEl.value) startingTextEl.value.classList.remove('shown');
+        if(vidEl.value?.currentTime === 0) showDetails();
+      }
+
+    } else {
+      vidEl.value.play();
+      if(vidEl.value?.currentTime === 0) showDetails();
+    }
   }
 
   if(!wants) {

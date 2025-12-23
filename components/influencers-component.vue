@@ -1,5 +1,10 @@
+<style scoped>
+.bufferMargin {
+  margin-top: var(--neg-margin);
+}
 
-<template>
+</style>
+<template ref="influenWrapEl" style="--neg-margin: 0px">
   <div class="px-6 md:px-12">
     <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
 
@@ -15,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useInfluencers } from '~/composables/useInfluencers'
 import { useStore } from '~/stores/store'
 import InfluencerCard from '~/components/influencer-card.vue'
@@ -30,6 +35,16 @@ const sortedInfluencers = computed(() => {
       a.influencerDetails.name.localeCompare(b.influencerDetails.name)
   )
 })
+
+const influenWrapEl = ref<HTMLElement | null>(null);
+
+const width = ref(window.innerWidth);
+const rowHeight = 100;
+const bufferRows = 5;
+function checkTlBuffer() {
+  width.value = window.innerWidth;
+  if(width.value > 1380 && influenWrapEl.value) influenWrapEl.value.style.setProperty('--neg-margin', `${bufferRows * rowHeight}px`);
+}
 
 const openModal = (influencer: any) => {
   store.openModal(influencer)

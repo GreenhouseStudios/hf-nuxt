@@ -38,7 +38,7 @@
 }
 
 .influencer-card:hover .info-overlay {
-  padding-bottom: 3.5rem;
+  padding-bottom: 4.5rem;
 }
 
 /* Skyline background - inside white container */
@@ -48,18 +48,18 @@
   left: 0;
   width: 100%;
   height: 7rem;
-  background: url("/town-bg.png") no-repeat center bottom;
+  background: url("/hf_skyline.svg") no-repeat center bottom;
   background-size: cover;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.4s ease, transform 0.4s ease;
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
 }
 
 .influencer-card:hover .skyline-bg {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(10px);
 }
 
 /* Text content */

@@ -15,7 +15,7 @@
   left: 0;
   top: 0;
   width: 100vw;
-  height: var(--curve-h, 130vh);
+  height: var(--curve-h, 140vh);
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -27,6 +27,7 @@
   height: 100%;
   bottom: 0;
   width: 100vw;
+  object-position: bottom center;
   transform: translateX(-50%) scaleX(1.05);
   object-fit: cover;
 }
@@ -202,12 +203,13 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, nextTick, computed, watch } from 'vue'
-import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import HeroVid from '~/components/hero-vid.vue'
 import { useFirstVisit } from '~/composables/useFirstVisit'
+import {useNuxtApp} from "#imports";
 
-gsap.registerPlugin(ScrollTrigger)
+const { $gsap } = useNuxtApp();
+
 
 const heroCurveSrc = new globalThis.URL('/hf-hero-bg-curve.svg', import.meta.url).href
 
@@ -304,7 +306,7 @@ function buildHeroGsap() {
   const video = desktopVideo || fallbackVideo
 
   mm?.kill()
-  mm = gsap.matchMedia()
+  mm = $gsap.matchMedia()
 
   let vidAniDone = false
 
@@ -322,9 +324,9 @@ function buildHeroGsap() {
   }
 
   mm.add('(min-width: 100px)', () => {
-    gsap.set([overlay, text], { clearProps: 'position,top' })
+    $gsap.set([overlay, text], { clearProps: 'position,top' })
 
-    heroTL = gsap.timeline({
+    heroTL = $gsap.timeline({
       scrollTrigger: {
         trigger: hero,
         start: 'top top',
@@ -368,7 +370,7 @@ function buildHeroGsap() {
 
     // reg video: move wrapper
     if (!fullAni.value && vidWrapEl.value) {
-      gsap.set(vidWrapEl.value, { yPercent: () => getYPercent() })
+      $gsap.set(vidWrapEl.value, { yPercent: () => getYPercent() })
 
       tl.to(
           vidWrapEl.value,
@@ -392,7 +394,7 @@ function buildHeroGsap() {
     return () => {
       tl.scrollTrigger?.kill(true)
       tl.kill()
-      gsap.set([overlay, text], { clearProps: 'transform' })
+      $gsap.set([overlay, text], { clearProps: 'transform' })
     }
   })
 

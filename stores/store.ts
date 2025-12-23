@@ -7,9 +7,9 @@ export const useStore = defineStore('store', {
         modalPost: null as ModalItem | null,
         modalType: '',
         isModalOpen: false as boolean,
-        timelineFilterCategories: [] as Category[],
+        timelineFilterCategory: null as Category | null,
         searchTerm: '',
-        quotesMuted: false
+        quotesMuted: true
     }),
     actions: {
       openModal(post: Post | Influencer) {
@@ -26,13 +26,11 @@ export const useStore = defineStore('store', {
         document.body.querySelector('.hf-page')?.classList.remove('modal-open')
       },
 
-
-
-      setFilterCategories(categories: Category[]) {
-        this.timelineFilterCategories = categories;
+      setFilterCategory(category: Category) {
+        this.timelineFilterCategory = category;
       },
-      setQuotesMuted(val: boolean) {
-        this.quotesMuted = val;
+      clearFilterCategory() {
+        this.timelineFilterCategory = null;
       },
       toggleQuotesMuted() {
         this.quotesMuted = !this.quotesMuted;

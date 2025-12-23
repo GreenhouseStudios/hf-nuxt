@@ -1,3 +1,5 @@
+import type gsap from 'gsap';
+
 export {};
 declare global {
     interface Category {
@@ -77,4 +79,16 @@ declare global {
           };
         };
       }
+}
+
+declare module '#app' {
+  interface NuxtApp {
+    $gsap: typeof gsap
+  }
+}
+
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    $gsap: typeof gsap
+  }
 }

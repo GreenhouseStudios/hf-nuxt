@@ -16,9 +16,6 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, nextTick, ref, provide, type Ref } from 'vue'
-import gsap from 'gsap'
-import ScrollTrigger from 'gsap/ScrollTrigger'
-import ScrollSmoother from 'gsap/ScrollSmoother'
 
 
 const navTeleportEl = ref<HTMLElement | null>(null)
@@ -58,7 +55,7 @@ html, body { margin: 0; padding: 0; height: 100%; }
 
 html {
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .vid {
