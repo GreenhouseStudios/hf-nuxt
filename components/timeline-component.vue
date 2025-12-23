@@ -201,9 +201,6 @@
 </style>
 
 <template>
-  <!-- NOTES
-    Set covid modal to disable until initial transition end + cards 2 rows under
-  -->
 
   <!-- Page wrapper -->
   <div class="mb-36 overflow-hidden">
@@ -917,7 +914,7 @@ function gapsPerCol(
       }
     }
 
-    // ✅ ignore the top “buffer” region
+    // ignore the top “buffer” region
     let prevEnd = ignoreTopRows
 
     for (const iv of merged) {
@@ -1142,7 +1139,7 @@ const covid = {
 }
 
 function getCovidMode(): CovidMode {
-  // Example breakpoint rule: desktop = span, smaller = grow
+  // Breakpoint rule: desktop = span, smaller = grow
   return numCols.value > 3 ? 'span' : 'grow'
 }
 
@@ -1215,8 +1212,6 @@ function armCovidCloseHandlers(
 
 const COVID_FLIP_MS = 750;
 
-// This is the key: animate CSS Grid reflow by inverting transforms.
-// (You already had this shape.) :contentReference[oaicite:2]{index=2}
 function flipGrid(
     grid: HTMLElement,
     mutate: () => void,
@@ -1257,14 +1252,18 @@ function flipGrid(
       resolve()
     }, durationMs)
     if(!closing) {
+
+    }
+
+    setTimeout(() => {
       $gsap.to(window, {
         duration: .75,
         scrollTo: {
           y: covidCard,
-          offsetY: window.innerHeight / 2 - covidCard.offsetHeight / 1.5
+          offsetY: window.innerHeight / 2 - covidCard.offsetHeight / 2
         },
       })
-    }
+    }, Math.floor(durationMs / 1.75))
     for (const el of items) {
       el.style.transition = `transform ${durationMs}ms ease`
       el.style.transform = 'translate3d(0,0,0)'
@@ -1274,34 +1273,8 @@ function flipGrid(
   })
 }
 
-/**
- * Span-open FLIP that keeps covid card in its original visual position
- * by shifting the entire grid via --grid-shift-y.
- */
-
-
-
-function pinElementToOldRect(el: HTMLElement, oldRect: DOMRect) {
-  const newRect = el.getBoundingClientRect()
-  const dx = oldRect.left - newRect.left
-  const dy = oldRect.top - newRect.top
-
-  el.style.transition = 'none'
-  el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`
-}
-
-
 
 const BUFFER_ROWS = 5;
-
-function getPitchY(grid: HTMLElement) {
-  // Best: use your getGridMetrics(grid).pitchY if you already have it.
-  const styles = getComputedStyle(grid);
-  const rowH = parseFloat(styles.getPropertyValue('--row-h')) || 95;
-  const gap = parseFloat(styles.getPropertyValue('--gap')) || 25;
-  return rowH + gap;
-}
-
 
 
 // ------------------------
@@ -1309,7 +1282,6 @@ function getPitchY(grid: HTMLElement) {
 // ------------------------
 
 function attachCovidOpen(covidCard: HTMLElement, grid: HTMLElement) {
-  // Avoid stacking listeners if you re-run attach after rerenders
   if ((covidCard as any).__covidBound) return
       ;(covidCard as any).__covidBound = true
 
@@ -1320,8 +1292,6 @@ function attachCovidOpen(covidCard: HTMLElement, grid: HTMLElement) {
     if (e.pointerType !== 'mouse') return
     if (covid.state !== 'idle') return
 
-    // If you have links/buttons inside the card and don't want accidental open,
-    // you can require the hover to be on the card background, but usually not needed.
     openCovid(covidCard, grid, false)
   }
 
@@ -1344,7 +1314,6 @@ function attachCovidOpen(covidCard: HTMLElement, grid: HTMLElement) {
 }
 
 
-// Call this to programmatically close (or from outside click)
 function closeCovid(covidCard: HTMLElement, grid: HTMLElement) {
   if (covid.state !== 'open') return
   covid.state = 'closing'
@@ -1354,7 +1323,6 @@ function closeCovid(covidCard: HTMLElement, grid: HTMLElement) {
 }
 
 // Open chooses grow vs span, then calls the specific function.
-// (Same concept you had.) :contentReference[oaicite:3]{index=3}
 function openCovid(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
   if (covid.state !== 'idle') return
 
@@ -1381,9 +1349,9 @@ function openCovid(covidCard: HTMLElement, grid: HTMLElement, touch = false) {
 }
 
 // ------------------------
-// GROW MODE (your working one)
+// GROW MODE
 // ------------------------
-// Keep your existing logic — just accept hooks.
+
 function growCovidCard(
     covidCard: HTMLElement,
     grid: HTMLElement,
@@ -1561,18 +1529,12 @@ function growCovidCard(
 }
 
 
-function placementsByEl(placements: Placement[]) {
-  const m = new Map<HTMLElement, Placement>()
-  placements.forEach(p => m.set(p.el, p))
-  return m
-}
-
 function computeBufferSpansForCovidSpan(
     grid: HTMLElement,
     covidCard: HTMLElement,
     cols: number,
     bufferRows: number,
-    upBias = 1.35 // >1 means "favor moving up"
+    upBias = 1.35
 ) {
   setBufferSpans(grid, Array(cols).fill(bufferRows));
 
@@ -1592,7 +1554,7 @@ function computeBufferSpansForCovidSpan(
   const max1 = Array(cols).fill(0);
   const max2 = Array(cols).fill(0);
 
-// when you process overlapRows for a col index i:
+// when process overlapRows for a col index i:
   function pushOverlap(i: number, overlapRows: number) {
     if (overlapRows > max1[i]) {
       max2[i] = max1[i];
@@ -1617,8 +1579,7 @@ function computeBufferSpansForCovidSpan(
 
     const center = pTop + (p.rowspan - 1) / 2;
 
-    // If card center is below mid, we'd prefer it moves UP (so it doesn't push covid down).
-    // If card center is above mid, moving it DOWN is less preferred.
+    // If card center is below mid, prefer it moves UP (so it doesn't push covid down).
     const wantsUp = center >= covidMid;
 
     const colStart = p.col;
@@ -1642,7 +1603,7 @@ function computeBufferSpansForCovidSpan(
     needFreeByCol[i] = Math.ceil(Math.max(up, down));
   }
 
-  // Propagate across multi-column cards (same as your version)
+  // Propagate across multi-column cards
   let changed = true;
   let guard = 0;
 
@@ -1690,11 +1651,11 @@ function computeBufferSpansForCovidSpan(
 }
 
 // ------------------------
-// SPAN MODE (the one you’re fighting)
+// SPAN MODE
 // ------------------------
 // This does:
 // 1) FLIP toggle .covid-open (grid-column: 1/-1) so OTHER CARDS ANIMATE into place
-// 2) Expand inner banner width to full grid (your existing inner expansion idea)
+// 2) Expand inner banner width to full grid
 // 3) Close reverses: stagger hide posts -> shrink inner -> FLIP remove .covid-open
 async function spanCovidCard(
     covidCard: HTMLElement,
@@ -1725,13 +1686,6 @@ async function spanCovidCard(
 
   ensureColumnBuffers(grid, cols)
 
-  const spansByCol = computeBufferSpansForCovidSpan(
-      grid,
-      covidCard,
-      cols,
-      BUFFER_ROWS,
-      -1.5
-  )
 
 
 
