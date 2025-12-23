@@ -1,13 +1,13 @@
 <template>
   <Transition name="fade" mode="out-in">
     <div 
-      class="modal-overlay fixed top-20 w-11/12 h-full bg-black bg-opacity-10 z-50 flex"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-[9999] flex"
       :class="{
-        'w-screen items-center pb-17': !isPost(store.modalPost)
+        'items-center justify-center': !isPost(store.modalPost),
+        'pt-20': isPost(store.modalPost)
       }"
-
       v-show="store.showModal"
-      @click.self="isInfluencer(store.modalPost) && store.closeModal()"
+      @click.self="store.closeModal()"
     >
       <!-- Show influencer content if modalPost has influencerDetails -->
       <InfluencerModalContent 
@@ -50,14 +50,11 @@ function isPost(x: unknown): x is Post {
 }
 
 .modal-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  left: 50%;
-  transform: translateX(-50%);
+  backdrop-filter: blur(2px);
 }
 
 .modal {
   background-color: white;
-  /* border-radius: 10px; */
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.25);
 }
 </style>

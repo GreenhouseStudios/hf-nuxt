@@ -13,6 +13,13 @@
   --pitch: calc(var(--row-h, 95px) + var(--gap, 25px));
 }
 
+/* Disable dense packing for 2-column layout to maintain chronological order */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bento-grid {
+    grid-auto-flow: row;
+  }
+}
+
 /* Used while recomputing layout to avoid flicker */
 .bento-grid.computing {
   opacity: 0;
@@ -29,6 +36,10 @@
 
 .grid-wrap {
   overflow: hidden;
+}
+
+.bento-grid.no-grid-shift {
+  padding-bottom: 5rem !important;
 }
 
 
@@ -203,17 +214,17 @@
 <template>
 
   <!-- Page wrapper -->
-  <div class="mb-36 overflow-hidden">
+  <div class="mb-36 overflow-hidden px-2 md:px-12">
 
     <!-- Title -->
     <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
-    xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300
+    xl:text-7xl 2xl:text-5xl font-black timeline-title dark:text-blue-300
     ps-3 md:ps-0
     "
     >CENTENNIAL TIMELINE</h1>
 
     <!-- Filters UI -->
-    <section>
+    <section id="timeline-filters">
       <Filters />
     </section>
 
@@ -300,7 +311,7 @@
 
 <script lang="ts" setup>
 import anime from 'animejs';
-import {computed, nextTick, onMounted, ref, watch} from 'vue';
+import {computed, nextTick, onMounted, provide, ref, watch} from 'vue';
 import 'gridstack/dist/gridstack.min.css';
 import {useStore} from '~/stores/store';
 import Card from "~/components/card.vue";
@@ -323,6 +334,7 @@ const { $gsap } = useNuxtApp();
  */
 
 const canPlayQuotes = ref(false);
+const currentlyPlayingMedia = ref<HTMLVideoElement | null>(null);
 
 
 const numCols = ref(5);
@@ -331,6 +343,21 @@ let rowHeight = 95;
 const gap = 25;
 let layoutInProgress = false;
 let covidCardGrow = false;
+
+/**
+ * Handle media playback - ensure only one plays at a time
+ */
+function handleMediaPlay(videoElement: HTMLVideoElement) {
+  // Pause the currently playing media if it's different from the new one
+  if (currentlyPlayingMedia.value && currentlyPlayingMedia.value !== videoElement) {
+    currentlyPlayingMedia.value.pause();
+  }
+  // Track the new playing media
+  currentlyPlayingMedia.value = videoElement;
+}
+
+// Provide the function to child components
+provide('handleMediaPlay', handleMediaPlay);
 
 /**
  * Column/row span ranges used when assigning card sizes
@@ -483,7 +510,7 @@ async function measureAndPack(reset = false) {
     }
 
     // Very small sets: force consistent sizing so layout doesn’t look broken
-    if(liElements.length < 10) {
+    if(liElements.length < 10 && !timelineFiltered.value) {
       gridEl.value.classList.add('buffer-gone')
       const rem = liElements.length % numCols.value;
       liElements.forEach(el => {
@@ -667,13 +694,18 @@ async function measureAndPack(reset = false) {
     } finally {
       // Reveal grid once layout is stable
       if(gridEl.value) {
-        if(numCols.value > 3) {
+        // Only apply buffer system when NOT filtered
+        if(numCols.value > 3 && !timelineFiltered.value) {
           ensureColumnBuffers(gridEl.value, numCols.value)
           const initArr: number[] = [];
           for(let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
           setBufferSpans(gridEl.value, initArr)
           gridEl.value.style.setProperty('--grid-shift-y', `-${(BUFFER_ROWS + 1) * rowHeight}px`);
           if(gridWrapEl.value) gridWrapEl.value.style.marginBottom = `-${BUFFER_ROWS * rowHeight}px`;
+        } else {
+          // Clear buffer effects when filtered
+          gridEl.value.style.setProperty('--grid-shift-y', '0px');
+          if(gridWrapEl.value) gridWrapEl.value.style.marginBottom = '0px';
         }
         gridEl.value.style.opacity = '1';
       }

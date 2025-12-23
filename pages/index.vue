@@ -2,7 +2,7 @@
 </style>
 <template>
   <div>
-    <Hero />
+
 
     <AboutTimeline id="about" />
 

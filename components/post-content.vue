@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, nextTick, watch, onBeforeUnmount } from 'vue';
 import { useStore } from "~/stores/store";
+import { useNuxtApp } from "#imports";
 
 const contentWrap = ref<HTMLElement | null>(null);
 
@@ -9,6 +10,7 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+const { $gsap } = useNuxtApp();
 const stablePost = ref<Post | null>(null)
 
 watch(
@@ -200,6 +202,30 @@ onMounted(async () => {
     const catEl = document.createElement('span');
     catEl.classList.add('tag-item', 'py-3', 'px-5', 'footer-icon')
     catEl.textContent = category.name;
+    catEl.style.cursor = 'pointer';
+    catEl.setAttribute('data-interactive', ''); // Prevent modal from closing
+    
+    // Add click handler to filter by category
+    catEl.addEventListener('click', () => {
+      store.setFilterCategory(category);
+      store.closeModal();
+      
+      // Scroll to the timeline filters after a short delay to allow modal to close
+      setTimeout(() => {
+        const timelineFilters = document.querySelector('#timeline-filters');
+        if (timelineFilters) {
+          $gsap.to(window, {
+            duration: 0.8,
+            scrollTo: {
+              y: timelineFilters,
+              offsetY: 100
+            },
+            ease: 'power2.inOut'
+          });
+        }
+      }, 100);
+    });
+    
     tagCatWrap.appendChild(catEl);
   });
   tagWrap.appendChild(tagCatWrap)
@@ -253,7 +279,11 @@ onMounted(async () => {
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
-    if (target.closest('[data-interactive]')) return;
+    // Don't close if clicking inside the modal content
+    if (target.closest('.post-layout')) return;
+
+    // Don't close if clicking the close button or interactive elements
+    if (target.closest('[data-interactive]') || target.closest('.close-button')) return;
 
     if(e.type !== 'pointerdown') return;
     store.closeModal();
@@ -277,6 +307,14 @@ setGallery()
 
 <template>
   <div class="post-layout">
+    <!-- Close button -->
+    <button 
+      class="close-button absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl leading-none z-10"
+      @click="store.closeModal()"
+    >
+      &times;
+    </button>
+    
     <div
         class="hero-wrap"
         ref="heroWrap"
@@ -305,17 +343,31 @@ setGallery()
 .post-layout {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 100%;
-  overflow: auto;
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  max-height: 85vh;
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
+.close-button {
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  transform: scale(1.1);
+}
 
 .content-wrap {
   color: black;
   background: white;
   padding: 3rem 12% 8rem 12%;
   flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 

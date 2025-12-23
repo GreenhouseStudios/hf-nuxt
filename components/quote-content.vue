@@ -402,7 +402,7 @@ p[aria-hidden="false"] {
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, inject } from 'vue';
 import { useStore } from '@/stores/store';
 import anime from 'animejs'
 import {nextTick} from "#imports";
@@ -420,6 +420,9 @@ let playInterval: ReturnType<typeof setInterval>
 const store = useStore();
 const loading = ref(true)
 const shouldPlay = ref(false);
+
+// Inject the media play handler from timeline component
+const handleMediaPlay = inject<((video: HTMLVideoElement) => void) | null>('handleMediaPlay', null);
 
 const isBackVisible = ref(false);
 
@@ -794,13 +797,21 @@ watch([loading, shouldPlay], ([isLoading, wants]) => {
       const startVid = (interval: ReturnType<typeof setTimeout>) => {
         clearInterval(interval);
         firstPlay.value = false;
-        if(vidEl.value) vidEl.value.play();
+        if(vidEl.value) {
+          // Notify timeline that this video is playing
+          if(handleMediaPlay) handleMediaPlay(vidEl.value);
+          vidEl.value.play();
+        }
         if(startingTextEl.value) startingTextEl.value.classList.remove('shown');
         if(vidEl.value?.currentTime === 0) showDetails();
       }
 
     } else {
-      vidEl.value.play();
+      if(vidEl.value) {
+        // Notify timeline that this video is playing
+        if(handleMediaPlay) handleMediaPlay(vidEl.value);
+        vidEl.value.play();
+      }
       if(vidEl.value?.currentTime === 0) showDetails();
     }
   }

@@ -38,17 +38,20 @@
 .vision-vid-wrap {
   margin: 2rem auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 2rem;
+  width: 100%;
 }
 
 .vision-vid {
-  width: 500px;
-  height: 300px;
+  width: 66.666%;
+  height: 550px;
   background: #000A5D;
   border-radius: 25px;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .slideshow-image {
@@ -70,7 +73,7 @@
 .vision-text-wrap {
   display: flex;
   flex-direction: column;
-  width: 40%;
+  flex: 1;
   color: #000A5D;
 }
 
@@ -127,8 +130,8 @@
     width: 90%;
   }
   .vision-vid {
-    width: 80vw;
-    height: 300px;
+    width: 85vw;
+    height: 400px;
   }
 }
 @media(max-width: 400px) {
@@ -321,10 +324,10 @@
 
 
 <template>
-  <section class="overflow-x-clip py-7 px-2 md:px-12 section-wrap">
+  <section class="overflow-x-clip py-7 px-2 md:px-12 pt-24 md:pt-28 section-wrap">
     <h2 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
-    xl:text-7xl 2xl:text-8xl font-black timeline-title dark:text-blue-300
-    ps-3 md:ps-0 uppercase">About Us</h2>
+    xl:text-7xl 2xl:text-5xl font-black timeline-title dark:text-blue-300
+    ps-3 md:ps-0 uppercase">Celebrating 100 Years</h2>
     <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
       <div class="vision-vid">
         <div class="spinner-wrap" v-if="!slideshowLoaded">
@@ -369,17 +372,17 @@
         <span class="uppercase">Granted</span>
       </div>
       <div class="stat-line"></div>
-      <div class="stat-text" style="transition-delay: .25s">
+      <div class="stat-text" style="transition-delay: .5s">
         <h2 class="stat">1500</h2>
         <span class="uppercase">Donor Funds</span>
       </div>
       <div class="stat-line"></div>
-      <div class="stat-text" style="transition-delay: .5s">
+      <div class="stat-text" style="transition-delay: .75s">
         <h2>$<span class="stat">30</span>M</h2>
         <span class="uppercase">In Scholarships</span>
       </div>
       <div class="stat-line"></div>
-      <div class="stat-text" style="transition-delay: .75s">
+      <div class="stat-text" style="transition-delay: 1s">
         <h2 class="stat">29</h2>
         <span class="uppercase">Community Funds</span>
       </div>
@@ -403,31 +406,45 @@ const slideshowLoaded = ref(false);
 // Fetch timeline posts, vue y u so hard
 const { data: posts } = usePosts();
 
-// Get timeline images from posts, sorted by year (descending - newest first)
+// Get timeline images from posts, one from each decade
 const slideshowImages = computed(() => {
   if (!posts.value || !Array.isArray(posts.value)) return [];
   
-  // Filter posts with images and years, sort by year descending
+  // Filter posts with images and years
   const postsWithImages = posts.value
     .filter((post: Post) => {
       const hasImage = post.eventOptions?.thumbnail?.node?.sourceUrl || 
                        post.eventOptions?.thumbnail?.node?.mediaItemUrl;
       const hasYear = post.eventOptions?.eventYear;
       return hasImage && hasYear;
-    })
-    .sort((a: Post, b: Post) => {
-      const yearA = parseInt(a.eventOptions.eventYear);
-      const yearB = parseInt(b.eventOptions.eventYear);
-      return yearB - yearA; // Sort descending (newest to oldest)
     });
   
-  // Take 7-8 images and extract URLs
-  return postsWithImages
-    .slice(0, 8)
-    .map((post: Post) => 
-      post.eventOptions.thumbnail.node.sourceUrl || 
-      post.eventOptions.thumbnail.node.mediaItemUrl
+  // Group posts by decade
+  const postsByDecade = new Map<number, Post[]>();
+  
+  postsWithImages.forEach((post: Post) => {
+    const year = parseInt(post.eventOptions.eventYear);
+    const decade = Math.floor(year / 10) * 10; // Get decade (1920, 1930, etc.)
+    
+    if (!postsByDecade.has(decade)) {
+      postsByDecade.set(decade, []);
+    }
+    postsByDecade.get(decade)!.push(post);
+  });
+  
+  // Get one image from each decade, sorted by decade (newest to oldest)
+  const decades = Array.from(postsByDecade.keys()).sort((a, b) => b - a);
+  
+  return decades.map(decade => {
+    const decadePosts = postsByDecade.get(decade)!;
+    // Get the first (most recent) post from this decade
+    const sortedDecadePosts = decadePosts.sort((a, b) => 
+      parseInt(b.eventOptions.eventYear) - parseInt(a.eventOptions.eventYear)
     );
+    const post = sortedDecadePosts[0];
+    return post.eventOptions.thumbnail.node.sourceUrl || 
+           post.eventOptions.thumbnail.node.mediaItemUrl;
+  });
 });
 
 const currentSlide = ref(0);
@@ -554,7 +571,7 @@ onUnmounted(() => {
 
 function statCount(el: HTMLElement, target: number) {
   let curr = Math.floor(target * 0.25);
-  const increment = Math.ceil((target - curr) / 30); // Animate over ~30 steps
+  const increment = Math.ceil((target - curr) / 60); // Animate over ~60 steps (doubled from 30)
   const interval = setInterval(() => {
     curr += increment;
     if(curr >= target) {
@@ -564,7 +581,7 @@ function statCount(el: HTMLElement, target: number) {
     } else {
       el.textContent = `${curr}`;
     }
-  }, 25);
+  }, 40); // Increased from 25ms to 40ms
 }
 
 </script>

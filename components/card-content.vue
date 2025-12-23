@@ -1,8 +1,8 @@
 <template>
   <div class="text-content">
-    <div class="flex flex-col gap-2 px-8 py-4 text-left feature-content grow dark:bg-gray-800">
-      <p class=" font-bold text-sm md:text-xl">{{ props?.post?.eventOptions?.eventYear }}</p>
-      <p class="text-xl md:text-2xl font-black">{{ props?.post?.title }}</p>
+    <div class="flex flex-col gap-2 px-8 py-4 pb-6 text-left feature-content grow dark:bg-gray-800">
+      <p class="font-bold text-base md:text-lg">{{ props?.post?.eventOptions?.eventYear }}</p>
+      <p style="line-height: 1; font-weight: 800;" class="text-base md:text-xl font-black uppercase">{{ props?.post?.title }}</p>
       <p class="font-light text-sm h-full line-clamp-3 overflow-hidden teaser">
         {{ props?.post?.eventOptions?.teaser ? props?.post?.eventOptions?.teaser : snippet }}
       </p>

@@ -1,7 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
-    pageTransition: { name: 'page', mode: 'out-in' }
+    pageTransition: { name: 'page', mode: 'out-in' },
+    head: {
+      title: 'Celebrating 100 Years - Greater Hartford Gives',
+      meta: [
+        { name: 'description', content: 'Celebrating 100 Years' }
+      ]
+    }
   },
   tailwindcss: {
     config: {
