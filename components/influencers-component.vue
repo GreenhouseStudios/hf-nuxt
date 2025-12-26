@@ -18,10 +18,10 @@
   left: -200px;
   z-index: -1;
   opacity: 0;
-  animation: circle .25s ease 2s forwards;
   width: 100vw;
   height: auto;
   aspect-ratio: 1/1;
+  --stroke-w: 225;
 }
 
 @media(max-width: 1400px) {
@@ -33,6 +33,13 @@
   .gradient-circle {
     top: -4%;
     left: -100px;
+    --stroke-w: 175;
+  }
+}
+
+@media(max-width: 1000px) {
+  .gradient-circle {
+    --stroke-w: 160;
   }
 }
 
@@ -40,13 +47,16 @@
   .gradient-circle {
     top: -250px;
     left: -100px;
+    --stroke-w: 125
+  }
+}
+@media(max-width: 550px) {
+  .gradient-circle {
+    top: -180px;
+    --stroke-w: 100;
   }
 }
 
-@keyframes circle {
-  from {opacity:0}
-  to {opacity: 1}
-}
 
 .intro {
   background: #0a7aff;
@@ -61,17 +71,58 @@
 
 </style>
 <template ref="influenWrapEl" style="--neg-margin: 0px">
-  <section class="relative mt-36 md:mt-12 pt-26 sm:pt-28 md:pt-44 xl:pt-80 px-2 md:px-12">
+  <section class="relative mt-36 md:mt-12 pt-26 sm:pt-28 md:pt-44 xl:pt-80 px-2 md:px-12" ref="sectionEl" data-io="section">
 
-    <svg class="gradient-circle" width="1727" height="1727" viewBox="0 0 1727 1727" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M863.5 1727C1340.4 1727 1727 1340.4 1727 863.5C1727 386.602 1340.4 0 863.5 0C386.602 0 0 386.602 0 863.5C0 1340.4 386.602 1727 863.5 1727ZM863.499 1434.74C548.013 1434.74 292.26 1178.99 292.26 863.5C292.26 548.014 548.013 292.262 863.499 292.262C1178.99 292.262 1434.74 548.014 1434.74 863.5C1434.74 1178.99 1178.99 1434.74 863.499 1434.74Z" fill="url(#paint0_linear_37_163)" fill-opacity="0.2"/>
+    <svg
+        data-io="circle"
+        class="gradient-circle"
+        ref="gradientCircleEl"
+        width="1727"
+        height="1727"
+        viewBox="-120 -120 2027 2027"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+      <!-- rotate so the "start" point is bottom -->
+      <!-- LEFT: bottom -> top along the left side -->
+      <path
+          ref="gradientArcLeftEl"
+          d="M 863.5 1580.87 A 717.37 717.37 0 0 1 863.5 146.13"
+          fill="none"
+          stroke="url(#paint0_linear)"
+          stroke-width="var(--stroke-w)"
+          stroke-opacity="0.2"
+          vector-effect="non-scaling-stroke"
+          stroke-linecap="butt"
+      />
+
+      <!-- RIGHT: bottom -> top along the right side -->
+      <path
+          ref="gradientArcRightEl"
+          d="M 863.5 1580.87 A 717.37 717.37 0 0 0 863.5 146.13"
+          fill="none"
+          stroke="url(#paint0_linear)"
+          stroke-width="var(--stroke-w)"
+          stroke-opacity="0.2"
+          vector-effect="non-scaling-stroke"
+          stroke-linecap="butt"
+      />
+
       <defs>
-        <linearGradient id="paint0_linear_37_163" x1="863.5" y1="0" x2="863.5" y2="1727" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#007AFD"/>
-          <stop offset="0.639423" stop-color="white"/>
+        <linearGradient
+            id="paint0_linear"
+            x1="863.5"
+            y1="0"
+            x2="863.5"
+            y2="1727"
+            gradientUnits="userSpaceOnUse"
+        >
+          <stop stop-color="#007AFD" />
+          <stop offset="0.639423" stop-color="white" />
         </linearGradient>
       </defs>
     </svg>
+
 
 
     <svg class="circle-fade" width="1728" height="1661" viewBox="0 0 1728 1661" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -84,12 +135,12 @@
       </defs>
     </svg>
 
-    <div class="px-6 md:px-12" ref="introEl">
-      <span
+    <div class="px-6 md:px-12">
+      <span ref="introEl"
         class="text-3xl sm:text-4xl intro text-white px-4 py-1 sm:ms-6"
       >INTRODUCING OUR<br></span>
 
-      <h2
+      <h2 ref="headEl"
         class="text-5xl sm:text-6xl font-black mb-24 text-cetacean mt-2 sm:ms-6"
       >100 INFLUENCERS</h2>
 
@@ -115,7 +166,6 @@ import InfluencerCard from '~/components/influencer-card.vue'
 const { data } = useInfluencers()
 const store = useStore()
 
-const introEl = ref<Element | null>(null);
 
 const influencers = computed(() => data.value ?? [])
 
@@ -138,20 +188,75 @@ function checkTlBuffer() {
 const openModal = (influencer: any) => {
   store.openModal(influencer)
 }
+
+const headEl = ref<HTMLElement | null>(null);
+const introEl = ref<HTMLElement | null>(null);
+const gradientCircleEl = ref<SVGElement | null>(null);
+const gradientArcLeftEl = ref<SVGPathElement | null>(null);
+const gradientArcRightEl = ref<SVGPathElement | null>(null);
+
+function setupDraw(path: SVGPathElement) {
+  const len = path.getTotalLength();
+  path.style.transition = 'none';
+  path.style.strokeDasharray = `${len + 275}`;
+  path.style.strokeDashoffset = `${len}`;
+}
+
+function playDraw(path: SVGPathElement) {
+  path.getBoundingClientRect();
+  requestAnimationFrame(() => {
+    path.style.transition = 'stroke-dashoffset 2s ease-out';
+    path.style.transitionDelay = '.5s';
+    path.style.strokeDashoffset = '0';
+  })
+}
+
+
 onMounted(async () => {
   await nextTick()
 
-  if(introEl.value) {
-    const io = new IntersectionObserver((entries) => {
+  const setupObserve = () => {
+    const introObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if(entry.isIntersecting) {
-          introEl.value?.firstElementChild?.classList.add('animate');
-          io.unobserve(entry.target);
+        if (entry.isIntersecting) {
+          introEl.value?.classList.add('animate')
+          introObserver.unobserve(entry.target)
         }
       })
+    }, {
+      threshold: .8
     })
-    io.observe(introEl.value);
+
+    const circleObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const left = gradientArcLeftEl.value
+          const right = gradientArcRightEl.value
+
+          if (left && right && gradientCircleEl.value) {
+            setupDraw(left)
+            setupDraw(right)
+
+            gradientCircleEl.value.style.opacity = '1'
+
+            playDraw(left)
+            playDraw(right)
+          }
+          circleObserver.unobserve(entry.target)
+        }
+      })
+    }, {
+      threshold: 0.15,
+    })
+
+    if (headEl.value) introObserver.observe(headEl.value)
+    if (gradientCircleEl.value) circleObserver.observe(gradientCircleEl.value)
   }
+
+  setTimeout(setupObserve, 2000)
+
 })
+
+
 
 </script>

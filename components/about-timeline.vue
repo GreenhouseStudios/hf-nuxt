@@ -33,6 +33,7 @@
 .half-circle-wrap {
   transform-origin: top right;
   transform: scale(1.1);
+  opacity: 0;
 }
 
 .half-circle {
@@ -382,7 +383,7 @@
 
 <template>
   <section class="overflow-x-clip pt-24 pb-2 px-4 sm:px-10 md:px-16 lg:px-16 xl:px-20 2xl:px-28 section-wrap relative">
-    <div class="half-circle-wrap absolute top-0 right-0 ">
+    <div class="half-circle-wrap absolute top-0 right-0" ref="halfCircleWrapEl">
       <svg
           width="1032"
           height="759"
@@ -587,6 +588,7 @@ const slideshowImages = computed(() => {
 });
 
 const halfCircleEl = ref<SVGPathElement | null>(null);
+const halfCircleWrapEl = ref<HTMLElement | null>(null);
 
 const currentSlide = ref(0);
 let slideshowInterval: ReturnType<typeof setInterval> | null = null;
@@ -595,19 +597,24 @@ onMounted(async ()  =>  {
 
   await nextTick();
 
-  if(halfCircleEl.value) {
-    const stroke = halfCircleEl.value;
-    const len = stroke.getTotalLength();
+  setTimeout(async () => {
+    if(halfCircleEl.value && halfCircleWrapEl.value) {
+      const stroke = halfCircleEl.value;
+      const len = stroke.getTotalLength();
 
-    stroke.style.strokeDasharray = `${len}`;
-    stroke.style.strokeDashoffset = `${len}`;
+      stroke.style.strokeDasharray = `${len}`;
+      stroke.style.strokeDashoffset = `${len}`;
 
-    stroke.getBoundingClientRect();
+      await nextTick();
+      halfCircleWrapEl.value.style.opacity = '1';
 
-    stroke.style.transition = 'stroke-dashoffset 2.5s ease-in';
-    stroke.style.strokeDashoffset = '0';
+      stroke.getBoundingClientRect();
+      stroke.style.transition = 'stroke-dashoffset 2.5s ease-in';
+      stroke.style.strokeDashoffset = '0';
 
-  }
+    }
+  }, 1250)
+
 
 
   // Start slideshow
