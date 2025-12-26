@@ -5,18 +5,21 @@
 
 </style>
 <template ref="influenWrapEl" style="--neg-margin: 0px">
-  <div class="px-6 md:px-12">
-    <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
+  <section>
+    <div class="px-6 md:px-12">
+      <h1 class="text-5xl text-center mt-48 mb-24">Influencers</h1>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <InfluencerCard
-          v-for="influencer in sortedInfluencers"
-          :key="influencer.id"
-          :influencer="influencer"
-          @click="openModal(influencer)"
-      />
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <InfluencerCard
+            v-for="influencer in sortedInfluencers"
+            :key="influencer.id"
+            :influencer="influencer"
+            @click="openModal(influencer)"
+        />
+      </div>
     </div>
-  </div>
+  </section>
+
 </template>
 
 <script setup lang="ts">

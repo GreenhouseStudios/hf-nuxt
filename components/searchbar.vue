@@ -3,7 +3,7 @@
         placeholder="Search by keyword" 
         v-model="store.searchTerm" 
         icon="i-lucide-search"
-        class="search-input"
+        class="search-input xl:w-[300px] mt-2"
     />
 </template>
 

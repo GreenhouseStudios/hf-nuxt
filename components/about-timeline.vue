@@ -1,186 +1,179 @@
 <style scoped>
-.section-wrap {
-  margin-top: 0 !important;
-}
 
-
-.vision-head {
-  width: 70%;
-  margin: auto;
-}
-.head-text {
-  font-weight: bold;
+.about-header {
   position: relative;
-  color: #000A5D;
-  /* line-height: 1; */
-}
-.vision-head::after {
-  content: '';
-  /* top: 50%; */
-  /* transform: translateY(-45%); */
-  left: -35px;
-  top: 0;
-  bottom: 0;
-  position: absolute;
-  background: #007AFD;
-  /* height: 75%; */
-  width: 15px;
-}
-.head-text > span {
-  font-weight: bolder;
-  text-shadow:
-      0  1px 0 #000A5D,  0 -1px 0 #000A5D,
-      1px 0  0 #000A5D, -1px 0  0 #000A5D,
-      1px 1px 0 #000A5D, -1px 1px 0 #000A5D,
-      1px -1px 0 #000A5D, -1px -1px 0 #000A5D;
 }
 
-.vision-vid-wrap {
-  margin: 2rem auto;
+.section-wrap:after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(200deg, transparent 35%, #007afd75 100%);
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(50% 0%, 100% 0%, 100% 97%, 86% 93%, 69% 90%, 49% 89%, 32% 90%, 15% 93%, 0% 97%, 0% 0%);
+}
+
+
+
+@media(max-width: 1075px) {
+  .section-wrap:after {
+    clip-path: polygon(50% 0%, 100% 0%, 100% 97%, 90% 96%, 71% 95%, 50% 95%, 19% 96%, 7% 97%, 0% 98%, 0% 0%);
+  }
+}
+
+@media(max-width: 550px) {
+  .section-wrap:after {
+    clip-path: polygon(50% 0%, 100% 0%, 100% 99%, 85% 98%, 70% 98%, 46% 98%, 28% 98%, 15% 98%, 0% 99%, 0% 0%);
+  }
+}
+
+.half-circle-wrap {
+  transform-origin: top right;
+  transform: scale(1.1);
+}
+
+.half-circle {
+  position: relative;
+  transform-origin: center;
+}
+
+@media(max-width: 1600px) {
+  .half-circle-wrap { transform: scale(1) }
+}
+
+@media(max-width: 1400px) {
+  .half-circle-wrap { transform: scale(.9) }
+}
+
+@media(max-width: 1200px) {
+  .half-circle-wrap { transform: scale(.9); right: -200px }
+}
+
+@media(max-width: 925px) {
+  .half-circle-wrap { transform: scale(.45); right: -50px}
+  .half-circle { transform: rotate(5deg) }
+}
+
+@media(max-width: 600px) {
+  .half-circle {
+    transform: scale(.35) rotate(30deg);
+    transform-origin: top right;
+    right: -154px;
+    top: 152px;
+
+  }
+}
+@media(max-width: 450px) {
+  .half-circle {
+    transform: scale(.35) rotate(45deg);
+    transform-origin: top right;
+    right: -194px;
+    top: 99px;
+  }
+}
+
+.about-header:after {
+  content: "";
+  position: absolute;
+  height: 95%;
+  width: 15px;
+  left: -50px;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: bottom;
+  background-color: #007AFD;
+  animation: head-ani .5s ease-out .75s forwards;
+}
+
+
+
+@media(max-width: 768px) {
+  .about-header:after {
+    left: -20px;
+    width: 10px;
+  }
+}
+
+@media(max-width: 640px) {
+  .about-header:after {
+    left: 3px;
+    bottom: -7px;
+    width: 85px;
+    height: 5px;
+    top: auto;
+    transform: scaleX(0);
+    animation: head-ani-mobile .5s ease-out .75s forwards;
+    transform-origin: left;
+  }
+}
+@keyframes head-ani {
+  from {transform: translateY(-50%) scaleY(0);}
+  to {transform: translateY(-50%) scaleY(1);}
+}
+
+@keyframes head-ani-mobile {
+  from {transform: scaleX(0)}
+  to {transform: none}
+}
+
+.slideshow-wrap {
+  opacity: 1;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 2rem;
-  width: 100%;
+  z-index: 2;
+  aspect-ratio: 18/10;
 }
 
-.vision-vid {
-  width: 66.666%;
-  height: 550px;
-  background: #000A5D;
-  border-radius: 25px;
+@media(min-width: 1725px) {
+  .slideshow-wrap {
+    height: 500px;
+  }
+}
+
+
+.slideshow {
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+  background: linear-gradient(180deg, #94C8FF 0%, #597899 80%);
+  border-radius: 22px;
+}
+
+.slideshow:after {
+  content: "";
+  height: calc(100% - 9px);
+  width: calc(100% - 9px);
+  transform: translateX(-50%) translateY(-50%);
+  border-radius: 20px;
+  left: 50%;
+  top: 50%;
+  position: absolute;
+  z-index: 1;
+  background-color: #000A5D;
 }
 
 .slideshow-image {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 9px);
+  height: calc(100% - 9px);
+  border-radius: 20px;
+
   object-fit: cover;
   opacity: 0;
   transition: opacity 1s ease-in-out;
-  border-radius: 25px;
+  z-index: 2;
+
 }
 
 .slideshow-image.active {
   opacity: 1;
-}
-
-.vision-text-wrap {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  color: #000A5D;
-}
-
-.vision-text-wrap > h3 {
-  font-size: xx-large;
-  font-weight: bolder;
-  margin-bottom: .5rem;
-}
-
-.vision-text-wrap > p {
-  color: #000A5D;
-  font-size: large;
-  /* margin-bottom: 3rem; */
-}
-
-.vision-list {
-  margin-bottom: 0;
-  margin-top: auto;
-  font-size: large;
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-}
-.list-item::before {
-  content: '\2713'; /* Unicode for checkmark */
-  margin-right: 20px;
-  font-size: xxx-large;
-  line-height: 1;
-
-  color: #007AFD;
-}
-
-@media(max-width: 1000px) {
-  .vision-vid-wrap {
-    flex-direction: column;
-    gap: 20px;
-    margin: 2rem auto;
-  }
-  .vision-text-wrap {
-    width: 75%;
-  }
-  #vision-bold {
-    text-shadow: none;
-  }
-  .head-text:after {
-    width: 7px;
-    left: -20px;
-  }
-}
-@media(max-width: 600px) {
-  .vision-text-wrap {
-    width: 90%;
-  }
-  .vision-vid {
-    width: 85vw;
-    height: 400px;
-  }
-}
-@media(max-width: 400px) {
-  .vision-head {
-    width: 95% !important;
-  }
-}
-
-.timeline-img-ani {
-  transition: transform .75s ease-in-out, opacity .5s !important;
-  transform: translateX(0) !important;
-  opacity: 1 !important;
-}
-.stat-wrap {
-  display: flex;
-  justify-content: space-evenly;
-  text-align: center;
-  color: #000A5D;
-  padding: 7rem 5rem;
-}
-.stat-line {
-  width: 2px;
-  background: #000A5D;
-}
-.stat-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  will-change: transform, opacity;
-  opacity: 0;
-  transform: translateY(100px);
-  transition: transform .5s, opacity .15s;
-}
-.animate-in {
-  transform: none !important;
-  opacity: 1 !important;
-}
-.stat-text > span {
-  font-weight: bolder;
-  font-size: large;
-}
-.stat-text > h2 {
-  font-size: 4.5rem;
-  font-weight: bolder;
-  margin-bottom: 1.25rem;
-}
-.stat {
-  font-size: inherit;
-  font-weight: inherit;
 }
 
 .spinner-wrap {
@@ -206,45 +199,115 @@
   100%{transform: rotate(360deg)}
 }
 
-@media(max-width: 1400px) {
-  .section-wrap {
-    margin-top: -12rem;
-  }
+
+.vision-text-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  color: #000A5D;
+}
+
+.vision-text-wrap > p {
+  color: #000A5D;
+  font-size: large;
+}
+
+.arc {
+  width: 100vw;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
 }
 
 
-@media(max-width: 1200px) {
-  .section-wrap {
-    margin-top: -22rem;
-  }
-  .stat-wrap {
-    padding: 3rem 1rem;
-  }
-  /* .stat {
-    font-size: xxx-large;
-  } */
-  .cta-text-wrap {
-    top: 15%;
-    width: 70%;
-  }
-  .cta-text-wrap > span {
-    max-width: unset;
-  }
+.stat-wrap {
+  display: flex;
+  justify-content: space-evenly;
+  text-align: center;
+  color: #000A5D;
+}
+.stat-line {
+  width: 2px;
+  background: #000A5D;
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(100px);
+  transition: transform .5s, opacity .15s;
+  width: 200px;
+}
+
+.stat-text.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stat-text > span {
+  font-weight: bolder;
+  font-size: large;
+}
+.stat-text > h2 {
+  font-size: 4.5rem;
+  font-weight: bolder;
+  margin-bottom: 1.25rem;
+}
+.stat {
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 
-@media(max-width: 800px) {
-  .section-wrap {
-    margin-top: -10rem;
-  }
+
+
+
+
+@media(max-width: 1280px) {
   .stat-wrap {
-    flex-wrap: wrap;
-    padding: 2rem 6rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    grid-column-gap: 100px;
+    grid-row-gap: 20px;
+    padding: 2rem 0;
+    justify-items: center;
+    position: relative;
   }
+  .stat-text:nth-of-type(4n + 1) { justify-self: end; }
+  .stat-text:nth-of-type(4n + 3) { justify-self: start; }
+
+  .stat-wrap:after {
+    content: '';
+    position: absolute;
+    width: 515px;
+    height: 2px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #000A5D;
+  }
+  .stat-wrap:before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 80%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #000A5D;
+  }
+
   .stat-text {
     flex-basis: 50%;
-    margin-top: 2rem;
   }
+  .stat-text span {
+    margin-bottom: 1.5rem;
+  }
+
   .stat-line {
     display: none;
   }
@@ -262,47 +325,41 @@
 
 }
 
-@media(max-width: 740px) {
-  .section-wrap {
-    margin-top: -35px;
-  }
-}
 
 @media(max-width: 550px) {
   .stat-wrap {
-    padding: 2rem 3rem;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 20px;
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    row-gap: 20px;
   }
+
+  .stat-line {
+    height: 2px;
+    width: 75%;
+    justify-self: center;
+    align-self: center;
+    display: none;
+  }
+
+  .stat-wrap:after, .stat-wrap:before { display: none }
+
   .stat-text {
     flex-basis: auto;
     margin: auto;
   }
-  /* .stat {
-    margin-bottom: auto;
-  } */
-  .stat-line {
-    width: 75%;
+
+  .stat-text:after {
+    width: 110%;
     height: 2px;
-    display: block;
+    content: '';
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000A5D;
+    position: absolute;
   }
-  .cta-text-wrap {
-    top: 5px;
-  }
-  .cta-text-wrap > span{
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .call-to-action > img {
-    width: 100%
-  }
-  .call-to-action {
-    margin-bottom: -20%;
-  }
-  .cta-btn {
-    font-size: 12px
+  .stat-text:last-of-type:after {
+    display: none;
   }
 }
 
@@ -324,51 +381,102 @@
 
 
 <template>
-  <section class="overflow-x-clip py-7 px-2 md:px-12 pt-24 md:pt-28 section-wrap">
-    <h2 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
-    xl:text-7xl 2xl:text-5xl font-black timeline-title dark:text-blue-300
-    ps-3 md:ps-0 uppercase">Celebrating 100 Years</h2>
-    <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
-      <div class="vision-vid">
-        <div class="spinner-wrap" v-if="!slideshowLoaded">
-          <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              class="spinner"
-          >
-            <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="#FFFFFF"/></svg>
+  <section class="overflow-x-clip pt-24 pb-2 px-4 sm:px-10 md:px-16 lg:px-16 xl:px-20 2xl:px-28 section-wrap relative">
+    <div class="half-circle-wrap absolute top-0 right-0 ">
+      <svg
+          width="1032"
+          height="759"
+          viewBox="0 0 1032 759"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="relative half-circle"
+      >
+        <defs>
+          <!-- your existing gradient -->
+          <linearGradient id="paint0_linear_46_566" x1="729" y1="759" x2="729" y2="-699" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#007AFD"/>
+            <stop offset="0.639423" stop-color="white"/>
+          </linearGradient>
+        </defs>
 
-        </div>
-        <img
-          v-for="(image, index) in slideshowImages" 
-          :key="index"
-          :src="image"
-          :class="['slideshow-image', { active: currentSlide === index }]"
-          alt="Timeline image"
-          @load="slideshowLoaded = true"
+        <path
+            ref="halfCircleEl"
+            d="M246.738 30
+              A482.262 482.262 0 1 1 1211.262 30
+              A482.262 482.262 0 1 1 246.738 30"
+            fill="none"
+            stroke="url(#paint0_linear_46_566)"
+            stroke-width="150"
+            opacity="0.4"
+            vector-effect="non-scaling-stroke"
+            transform="scale(-1,1) translate(-1458,0)"
+            style="will-change: stroke-dashoffset"
         />
+      </svg>
+
+    </div>
+    <div class="
+      head-wrap grid grid-cols-1 lg:grid-cols-[0.7fr_1.3fr]
+      justify-center md:px-5 mt-8 xl:mt-14 gap-16 md:gap-12 2xl:gap-16 items-center
+    ">
+      
+      <div class="header-text text-nowrap w-3/5 ">
+        <h2
+            class="text-cetacean text-3xl md:text-4xl xl:text-5xl 2xl:text-6xl font-normal uppercase lg:mb-14 about-header"
+        >Celebrating<br><span
+            class="text-5xl sm:text-5xl md:text-6xl lg:text-7xl 2xl:text-8xl font-black"
+        >100 Years</span></h2>
+
+
       </div>
-      <div class="vision-text-wrap">
-        <h3>SINCE 1925</h3>
+      <div class="
+      slideshow-wrap lg:row-span-2 lg:col-start-2
+      mx-auto lg:mr-0 lg:ms-auto
+      w-11/12 md:w-5/6 lg:w-11/12 ">
+        <div class="slideshow w-full h-full">
+          <div class="spinner-wrap" v-if="!slideshowLoaded">
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                class="spinner"
+            >
+              <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="#FFFFFF"/></svg>
+
+          </div>
+          <img
+              v-for="(image, index) in slideshowImages"
+              :key="index"
+              :src="image"
+              :class="['slideshow-image', { active: currentSlide === index }]"
+              alt="Timeline image"
+              @load="slideshowLoaded = true"
+          />
+        </div>
+
+      </div>
+      <div class="vision-text-wrap text-wrap ps-2">
+        <h3 class="text-4xl font-extrabold mb-5">SINCE 1925</h3>
         <p class="mb-5">
           Over our 100-year history, we have transformed the way residents and local organizations come together to drive lasting change across the region.
         </p>
         <p>
           We have been proud to serve as a charitable resource for the community. To make an even greater impact, we have worked to build a powerful network of changemakers—donors, nonprofits, residents, businesses, policymakers, and all people who are committed to the success and wellbeing of Greater Hartford.
         </p>
-        <!-- <ul class="vision-list">
-          <li class="list-item">bullet point</li>
-          <li class="list-item">bullet point</li>
-          <li class="list-item">bullet point</li>
-        </ul> -->
+
       </div>
+
+
     </div>
 
-    <div class="stat-wrap">
+
+
+
+
+    <div class="stat-wrap mt-16 md:mt-20 lg:mt-20 xl:mt-36 2xl:mt-40 mb-44  md:mb-64 lg:mb-64 xl:mb-96 py-37">
       <div class="stat-text">
-        <h2>$<span class="stat">1.1</span>B</h2>
+        <h2>$<span class="stat" id="billion">1.1</span>B</h2>
         <span class="uppercase">Granted</span>
       </div>
       <div class="stat-line"></div>
@@ -389,8 +497,39 @@
     </div>
 
 
-  </section>
+    <svg
+        viewBox="0 0 1728 351"
+        xmlns="http://www.w3.org/2000/svg"
+        class="w-screen absolute arc"
+    >
+      <path
+          d="M864 0C1276.64 0 1558.5 91.9994 1728.5 141.999V351C1728.5 351 1407 209 899.5 201C392 193 0 338.5 0 338.5V248V134C185 76.4995 451.362 4.76181e-05 864 0Z"
+          fill="white"
+      />
 
+      <path
+          d="M864 0C1276.64 0 1558.5 91.9994 1728.5 141.999V351C1728.5 351 1407 209 899.5 201C392 193 0 338.5 0 338.5V248V134C185 76.4995 451.362 4.76181e-05 864 0Z"
+          fill="url(#paint0_radial_48_567)"
+          fill-opacity="0.8"
+      />
+
+      <defs>
+        <radialGradient
+            id="paint0_radial_48_567"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientTransform="matrix(212 -992 1472.19 313.358 850.999 924)"
+            gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0.4375" stop-color="white"/>
+          <stop offset="0.834497" stop-color="#007AFD"/>
+        </radialGradient>
+      </defs>
+    </svg>
+
+
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -447,10 +586,30 @@ const slideshowImages = computed(() => {
   });
 });
 
+const halfCircleEl = ref<SVGPathElement | null>(null);
+
 const currentSlide = ref(0);
 let slideshowInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(async ()  =>  {
+
+  await nextTick();
+
+  if(halfCircleEl.value) {
+    const stroke = halfCircleEl.value;
+    const len = stroke.getTotalLength();
+
+    stroke.style.strokeDasharray = `${len}`;
+    stroke.style.strokeDashoffset = `${len}`;
+
+    stroke.getBoundingClientRect();
+
+    stroke.style.transition = 'stroke-dashoffset 2.5s ease-in';
+    stroke.style.strokeDashoffset = '0';
+
+  }
+
+
   // Start slideshow
   slideshowInterval = setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % slideshowImages.value.length;
@@ -493,69 +652,13 @@ onMounted(async ()  =>  {
       stat.removeEventListener('transitionend', triggerCount);
       const data = statData[idx];
       if(data) {
-        statCount(data.element, data.target);
+        statCount(data.element, data.target, data.element.id === 'billion');
       }
     })
   })
 
 
 
-  const visionHead = document.querySelector('.vision-head');
-  if(!visionHead) return;
-  $gsap.fromTo(visionHead,
-      {x: -200, opacity: 0},
-      {
-        x: 0,
-        opacity: 1,
-        ease: 'power1.out',
-        duration: .5,
-        scrollTrigger: {
-          trigger: visionHead,
-          start: 'top 85%',
-          once: true,
-        },
-        onStart: visionBoldAni
-      },
-  )
-  const listEls = Array.from(document.querySelectorAll('.list-item'))
-  if(listEls.length > 0) {
-    listEls.forEach(el => {
-      $gsap.fromTo(el,
-          {x: 100 + (listEls.indexOf(el) * 15), opacity: 0},
-          {
-            x: 0,
-            opacity: 1,
-            ease: 'power3.inOut',
-            delay: listEls.indexOf(el) * .5 + .5,
-            duration: .5,
-            scrollTrigger: {
-              trigger: '.vision-list',
-              start: 'top 85%',
-              once: true
-            }
-          }
-      )
-    })
-  }
-
-  function visionBoldAni() {
-    const textLarge = document.querySelector('#vision-bold');
-    if(!textLarge) return;
-    const text: string[] = [];
-    for(let i = 0; i < textLarge.textContent.length; i++) {
-      text.push(textLarge.textContent[i]);
-    }
-    if(text.length < textLarge.textContent.length) return;
-    textLarge.innerHTML = '';
-    text.forEach((char, idx) => {
-      const charEl = document.createElement('span');
-      charEl.textContent = `${char}`;
-      if(char === ' ') charEl.style.display = 'inline';
-      charEl.style.animationDelay = `${(idx * .025) + .25}s`;
-      charEl.className = 'vision-char-ani';
-      textLarge.appendChild(charEl);
-    })
-  }
 
 
 });
@@ -569,17 +672,29 @@ onUnmounted(() => {
 
 
 
-function statCount(el: HTMLElement, target: number) {
+
+function statCount(el: HTMLElement, target: number, billion = false) {
   let curr = Math.floor(target * 0.25);
-  const increment = Math.ceil((target - curr) / 60); // Animate over ~60 steps (doubled from 30)
+  let increment = Math.ceil((target - curr) / 60);
+
+  if(billion) {
+    curr = 0;
+    increment = .025;
+  }
+
   const interval = setInterval(() => {
     curr += increment;
     if(curr >= target) {
       curr = target;
-      el.textContent = `${target}`;
+      el.textContent = `${target}`
       clearInterval(interval);
     } else {
-      el.textContent = `${curr}`;
+      if(billion) {
+        const toDisplay = curr.toFixed(2);
+        el.textContent = `${toDisplay}`
+      } else {
+        el.textContent = `${curr}`;
+      }
     }
   }, 40); // Increased from 25ms to 40ms
 }

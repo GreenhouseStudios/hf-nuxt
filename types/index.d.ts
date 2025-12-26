@@ -79,6 +79,12 @@ declare global {
           };
         };
       }
+
+  type NavItem = {
+    label: string;
+    sectionID: string;
+    active: boolean;
+  }
 }
 
 declare module '#app' {

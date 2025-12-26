@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger)
 export default defineNuxtPlugin(() => {
   return {
     provide: {
-      gsap
+      gsap, ScrollTrigger
     }
   }
 })

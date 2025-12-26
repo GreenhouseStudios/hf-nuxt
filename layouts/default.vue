@@ -4,7 +4,7 @@
       <path id="logoPath" stroke="black" d="M1.09,3.11c4.23,22.52,85.06,421.8,384.91,505.79,131.99,36.97,348.19,24.55,396.26-96,40.45-101.44-39.33-276.53-167.49-294.13-126.63-17.38-246.23,126.42-241.02,232.85,8.45,172.59,357.13,330.93,490.21,226.72,126.82-99.3,72.03-428.54-59.53-484.62-137.86-58.76-289.14,212.72-510.64,175.66C154.42,246.07,59.59,112.71,1.09,3.11Z"/>
 
     </svg>
-    <Nav class="site-header py-2" />
+    <Nav :active="activeSection" class="site-header py-2" />
 
 
     <div class="hf-page">
@@ -16,16 +16,46 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, nextTick, ref, provide, type Ref } from 'vue'
-
-
-const navTeleportEl = ref<HTMLElement | null>(null)
-provide<Ref<HTMLElement | null>>( 'navTeleportEl', navTeleportEl)
+const activeSection = ref<string | null>(null);
 
 let ro: ResizeObserver | null = null
+
+
+
+let headerRO: ResizeObserver | null = null
+let timelineRO: ResizeObserver | null = null
 
 onMounted(async () => {
   await nextTick()
 
+  const { $gsap, $ScrollTrigger } = useNuxtApp()
+
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('section[id]'))
+
+  sections.forEach(section => {
+    $gsap.to({}, {
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 35%',
+        end: 'bottom 35%',
+        onEnter: () => (activeSection.value = section.id),
+        onEnterBack: () => (activeSection.value = section.id),
+      }
+    })
+  })
+
+  // 🔥 refresh when timeline height changes (packing)
+  const timeline = document.querySelector<HTMLElement>('#timeline')
+  if (timeline && 'ResizeObserver' in window) {
+    let raf = 0
+    timelineRO = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => $ScrollTrigger.refresh())
+    })
+    timelineRO.observe(timeline)
+  }
+
+  // your header padding observer (fix removal too)
   const header = document.querySelector<HTMLElement>('.site-header')
   const content = document.querySelector<HTMLElement>('.smooth-content')
 
@@ -34,14 +64,22 @@ onMounted(async () => {
     const h = header?.offsetHeight ?? 0
     content.style.paddingTop = h + 'px'
   }
-  setPadTop()
-  if (header && 'ResizeObserver' in window) {
-    ro = new ResizeObserver(setPadTop)
-    ro.observe(header)
-  }
-  window.addEventListener('resize', setPadTop)
-})
 
+  setPadTop()
+
+  if (header && 'ResizeObserver' in window) {
+    headerRO = new ResizeObserver(setPadTop)
+    headerRO.observe(header)
+  }
+
+  window.addEventListener('resize', setPadTop)
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', setPadTop)
+    headerRO?.disconnect()
+    timelineRO?.disconnect()
+  })
+})
 onBeforeUnmount(() => {
   window.removeEventListener('resize', () => {})
   ro?.disconnect()

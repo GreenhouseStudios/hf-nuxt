@@ -1,5 +1,5 @@
 <template>
-    <div class=" flex flex-wrap  mt-5">
+    <div class=" flex flex-wrap max-w-[700px] m-auto justify-center mt-5">
         <CategoryFilterButton
             v-for="cat in displayCategories"
             :key="cat.slug"

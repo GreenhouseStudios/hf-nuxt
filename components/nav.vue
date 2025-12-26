@@ -1,112 +1,125 @@
 <template>
-  <div class="flex items-center justify-between px-4 py-4 fixed z-100 top-0 ">
+  <div class="flex items-center justify-between px-4 md:py-4 fixed z-100 top-0 ">
 
     <Logo></Logo>
 
-    <UNavigationMenu :items="items" color="primary" class="bg-white hidden lg:flex"></UNavigationMenu>
+    <NavMenu :items="items" class="hidden md:flex md:gap-5"/>
 
 
-    <USlideover class="max-w-screen" v-model:open="isOpen" close-icon="i-lucide-arrow-right" :close="{
+    <USlideover class="max-w-36" v-model:open="isOpen" close-icon="i-lucide-arrow-right" :close="{
       color: 'primary',
       variant: 'outline',
       class: 'rounded-full'
     }">
-      <UButton icon="i-heroicons-bars-3" color="gray" variant="ghost" @click="isOpen = true" class="lg:hidden" />
-      <template #body>
-        <div class="p-4">
-          <div class="mb-4 text-lg font-semibold">Greater Hartford Gives Centennial</div>
-          <UButton @click="() => handleClick(item.to)"
-            v-for="item in items" :key="item.label" block variant="ghost" :label="item.label" class="mb-2" />
+      <template #title>
+        <div class="text-lg font-semibold text-right">Greater Hartford Gives Centennial</div>
+      </template>
+      <UButton
+          icon="i-heroicons-bars-3"
+          variant="ghost"
+          @click="isOpen = true"
+          class="md:hidden text-cetacean text-3xl"
+
+      />
+      <template #body style="padding-right: 0">
+        <div class="flex flex-col">
+          <UButton
+            v-for="item in items"
+            :key="item.sectionID"
+            block
+            variant="ghost"
+            :label="item.label"
+            :class="item.active
+              ? 'font-bold'
+              : 'text-black'"
+            class="justify-end w-fit mr-0 ml-auto"
+            :style="item.active ? 'color: #0a7aff':''"
+            @click="() => handleClick(item.sectionID)"/>
         </div>
       </template>
-
     </USlideover>
-    <div v-if="showTeleport" id="vid-teleport" ref="vidTeleport" style="pointer-events: none">
-
-    </div>
   </div>
 
 </template>
 
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui/dist/module';
-import { ref, inject, onMounted, type Ref, computed, watchEffect } from 'vue';
-import { useRouter } from 'vue-router';
-import {useFirstVisit} from "~/composables/useFirstVisit";
-const router = useRouter()
+import { ref, computed, watch } from 'vue';
+import NavMenu from "~/components/nav-menu.vue";
+import Logo from "~/components/logo.vue";
+import {useNuxtApp} from "#imports";
+
+const { $gsap } = useNuxtApp();
+
+const props = withDefaults(
+    defineProps<{
+      active?: string | null
+    }>(),
+    {
+      active: null
+    }
+)
 
 
-const { ready, hasSeen } = useFirstVisit();
-
-const showTeleport = computed(() => ready.value && !hasSeen.value);
 
 
-
-const handleClick = async (to: string) => {
-  isOpen.value = false;
-  await new Promise(resolve => setTimeout(resolve, 300))
-  router.push(to);
+const handleClick = (sectionID: string) => {
+  const section = document.getElementById(sectionID);
+  if(!section) {
+    isOpen.value = false
+    return;
+  }
+  $gsap.to(window, {
+    duration: .75,
+    ease: 'power1.inOut',
+    scrollTo: {
+      y: section,
+      offsetY: 100,
+    },
+    onComplete: () => {
+      isOpen.value = false;
+    }
+  })
 };
+
+const scrollToSection = (sectionID: string) => {
+
+}
 
 const isOpen = ref(false);
 
-const items = ref(<NavigationMenuItem[]>[
+const items = computed<NavItem[]>(() => { return [
   {
     label: 'OVERVIEW',
-    to: '#',
+    sectionID: 'overview',
+    active: props.active === 'overview'
   },
   {
-    label: 'OUR TIMELINE',
-    to: '#timeline',
+    label: 'TIMELINE',
+    sectionID: 'timeline',
+    active: props.active === 'timeline'
   },
   {
-    label: '100 INFLUENCERS',
-    to: '#influencers',
-  },
-].map((item) => ({
-  ...item,
-  class: 'bg-white hover:bg-gray-100 rounded-md',
-})));
-
-const vidTeleport = ref<HTMLDivElement | null>(null);
-const navTeleportEl = inject<Ref<HTMLElement | null>>('navTeleportEl', ref(null));
-
-onMounted(() => {
-  if(navTeleportEl && window.innerWidth > 1150) {
-    navTeleportEl.value = vidTeleport.value;
+    label: 'INFLUENCERS',
+    sectionID: 'influencers',
+    active: props.active === 'influencers'
   }
-})
-
-watchEffect(() => {
-  if (!navTeleportEl) return;
-  if (window.innerWidth <= 1150) return;
-
-  if (showTeleport.value && vidTeleport.value) {
-    navTeleportEl.value = vidTeleport.value;
-  }
-});
-
-defineExpose({vidTeleport})
+] })
+watch(
+    () => props.active,
+    (val, oldVal) => {
+      console.log('active changed:', oldVal, '→', val)
+    },
+    { immediate: true }
+)
 </script>
 
 <style scoped>
 div {
   background: white;
 }
-
-#vid-teleport {
-  position: fixed;
-  width: 100%;
-  height: calc(100% - 80px);
-  bottom: 0;
-  left: 0;
-  background: none;
+.text-active {
+  color: #0a7aff !important;
 }
 
-#vid-teleport > video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 </style>

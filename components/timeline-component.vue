@@ -1,4 +1,28 @@
 <style scoped>
+.timeline-title {
+  position: relative;
+  width: fit-content;
+  margin: auto;
+}
+
+.timeline-title:after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -20px;
+  width: 75%;
+  height: 4px;
+  background-color: #0a7aff;
+  transform-origin: center;
+  transition: transform .5s ease-in;
+  transition-delay: .25s;
+  transform: translateX(-50%) scaleX(0);
+}
+
+.timeline-title.animated:after {
+  transform: translateX(-50%) scaleX(1);
+}
+
 /* === Core bento grid layout (CSS grid “masonry-ish”) === */
 .bento-grid {
   display: grid;
@@ -13,12 +37,7 @@
   --pitch: calc(var(--row-h, 95px) + var(--gap, 25px));
 }
 
-/* Disable dense packing for 2-column layout to maintain chronological order */
-@media (min-width: 640px) and (max-width: 1023px) {
-  .bento-grid {
-    grid-auto-flow: row;
-  }
-}
+
 
 /* Used while recomputing layout to avoid flicker */
 .bento-grid.computing {
@@ -212,101 +231,111 @@
 </style>
 
 <template>
+  <section>
+    <!-- Page wrapper -->
+    <div class="mb-36 overflow-hidden px-2 md:px-12">
 
-  <!-- Page wrapper -->
-  <div class="mb-36 overflow-hidden px-2 md:px-12">
+      <!-- Title -->
+      <h1 class=
+        "text-cetacean
+        text-4xl sm:text-5xl font-normal timeline-title dark:text-blue-300
+        text-center"
+        ref="titleEl"
+      >CENTENNIAL<br><span class=
+         "text-6xl sm:text-7xl font-black"
 
-    <!-- Title -->
-    <h1 class="text-blue-950 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
-    xl:text-7xl 2xl:text-5xl font-black timeline-title dark:text-blue-300
-    ps-3 md:ps-0
-    "
-    >CENTENNIAL TIMELINE</h1>
+      >TIMELINE</span></h1>
 
-    <!-- Filters UI -->
-    <section id="timeline-filters">
-      <Filters />
-    </section>
-
-    <!-- Card Layout (CSS Grid) -->
-    <section class="flex flex-col justify-around">
-
-      <!-- Empty state -->
-      <div v-if="timelineItems.length === 0">
-        No posts found.
+      <!-- Filters UI -->
+      <div id="timeline-filters">
+        <Filters />
       </div>
 
-      <!-- Grid wrapper (opacity toggled during rebuilds) -->
-      <div class="grid-wrap px-2 py-12 md:px-12" ref="gridWrapEl" v-else>
-        <ul
-            :key="`grid-${rebuildToken}-${numCols}`"
-            ref="gridEl"
-            id="card-grid"
-            class="bento-grid py-10"
-            :class="{ 'no-grid-shift': timelineFiltered }"
-            :style="{
+      <!-- Card Layout (CSS Grid) -->
+      <div class="flex flex-col justify-around">
+
+        <!-- Empty state -->
+        <div v-if="timelineItems.length === 0">
+          No posts found.
+        </div>
+
+        <!-- Grid wrapper (opacity toggled during rebuilds) -->
+        <div class="grid-wrap px-2 py-12 md:px-12" ref="gridWrapEl" v-else>
+          <ul
+              :key="`grid-${rebuildToken}-${numCols}`"
+              ref="gridEl"
+              id="card-grid"
+              class="bento-grid py-10"
+              :class="{ 'no-grid-shift': timelineFiltered }"
+              :style="{
               '--cols': numCols,
               '--row-h': rowHeight + 'px',
               '--gap': gap + 'px',
             }"
-        >
+          >
 
 
-          <!-- Each item is either a normal post or the COVID wrapper -->
-          <li
-              v-for="item in timelineItems"
-              :key="item.type === 'post' ? item.post.slug : 'covid-2020'"
-              :class="[
+            <!-- Each item is either a normal post or the COVID wrapper -->
+            <li
+                v-for="item in timelineItems"
+                :key="item.type === 'post' ? item.post.slug : 'covid-2020'"
+                :class="[
                 'bento-card',
                 { 'quote-card': item.type === 'post' && item.post?.eventOptions?.postType === 'quote' },
                 { 'covid-card': item.type === 'covid' }
               ]"
-              :data-card-size="item.type === 'post'
-                ? (item.post?.eventOptions?.cardSize ?? 'default')
-                : 'large'"
-              :data-is-quote="item.type === 'post' && item.post?.eventOptions?.postType === 'quote' ? '1' : '0'"
-              :data-is-covid="item.type === 'covid' ? '1' : '0'"
-          >
-            <!-- Normal posts: render one Card -->
-            <div
-                v-if="item.type === 'post'"
-                class="bento-inner"
+                :data-card-size="item.type === 'post'
+                ? item.post?.eventOptions?.cardSize === 'small'
+                  ? 'small'
+                  : item.post?.eventOptions?.cardSize === 'large'
+                    ? 'large'
+                    : 'default'
+                  : 'default'"
+                :data-is-quote="item.type === 'post' && item.post?.eventOptions?.postType === 'quote' ? '1' : '0'"
+                :data-is-covid="item.type === 'covid' ? '1' : '0'"
             >
-              <Card
-                  :post="item.post"
-                  :x-multiplier="1"
-                  :y-multiplier="1"
-                  :quote-can-start="canPlayQuotes"
-                  mode="fixedHeight"
+              <!-- Normal posts: render one Card -->
+              <div
+                  v-if="item.type === 'post'"
+                  class="bento-inner"
+              >
+                <Card
+                    :post="item.post"
+                    :x-multiplier="1"
+                    :y-multiplier="1"
+                    :quote-can-start="canPlayQuotes"
+                    mode="fixedHeight"
 
-              />
-            </div>
+                />
+              </div>
 
-            <!-- COVID wrapper: holds multiple posts, starts hidden -->
-            <div
-                v-else
-                class="bento-inner covid-inner"
-            >
-              <Card
-                  v-for="post in item.posts"
-                  :key="post.slug"
-                  :post="post"
-                  :class="'covid-post inactive'"
-                  style="display: none"
-                  :x-multiplier="1"
-                  :y-multiplier="1"
-                  mode="fixedHeight"
-              />
-              <h2 id="covid-title" class="text-5xl md:text-6xl font-bold">COVID-19</h2>
+              <!-- COVID wrapper: holds multiple posts, starts hidden -->
+              <div
+                  v-else
+                  class="bento-inner covid-inner"
+              >
+                <Card
+                    v-for="post in item.posts"
+                    :key="post.slug"
+                    :post="post"
+                    :class="'covid-post inactive'"
+                    style="display: none"
+                    :x-multiplier="1"
+                    :y-multiplier="1"
+                    mode="fixedHeight"
+                />
+                <h2 id="covid-title" class="text-5xl md:text-6xl font-bold">COVID-19</h2>
 
-              <!-- can be a single special card or a small list of covid cards -->
-            </div>
-          </li>
+                <!-- can be a single special card or a small list of covid cards -->
+              </div>
+            </li>
 
-        </ul>
+          </ul>
+        </div>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
+
 </template>
 
 <script lang="ts" setup>
@@ -376,10 +405,13 @@ const lgCardRange = {
   row: [3, 7]
 }
 
+
+
 /* DOM refs for grid wrapper + grid element */
 const gridWrapEl = ref<HTMLElement | null>(null);
 const gridEl = ref<HTMLElement | null>(null);
 
+const titleEl = ref<HTMLElement | null>(null);
 
 /* Timeline list is posts plus a special “covid group” item */
 type TimelineItem =
@@ -403,7 +435,6 @@ async function hardRebuild() {
 
     gridWrapEl.value.style.opacity = '0';
     if(numCols.value > 3) {
-      ensureColumnBuffers(gridEl.value, numCols.value);
     }
   }
 
@@ -456,6 +487,14 @@ async function measureAndPack(reset = false) {
   if(layoutInProgress) return;
   layoutInProgress = true;
 
+  packCount++;
+
+  if(packCount > 2) {
+    layoutInProgress = false;
+    packCount = 0;
+    return await hardRebuild();
+  }
+
   try {
     await nextTick();
     if(!gridEl.value) return;
@@ -499,12 +538,23 @@ async function measureAndPack(reset = false) {
       gridEl.value.classList.add('buffer-gone')
       liElements.forEach(el => {
         const rand = Math.random();
-        const rowspan = rand < .75 ? 3 : 4;
-        el.style.gridRowEnd = `span ${rowspan}`;
-        el.dataset.rowspan = `${rowspan}`;
+
+
+        const ar = parseFloat(el.dataset.imgAr || '1.5');
+
         el.style.gridColumn = 'span 1';
         el.dataset.colspan = '1';
+
+        if(ar < .85) {
+          el.style.gridRowEnd = 'span 5';
+          el.dataset.rowspan = '5';
+        } else {
+          const rowspan = rand < .75 ? 4 : 3;
+          el.style.gridRowEnd = `span ${rowspan}`;
+          el.dataset.rowspan = `${rowspan}`
+        }
       })
+      nudgeImageMaxHeights(gridEl.value as HTMLElement);
       cardAnimation();
       return;
     }
@@ -617,7 +667,7 @@ async function measureAndPack(reset = false) {
 
 
       // Size intent tweaks
-      if (el.dataset.cardSize === 'large') r += 1;
+      if (el.dataset.cardSize === 'large' && numCols.value > 2) r += 1;
       if (el.dataset.cardSize === 'small') r -= 1;
 
       // Clamp keeps the rest of the gap logic sane
@@ -1936,7 +1986,6 @@ function updateColumns() {
   else if (width >= 1024) numCols.value = 3
   else if (width >= 640) numCols.value = 2
   else numCols.value = 1;
-
   // Only rebuild if column count actually changed
   if(cols !== numCols.value) {
     cols = numCols.value;
@@ -2137,32 +2186,34 @@ const filteredPosts = computed(() => {
 onMounted( async () => {
   await nextTick();
   updateColumns();
-  if(numCols.value > 3 && gridEl.value) {
-    ensureColumnBuffers(gridEl.value, numCols.value);
+  if (numCols.value > 3 && gridEl.value) {
     const initArr: number[] = [];
-    for(let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
+    for (let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
     setBufferSpans(gridEl.value, initArr);
   }
 
-  document.addEventListener('pointerdown', () => {canPlayQuotes.value = true }, {once: true})
+  document.addEventListener('pointerdown', () => {
+    canPlayQuotes.value = true
+  }, {once: true})
 
   window.addEventListener('resize', () => {
     updateColumns();
   });
 
-  const timelineTitle = document.querySelector('.timeline-title');
-  if(!timelineTitle) return;
+  if(titleEl.value) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) {
+          entry.target.classList.add('animated');
+          io.unobserve(entry.value);
+        }
+      })
+    }, { threshold: .8})
+    io.observe(titleEl.value);
+  }
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && timelineTitle)
-      { anime({ targets: '.timeline-title', translateX: [-200, 0], duration: 700 })}
-      else observer.unobserve(timelineTitle);
-    });
-  });
 
-  observer.observe(timelineTitle);
-});
+})
 
 /**
  * Watch posts/filters:
