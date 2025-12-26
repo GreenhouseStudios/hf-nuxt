@@ -61,8 +61,8 @@
   .half-circle {
     transform: scale(.35) rotate(30deg);
     transform-origin: top right;
-    right: -154px;
-    top: 152px;
+    right: 10px;
+    top: 185px;
 
   }
 }

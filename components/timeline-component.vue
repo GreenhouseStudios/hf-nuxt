@@ -236,7 +236,7 @@
     <div class="mb-36 overflow-hidden px-2 md:px-12">
 
       <!-- Title -->
-      <h1 class=
+      <h2 class=
         "text-cetacean
         text-4xl sm:text-5xl font-normal timeline-title dark:text-blue-300
         text-center"
@@ -244,7 +244,7 @@
       >CENTENNIAL<br><span class=
          "text-6xl sm:text-7xl font-black"
 
-      >TIMELINE</span></h1>
+      >TIMELINE</span></h2>
 
       <!-- Filters UI -->
       <div id="timeline-filters">
@@ -1337,15 +1337,48 @@ function flipGrid(
 
     }
 
+    let tween: gsap.core.Tween | null = null;
+
+    const scroller =
+        document.scrollingElement || document.documentElement; // usually <html>
+
+
     setTimeout(() => {
-      $gsap.to(window, {
+      const cleanup = () => {
+        window.removeEventListener('wheel', stopScroll);
+        window.removeEventListener('touchstart', stopScroll);
+        window.removeEventListener('pointerdown', stopScroll);
+        window.removeEventListener('keydown', stopScroll);
+      }
+
+
+      const stopScroll = () => {
+        tween?.kill()
+        cleanup();
+      }
+
+      window.addEventListener('wheel', stopScroll);
+      window.addEventListener('touchstart', stopScroll);
+      window.addEventListener('pointerdown', stopScroll);
+      window.addEventListener('keydown', stopScroll);
+
+      tween = $gsap.to(window, {
         duration: .75,
         scrollTo: {
           y: covidCard,
           offsetY: window.innerHeight / 2 - covidCard.offsetHeight / 2
         },
+        onComplete: cleanup,
+        onInterrupt: cleanup
       })
+
+
+
     }, Math.floor(durationMs / 1.75))
+
+
+
+
     for (const el of items) {
       el.style.transition = `transform ${durationMs}ms ease`
       el.style.transform = 'translate3d(0,0,0)'
@@ -2205,7 +2238,7 @@ onMounted( async () => {
       entries.forEach(entry => {
         if(entry.isIntersecting) {
           entry.target.classList.add('animated');
-          io.unobserve(entry.value);
+          io.unobserve(entry.target);
         }
       })
     }, { threshold: .8})
