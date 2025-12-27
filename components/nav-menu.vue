@@ -36,12 +36,17 @@ const props = defineProps<{
 const scrollToSection = (sectionID: string) => {
   const section = document.getElementById(sectionID);
   if(!section) return;
+
+  const offset =
+      sectionID === 'timeline' ? 320 :
+      sectionID === 'influencers' ? -150 :
+      0
   $gsap.to(window, {
     duration: .75,
     ease: 'power1.inOut',
     scrollTo: {
       y: section,
-      offsetY: 100,
+      offsetY: offset,
     },
   })
 }

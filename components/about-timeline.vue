@@ -435,7 +435,7 @@
       mx-auto lg:mr-0 lg:ms-auto
       w-11/12 md:w-5/6 lg:w-11/12 ">
         <div class="slideshow w-full h-full">
-          <div class="spinner-wrap" v-if="!slideshowLoaded">
+          <div class="spinner-wrap" v-if="!imagesLoaded">
             <svg
                 width="24"
                 height="24"
@@ -447,12 +447,12 @@
 
           </div>
           <img
+              v-if="imagesLoaded"
               v-for="(image, index) in slideshowImages"
               :key="index"
               :src="image"
               :class="['slideshow-image', { active: currentSlide === index }]"
               alt="Timeline image"
-              @load="slideshowLoaded = true"
           />
         </div>
 
@@ -535,16 +535,14 @@
 
 <script setup lang="ts">
 import anime from 'animejs';
-import { onMounted, nextTick, ref, onUnmounted, computed } from 'vue';
+import { onMounted, nextTick, ref, onUnmounted, computed, watch } from 'vue';
 import { usePosts } from '~/composables/usePosts';
 import {useNuxtApp} from "#imports";
 
-const { $gsap } = useNuxtApp()
-
-const slideshowLoaded = ref(false);
-
 // Fetch timeline posts, vue y u so hard
+// Hey don't hurt vue's feelings :<
 const { data: posts } = usePosts();
+
 
 // Get timeline images from posts, one from each decade
 const slideshowImages = computed(() => {
@@ -553,16 +551,27 @@ const slideshowImages = computed(() => {
   // Filter posts with images and years
   const postsWithImages = posts.value
     .filter((post: Post) => {
-      const hasImage = post.eventOptions?.thumbnail?.node?.sourceUrl || 
+      const hasImage = post.eventOptions?.thumbnail?.node?.sourceUrl ||
                        post.eventOptions?.thumbnail?.node?.mediaItemUrl;
       const hasYear = post.eventOptions?.eventYear;
-      return hasImage && hasYear;
+      return hasImage && hasYear && post.slug !== 'greater-hartford-gives';
     });
-  
+
+  // Filter out posts with image smaller than 1.1/1 aspect ratio
+  let viablePosts = postsWithImages.filter((post: Post) => {
+    const details = post?.eventOptions?.thumbnail?.node?.mediaDetails;
+    if(!details?.width || !details?.height) return false;
+
+
+    return (details?.width / details?.height) >= 1.1;
+  })
+
+  if(viablePosts.length < 10) viablePosts = postsWithImages;
+
   // Group posts by decade
   const postsByDecade = new Map<number, Post[]>();
   
-  postsWithImages.forEach((post: Post) => {
+  viablePosts.forEach((post: Post) => {
     const year = parseInt(post.eventOptions.eventYear);
     const decade = Math.floor(year / 10) * 10; // Get decade (1920, 1930, etc.)
     
@@ -570,21 +579,28 @@ const slideshowImages = computed(() => {
       postsByDecade.set(decade, []);
     }
     postsByDecade.get(decade)!.push(post);
+
   });
   
   // Get one image from each decade, sorted by decade (newest to oldest)
   const decades = Array.from(postsByDecade.keys()).sort((a, b) => b - a);
-  
-  return decades.map(decade => {
-    const decadePosts = postsByDecade.get(decade)!;
-    // Get the first (most recent) post from this decade
-    const sortedDecadePosts = decadePosts.sort((a, b) => 
-      parseInt(b.eventOptions.eventYear) - parseInt(a.eventOptions.eventYear)
-    );
-    const post = sortedDecadePosts[0];
-    return post.eventOptions.thumbnail.node.sourceUrl || 
-           post.eventOptions.thumbnail.node.mediaItemUrl;
-  });
+
+  // Set wide logo image as first in slideshow + return urls sorted by
+  return [
+    'https://leamh.org/hartford_foundation/wp-content/uploads/2025/12/Primary-Logo-Reversed-scaled.jpg',
+      ...decades.map(decade => {
+        const decadePosts = postsByDecade.get(decade)!;
+
+        // Get the first (most recent) post from this decade
+        const sortedDecadePosts = decadePosts.sort((a, b) =>
+            parseInt(b.eventOptions.eventYear) - parseInt(a.eventOptions.eventYear)
+        );
+        const post = sortedDecadePosts[0];
+        return post.eventOptions.thumbnail.node.sourceUrl ||
+            post.eventOptions.thumbnail.node.mediaItemUrl;
+      })
+  ]
+
 });
 
 const halfCircleEl = ref<SVGPathElement | null>(null);
@@ -615,13 +631,6 @@ onMounted(async ()  =>  {
     }
   }, 1250)
 
-
-
-  // Start slideshow
-  slideshowInterval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % slideshowImages.value.length;
-  }, 3000); // Change image every 3 seconds
-  anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
   await nextTick()
 
   const stats = Array.from(document.querySelectorAll('.stat'));
@@ -669,6 +678,23 @@ onMounted(async ()  =>  {
 
 
 });
+
+// Start slideshow
+const startInterval = () => {
+  slideshowInterval = setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % slideshowImages.value.length;
+  }, 3000); // Change image every 3 seconds
+  anime({ targets: '.text-center', opacity: [0,1], duration: 700 });
+}
+
+
+const imagesLoaded = ref(false);
+watch([slideshowImages], async () => {
+  if(slideshowImages.value.length < 1) return;
+  imagesLoaded.value = true;
+  await nextTick();
+  startInterval();
+})
 
 onUnmounted(() => {
   // Clean up slideshow interval

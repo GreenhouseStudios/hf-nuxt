@@ -649,7 +649,9 @@ async function measureAndPack(reset = false) {
           r = Math.floor(Math.random() * 2) + 5; // 5–6
         } else if (ar < 1.2) {
           // near-square
-          r = Math.floor(Math.random() * 2) + 4; // 4–5
+          r = numCols.value > 4
+              ? Math.floor(Math.random() * 2) + 4
+              : Math.floor(Math.random() * 2) + 3;
         } else if (ar < 1.9) {
           // landscape
           if(c === 2) {
@@ -1098,7 +1100,10 @@ async function growSinglesByOne(maxRowSpan = 8) {
   placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
 
   for (const me of placements) {
-    if (me.rowspan >= maxRowSpan) continue;
+    if (
+        me.rowspan >= maxRowSpan ||
+        (parseFloat(me.el.dataset.ar || '1.5') >= 1.35 && me.rowspan >= 6)
+    ) continue;
     const emptyBelow = clearanceRowsBelow(me, placements);
 
     if (emptyBelow === 1) {
@@ -1124,6 +1129,11 @@ async function growAcrossTwoEmptyRows(maxRowSpan = 8) {
   placements.sort((a,b) => (a.row - b.row) || (a.col - b.col));
 
   for (const me of placements) {
+    if (
+        me.rowspan >= maxRowSpan ||
+        (parseFloat(me.el.dataset.ar || '1.5') >= 1.15 && me.rowspan >= 6)
+    ) continue;
+
     const emptyBelow = clearanceRowsBelow(me, placements);
     if (emptyBelow !== 2) continue;
 

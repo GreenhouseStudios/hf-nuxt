@@ -19,6 +19,8 @@ query GetPosts {
                 mediaItemUrl
                 sourceUrl
                 mediaDetails {
+                  width
+                  height
                   sizes {
                     name
                     sourceUrl

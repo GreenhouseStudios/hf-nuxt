@@ -309,7 +309,7 @@ setGallery()
   <div class="post-layout">
     <!-- Close button -->
     <button 
-      class="close-button absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl leading-none z-10"
+      class="close-button absolute top-4 right-4 text-gray-200 hover:text-gray-800 text-3xl leading-none z-10"
       @click="store.closeModal()"
     >
       &times;
@@ -345,7 +345,8 @@ setGallery()
   flex-direction: column;
   background: white;
   border-radius: 1rem;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 85vh;
   width: 90%;
   max-width: 1200px;
@@ -365,9 +366,9 @@ setGallery()
 .content-wrap {
   color: black;
   background: white;
-  padding: 3rem 12% 8rem 12%;
+  padding: 3rem 12% 3rem 12%;
   flex: 1 1 auto;
-  overflow-y: auto;
+
 }
 
 
@@ -519,7 +520,7 @@ setGallery()
 .gallery-columns-3 { --cols: 3; --col-min: 180px; --col-max: 320px; }
 .gallery-columns-4 { --cols: 4; --col-min: 160px; --col-max: 260px; }
 
-.content-gallery.gallery{
+.content-gallery.gallery {
   display: grid;
   width: 100%;
   justify-content: center; /* centers leftover tracks / ragged last row */

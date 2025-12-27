@@ -205,7 +205,7 @@ function setupDraw(path: SVGPathElement) {
 function playDraw(path: SVGPathElement) {
   path.getBoundingClientRect();
   requestAnimationFrame(() => {
-    path.style.transition = 'stroke-dashoffset 2s ease-out';
+    path.style.transition = 'stroke-dashoffset 3s ease-in-out';
     path.style.transitionDelay = '.5s';
     path.style.strokeDashoffset = '0';
   })

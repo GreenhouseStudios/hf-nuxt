@@ -23,6 +23,8 @@ declare global {
                     sourceUrl: string;
                     altText: string;
                     mediaDetails: {
+                        width: number;
+                        height: number;
                         sizes: {
                             name: string;
                             sourceUrl: string;
