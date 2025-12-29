@@ -307,16 +307,19 @@ setGallery()
 
 <template>
   <div class="post-layout">
-    <!-- Close button -->
-    <button 
-      class="close-button absolute top-4 right-4 text-gray-200 hover:text-gray-800 text-3xl leading-none z-10"
-      @click="store.closeModal()"
-    >
-      &times;
-    </button>
+    <!-- Close button wrapper for sticky positioning -->
+    <div class="sticky top-0 z-10 flex justify-end pointer-events-none">
+      <button
+        style="cursor:pointer;" 
+        class="close-button text-gray-200 hover:text-gray-800 text-3xl leading-none mr-4 mt-4 pointer-events-auto"
+        @click="store.closeModal()"
+      >
+        &times;
+      </button>
+    </div>
     
     <div
-        class="hero-wrap"
+        class="hero-wrap -mt-16"
         ref="heroWrap"
         v-show="stablePost"
         :style="{ backgroundImage: `url(${stablePost?.eventOptions?.thumbnail?.node?.mediaItemUrl ?? '/placeholder.png'})`}"
