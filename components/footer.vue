@@ -101,9 +101,9 @@
 
           <div class="mt-10 flex flex-col sm:flex-row gap-6 sm:gap-36 lg:gap-24">
             <ul class="space-y-3 text-md">
-              <li><a href="" class="text-md hover:underline" target="_blank">Contact Us</a></li>
-              <li><a href="" class="text-md hover:underline" target="_blank">Careers</a></li>
-              <li><a href="" class="text-md hover:underline" target="_blank">Our Finances</a></li>
+              <li><a href="https://greaterhartfordgives.org/contact-us/" class="text-md hover:underline" target="_blank">Contact Us</a></li>
+              <li><a href="https://greaterhartfordgives.org/careers/" class="text-md hover:underline" target="_blank">Careers</a></li>
+              <li><a href="https://greaterhartfordgives.org/financial-strength/" class="text-md hover:underline" target="_blank">Our Finances</a></li>
             </ul>
 
             <ul class="space-y-3 text-md">
@@ -111,49 +111,36 @@
 
               <li>
                 <div class="flex items-center gap-2">
-                  <a class="social-link facebook" href="" target="_blank" aria-label="Facebook"></a>
-                  <a class="social-link instagram" href="" target="_blank" aria-label="Instagram"></a>
-                  <a class="social-link linkedin" href="" target="_blank" aria-label="LinkedIn"></a>
-                  <a class="social-link youtube" href="" target="_blank" aria-label="YouTube"></a>
+                  <a class="social-link facebook" href="https://www.facebook.com/HartfordFoundation" target="_blank" aria-label="Facebook"></a>
+                  <a class="social-link instagram" href="https://www.instagram.com/hartfordfoundation/" target="_blank" aria-label="Instagram"></a>
+                  <a class="social-link linkedin" href="https://www.linkedin.com/company/hartford-foundation-for-public-giving/" target="_blank" aria-label="LinkedIn"></a>
+                  <a class="social-link youtube" href="https://www.youtube.com/user/HartfordFoundation" target="_blank" aria-label="YouTube"></a>
                 </div>
               </li>
 
-              <li class="pt-4"><a href="" class="hover:underline" target="_blank">Privacy Policy</a></li>
-              <li><a href="" class="hover:underline" target="_blank">Terms of Use</a></li>
+              <li class="pt-4"><a href="https://greaterhartfordgives.org/privacy-policy/" class="hover:underline" target="_blank">Privacy Policy</a></li>
+              <li><a href="https://greaterhartfordgives.org/terms-of-use/" class="hover:underline" target="_blank">Terms of Use</a></li>
             </ul>
           </div>
         </div>
 
-        <!-- RIGHT: newsletter card -->
+        <!-- RIGHT: CTA card -->
         <div class="lg:basis-2/3 lg:flex w-full md:w-9/12 lg:w-auto lg:justify-end">
           <div class="signup-card w-full lg:max-w-[850px] bg-[#F4B400] text-[#0b1b2a] px-8 py-12">
             <h3 class="text-3xl font-extrabold z-10">
-              Stay connected to your <span class="community">community</span>.
+              Let's connect and collaborate.
             </h3>
             <p class="text-md mt-1 opacity-90 z-10">
-              Sign up for emails to receive our monthly newsletter.
+              Get in touch with our team to learn more about our mission and how you can be a part of it.
             </p>
 
             <div class="mt-6">
-              <label class="block text-md font-bold mb-2 z-10">Email</label>
-
-              <div class="flex flex-col sm:flex-row gap-3 sm:items-center z-10">
-                <input
-                    type="email"
-                    placeholder=""
-                    class="md:max-w-3/4 sm:flex-1 h-11 rounded-full px-4 text-sm outline-none bg-white text-black"
-                />
-                <button
-                    class=
-                      "h-11 rounded-full px-6 text-sm font-extrabold bg-transparent border-black border-2 text-black
-                      hover:bg-black hover:text-white transition-colors duration-150
-
-"
-                    type="button"
+                <a
+                  href="https://greaterhartfordgives.org/contact-us/"
+                  class="inline-block h-11 rounded-full px-8 text-sm font-extrabold bg-transparent border-black border-2 text-black hover:bg-black hover:text-white transition-colors duration-150 leading-[2.75rem] z-10"
                 >
-                  SIGN UP
-                </button>
-              </div>
+                CONNECT WITH US
+                </a>
             </div>
           </div>
         </div>

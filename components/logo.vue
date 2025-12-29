@@ -1,10 +1,10 @@
 <template>
     <NuxtLink to="https://greaterhartfordgives.org/" target="_blank" style="z-index: 1;" class="fade-in img-transition relative" id="nav-img">
         <img
-          src="~/public/image.png"
+          src="~/public/GHGF_Logo_RGB_Primary.png"
           alt="Logo"
           ref="logoEl"
-          class="object-contain max-h-8 md:h-8 "
+          class="object-contain max-h-14 md:h-14 "
 
         />
       <h3 class="site-link text-sm mt-1.5 text-cetacean font-medium text-center px-2 py-1 absolute" >GreaterHartfordGives.org</h3>
