@@ -13,7 +13,7 @@
       <!-- Backup Placeholder Image from picsum.photos -->
     <img v-else-if="isDefault"
       src="/placeholder.png"
-      class="bg-auto card-img" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt=""
+      class="bg-auto card-img" :class="isDefault || isQuote ? 'shrink' : 'grow'" alt="Hartford Foundation Placeholder Image"
       data-placeholder="1"
     >
     <CardContent v-if="isDefault" :post="props.post"
