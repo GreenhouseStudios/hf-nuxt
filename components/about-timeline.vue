@@ -596,6 +596,15 @@ const slideshowImages = computed(() => {
             parseInt(b.eventOptions.eventYear) - parseInt(a.eventOptions.eventYear)
         );
         const post = sortedDecadePosts[0];
+
+        if ( post.eventOptions.thumbnail?.node.mediaDetails ) {
+          const imageSizes = post.eventOptions.thumbnail.node.mediaDetails.sizes;
+          const wideImage = imageSizes?.find(size => size.name === 'medium_large');
+          if (wideImage) {
+            return wideImage.sourceUrl;
+          }
+        }
+
         return post.eventOptions.thumbnail.node.sourceUrl ||
             post.eventOptions.thumbnail.node.mediaItemUrl;
       })
