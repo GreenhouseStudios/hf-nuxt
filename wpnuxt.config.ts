@@ -9,7 +9,8 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/cropped-GHG_Favicon-32x32.png' }
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/cropped-GHG_Favicon-32x32.png' },
+        { rel: 'stylesheet', href:'https://use.typekit.net/omh7iec.css' }
       ]
     },
     cdnURL: '/wp-content/themes/i3-hf-centennial/dist/',
@@ -43,7 +44,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   runtimeConfig: {
     public: {
-      graphqlUrl: process.env.NUXT_PUBLIC_GRAPHQL_URL || 'https://leamh.org/hartford_foundation/index.php?graphql'
+      graphqlUrl: process.env.NUXT_PUBLIC_GRAPHQL_URL || 'https://100years.greaterhartfordgives.org/?graphql'
     }
   },
   css: ['~/assets/css/main.css', '~/node_modules/gridstack/dist/gridstack.min.css', '~/node_modules/gridstack/dist/gridstack-all.js', '/assets/css/wp/wp-block-library.css'],

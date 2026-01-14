@@ -10,9 +10,10 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/cropped-GHG_Favicon-32x32.png' },
-        { rel: 'stylesheet', href: 'https://use.typekit.net/omh7iec.css'}
+        { rel: 'stylesheet', href:'https://use.typekit.net/omh7iec.css' }
       ]
-    }
+    },
+    cdnURL: '/wp-content/themes/i3-hf-centennial/dist/',
   },
   tailwindcss: {
     config: {
@@ -21,7 +22,7 @@ export default defineNuxtConfig({
 
         }
       },
-      plugins:[
+      plugins: [
         require("@tailwindcss/line-clamp"),
       ]
     }
@@ -38,21 +39,22 @@ export default defineNuxtConfig({
     classSuffix: '',
     preference: 'light',
     fallback: 'light'
-},
+  },
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   runtimeConfig: {
     public: {
-      graphqlUrl: process.env.NUXT_PUBLIC_GRAPHQL_URL || 'https://100years.greaterhartfordgives.org?graphql'
+      graphqlUrl: process.env.NUXT_PUBLIC_GRAPHQL_URL || 'https://100years.greaterhartfordgives.org/?graphql'
     }
   },
-  css: ['~/assets/css/main.css','~/node_modules/gridstack/dist/gridstack.min.css', '~/node_modules/gridstack/dist/gridstack-all.js', '/assets/css/wp/wp-block-library.css'],
+  css: ['~/assets/css/main.css', '~/node_modules/gridstack/dist/gridstack.min.css', '~/node_modules/gridstack/dist/gridstack-all.js', '/assets/css/wp/wp-block-library.css'],
   ui: {
     theme: {
       colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
     }
   },
   ssr: false,
+  target: 'static',
   vite: {
     plugins: [
 
@@ -60,7 +62,7 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         './media': {
-          target: 'https://leamh.org',
+          target: '/',
           changeOrigin: true,
           secure: true,
           rewrite: (path) => path.replace(/^\/media/, '')
