@@ -60,9 +60,10 @@
 
 .intro {
   background: #0a7aff;
-  will-change: clip-path;
-  transition: clip-path .75s ease-in;
-  clip-path: inset(0% 100% 0% 0%)
+  display: inline-block;
+  letter-spacing: 0.65px;
+  text-transform: uppercase;
+  padding: 14px 26px;
 }
 .intro.animate {
   clip-path: inset(0);
@@ -137,12 +138,12 @@
 
     <div class="px-6 md:px-12">
       <span ref="introEl"
-        class="text-3xl sm:text-4xl intro text-white px-4 py-1 sm:ms-6"
-      >INTRODUCING OUR<br></span>
+        class="text-1xl sm:text-1xl intro text-white px-4 py-1 sm:ms-6 sans-serif font-extrabold"
+      >Introducing our<br></span>
 
       <h2 ref="headEl"
         class="text-5xl sm:text-6xl font-black mb-24 text-cetacean mt-2 sm:ms-6"
-      >100 INFLUENCERS</h2>
+      >100 Influencers</h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <InfluencerCard

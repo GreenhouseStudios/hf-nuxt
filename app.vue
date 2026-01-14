@@ -28,11 +28,6 @@ watch(() => store.showModal, (open) => {
 </template>
 
 <style>
-body {
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
-}
-
 .no-scroll {
   overflow: hidden;
 }

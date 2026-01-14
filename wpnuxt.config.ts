@@ -6,6 +6,10 @@ export default defineNuxtConfig({
       title: 'Celebrating 100 Years - Greater Hartford Gives',
       meta: [
         { name: 'description', content: 'Celebrating 100 Years' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/cropped-GHG_Favicon-32x32.png' }
       ]
     },
     cdnURL: '/wp-content/themes/i3-hf-centennial/dist/',

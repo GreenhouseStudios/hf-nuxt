@@ -241,10 +241,10 @@
         text-4xl sm:text-5xl font-normal timeline-title dark:text-blue-300
         text-center"
         ref="titleEl"
-      >CENTENNIAL<br><span class=
+      >Centennial<br><span class=
          "text-6xl sm:text-7xl font-black"
 
-      >TIMELINE</span></h2>
+      >Timeline</span></h2>
 
       <!-- Filters UI -->
       <div id="timeline-filters">

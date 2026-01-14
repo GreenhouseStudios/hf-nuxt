@@ -1,6 +1,22 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+/* @import url('https://use.typekit.net/omh7iec.css'); */
+
+@font-face {
+    font-family: 'Schibsted Grotesk';
+    src: url('~/assets/font/Schibsted_Grotesk/SchibstedGrotesk-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Schibsted Grotesk';
+    src: url('~/assets/font/Schibsted_Grotesk/SchibstedGrotesk-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
 
 @theme {
     --color-midnight: #121063;
@@ -11,10 +27,21 @@
     --color-zaffre: #0014BA;
 }
 
-html * {
-    font-family: "Roboto", sans-serif;
+html {
+    font-family: 'Schibsted Grotesk', sans-serif;
     font-optical-sizing: auto;
     font-style: normal;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-family: bennet-display, Georgia, "Times New Roman", serif;
+    font-weight: 700;
+}
+.serif {
+    font-family: bennet-display, Georgia, "Times New Roman", serif;
+}
+.sans-serif {
+    font-family: 'Schibsted Grotesk', sans-serif;
 }
 
 nav a:not([data-active]) {

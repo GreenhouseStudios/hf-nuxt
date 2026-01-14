@@ -6,6 +6,11 @@ export default defineNuxtConfig({
       title: 'Celebrating 100 Years - Greater Hartford Gives',
       meta: [
         { name: 'description', content: 'Celebrating 100 Years' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/cropped-GHG_Favicon-32x32.png' },
+        { rel: 'stylesheet', href: 'https://use.typekit.net/omh7iec.css'}
       ]
     }
   },
@@ -36,6 +41,11 @@ export default defineNuxtConfig({
 },
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  runtimeConfig: {
+    public: {
+      graphqlUrl: process.env.NUXT_PUBLIC_GRAPHQL_URL || 'https://100years.greaterhartfordgives.org?graphql'
+    }
+  },
   css: ['~/assets/css/main.css','~/node_modules/gridstack/dist/gridstack.min.css', '~/node_modules/gridstack/dist/gridstack-all.js', '/assets/css/wp/wp-block-library.css'],
   ui: {
     theme: {

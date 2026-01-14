@@ -423,7 +423,7 @@
       
       <div class="header-text text-nowrap w-3/5 ">
         <h2
-            class="text-cetacean text-3xl md:text-4xl xl:text-5xl 2xl:text-6xl font-normal uppercase lg:mb-14 about-header"
+            class="text-cetacean text-3xl md:text-4xl xl:text-5xl 2xl:text-6xl font-normal lg:mb-14 about-header"
         >Celebrating<br><span
             class="text-5xl sm:text-5xl md:text-6xl lg:text-7xl 2xl:text-8xl font-black"
         >100 Years</span></h2>
