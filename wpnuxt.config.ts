@@ -84,6 +84,10 @@ export default defineNuxtConfig({
     '@formkit/auto-animate/nuxt',
     '@hypernym/nuxt-anime',
     '@nuxtjs/color-mode',
-    'nuxt-aos'
+    'nuxt-aos',
+    'nuxt-gtag'
   ],
+  gtag: {
+    id: 'G-NHFPF8EMZ3'
+  }
 })
