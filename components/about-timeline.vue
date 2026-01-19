@@ -460,10 +460,7 @@
       <div class="vision-text-wrap text-wrap ps-2">
         <h3 class="text-4xl font-extrabold mb-5">SINCE 1925</h3>
         <p class="mb-5">
-          Over our 100-year history, we have transformed the way residents and local organizations come together to drive lasting change across the region.
-        </p>
-        <p>
-          We have been proud to serve as a charitable resource for the community. To make an even greater impact, we have worked to build a powerful network of changemakers—donors, nonprofits, residents, businesses, policymakers, and all people who are committed to the success and wellbeing of Greater Hartford.
+          Over our 100-year history, we have been proud to serve as a charitable resource for the community. To amplify our impact, we have worked to build a powerful network of changemakers—donors, nonprofits, residents, businesses, and policymakers who are committed to the success and wellbeing of Greater Hartford.
         </p>
 
       </div>
