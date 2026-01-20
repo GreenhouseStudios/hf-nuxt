@@ -260,7 +260,7 @@ onMounted(async () => {
   const shareCopy = document.createElement('a');
   shareCopy.classList.add('social-icon', 'share-copy', 'footer-icon');
   shareCopy.addEventListener('pointerdown', () => {
-    const link = `https://100years.greaterhartfordgives.org/e/${stablePost?.value?.slug}`;
+    const link = stablePost?.value?.link || `https://100years.greaterhartfordgives.org/`;
     navigator.clipboard.writeText(link).then(() => {
       shareCopy.classList.add('copied');
     }).catch(err => {
@@ -273,8 +273,7 @@ onMounted(async () => {
   })
 
   function getShareLinks() {
-    const url = encodeURIComponent(`https://100years.greaterhartfordgives.org/e/${stablePost?.value?.slug}`);
-    console.log(url)
+    const url = encodeURIComponent(`${stablePost?.value?.link}`);
     return {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
