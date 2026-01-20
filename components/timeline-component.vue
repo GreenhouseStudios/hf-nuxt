@@ -1539,11 +1539,11 @@ function growCovidCard(
   let closing = false;
 
   // push all above cards up and below cards down while covid expands
-  above.forEach(p => {
-    p.el.style.transform = `translateY(-${rowHeight * 2}px`;
-  });
+  // above.forEach(p => {
+  //   p.el.style.transform = `translateY(-${rowHeight * 2}px`;
+  // });
   below.forEach(p => {
-    p.el.style.transform = `translateY(${rowHeight * 2}px`;
+    p.el.style.transform = `translateY(${rowHeight * 4}px`;
   });
 
   // ------------ OPEN: banner growth (height) ------------
@@ -1569,6 +1569,9 @@ function growCovidCard(
 
     // grow to a fixed “open” height
     inner.style.height = `${rowHeight * 8 - (gap * 2)}px`;
+    covidCard.style.transition = `transform .75s`;
+    covidCard.style.transitionDelay = 'initial';
+    covidCard.style.transform = `translateY(${rowHeight * 2}px)`;
 
     inner.addEventListener(
         'transitionend',
