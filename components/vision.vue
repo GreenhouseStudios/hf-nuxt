@@ -137,7 +137,7 @@
     <div class="vision-vid-wrap w-full lg:w-9/10 2xl:w-7/10">
       <div class="vision-vid"></div>
       <div class="vision-text-wrap">
-        <h3>SINCE 1925</h3>
+        <h3>Since 1925</h3>
         <p>
           We are committed to providing our customers with the best service,
           to serve, to create, and lorem ipsum. We are proud of everyone's achievement.

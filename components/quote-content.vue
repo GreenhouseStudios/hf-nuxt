@@ -484,6 +484,7 @@ function wrapCharsByWord(el: HTMLElement) {
 
 function previewClick() {
   shouldPlay.value = true;
+  muteUnmute();
 }
 
 
@@ -737,6 +738,7 @@ onMounted(() => {
 
       vidEl.value.addEventListener('canplay', () => {
         loading.value = false;
+        // muteUnmute();
       })
     }
 

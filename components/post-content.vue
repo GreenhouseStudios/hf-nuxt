@@ -532,10 +532,10 @@ setGallery()
   justify-content: center !important;
 }
 
-.gallery-columns-1 { --cols: 1; --col-min: 220px; --col-max: 500px; }
-.gallery-columns-2 { --cols: 2; --col-min: 200px; --col-max: 400px; }
-.gallery-columns-3 { --cols: 3; --col-min: 180px; --col-max: 320px; }
-.gallery-columns-4 { --cols: 4; --col-min: 160px; --col-max: 260px; }
+.gallery-columns-1 { --cols: 1; --col-min: 220px;  }
+.gallery-columns-2 { --cols: 2; --col-min: 200px;  }
+.gallery-columns-3 { --cols: 3; --col-min: 180px;  }
+.gallery-columns-4 { --cols: 4; --col-min: 160px;  }
 
 .content-gallery.gallery {
   display: grid;
