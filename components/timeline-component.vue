@@ -293,6 +293,9 @@
                   : 'default'"
                 :data-is-quote="item.type === 'post' && item.post?.eventOptions?.postType === 'quote' ? '1' : '0'"
                 :data-is-covid="item.type === 'covid' ? '1' : '0'"
+                :data-slug="item.type === 'post'
+                    ? item.post.slug : 'slug-null'
+                "
             >
               <!-- Normal posts: render one Card -->
               <div
@@ -365,6 +368,8 @@ const { $gsap } = useNuxtApp();
 const canPlayQuotes = ref(false);
 const currentlyPlayingMedia = ref<HTMLVideoElement | null>(null);
 
+let eventQueried = false;
+let queriedEvent = ref<String | null>(null);
 
 const numCols = ref(5);
 let cols = numCols.value;
@@ -781,6 +786,35 @@ async function measureAndPack(reset = false) {
     // Safety: ensure we never leave layoutInProgress stuck on
     if (gridEl.value) gridEl.value.style.opacity = '1';
     layoutInProgress = false;
+    console.log(queriedEvent.value)
+    if(eventQueried && queriedEvent.value && gridEl.value) {
+      const key = `searchedEvent:${queriedEvent.value}`;
+      const el = gridEl.value.querySelector(`li[data-slug="${queriedEvent.value}"]`)
+      console.log(el)
+      if(sessionStorage.getItem(key) !== '1' && el) {
+        sessionStorage.setItem(key, '1');
+
+        setTimeout(() => {
+          const rect = el.getBoundingClientRect();
+          const y = rect.top + window.scrollY - 100;
+          console.log(y)
+          window.scrollTo({
+            top: y,
+            behavior: "smooth",
+          });
+        }, 100)
+
+      }
+
+/*
+        const searchedEvent = gridEl.value.querySelector(`li[data-slug="${queriedEvent.value}"]`)
+        if(searchedEvent) searchedEvent.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })*/
+
+    }
+
   }
 }
 
@@ -2229,6 +2263,15 @@ const filteredPosts = computed(() => {
 onMounted( async () => {
   await nextTick();
   updateColumns();
+
+  const params = new URLSearchParams(window.location.search);
+  const event = params.get('event');
+  console.log(params)
+  if(event) {
+    eventQueried = true;
+    queriedEvent.value = event;
+  }
+
   if (numCols.value > 3 && gridEl.value) {
     const initArr: number[] = [];
     for (let i = 0; i < numCols.value; i++) initArr.push(BUFFER_ROWS)
