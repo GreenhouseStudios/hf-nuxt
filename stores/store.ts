@@ -9,7 +9,7 @@ export const useStore = defineStore('store', {
         isModalOpen: false as boolean,
         timelineFilterCategory: null as Category | null,
         searchTerm: '',
-        quotesMuted: false
+        quotesMuted: true
     }),
     actions: {
       openModal(post: Post | Influencer) {
