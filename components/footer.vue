@@ -113,7 +113,7 @@
                 <div class="flex items-center gap-2">
                   <a class="social-link facebook" href="https://www.facebook.com/HartfordFoundation" target="_blank" aria-label="Facebook"></a>
                   <a class="social-link instagram" href="https://www.instagram.com/hartfordfoundation/" target="_blank" aria-label="Instagram"></a>
-                  <a class="social-link linkedin" href="https://www.linkedin.com/company/hartford-foundation-for-public-giving/" target="_blank" aria-label="LinkedIn"></a>
+                  <a class="social-link linkedin" href="https://www.linkedin.com/company/greaterhartfordgives" target="_blank" aria-label="LinkedIn"></a>
                   <a class="social-link youtube" href="https://www.youtube.com/user/HartfordFoundation" target="_blank" aria-label="YouTube"></a>
                 </div>
               </li>
